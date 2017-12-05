@@ -22,6 +22,7 @@ package scalarDistribution
 import   "io"
 import   "math"
 
+import . "github.com/pbenner/ngstat/statistics"
 import . "github.com/pbenner/ngstat/statistics/config"
 
 import . "github.com/pbenner/autodiff"

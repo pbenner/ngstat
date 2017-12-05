@@ -21,26 +21,7 @@ package scalarDistribution
 //import   "fmt"
 import   "reflect"
 
-import . "github.com/pbenner/pshape/Config"
-
-import . "github.com/pbenner/autodiff"
-
-/* -------------------------------------------------------------------------- */
-
-type BasicDistribution interface {
-  Serializable
-  GetParameters() Vector
-  SetParameters(parameters Vector) error
-  ScalarType() ScalarType
-}
-
-/* -------------------------------------------------------------------------- */
-
-type ScalarDistribution interface {
-  BasicDistribution
-  LogPdf(r Scalar, x Scalar) error
-  CloneScalarDistribution() ScalarDistribution
-}
+import . "github.com/pbenner/ngstat/statistics"
 
 /* -------------------------------------------------------------------------- */
 
