@@ -21,7 +21,6 @@ package scalarDistribution
 //import   "fmt"
 
 import . "github.com/pbenner/ngstat/statistics"
-//import . "github.com/pbenner/ngstat/statistics/config"
 
 import . "github.com/pbenner/autodiff"
 import   "github.com/pbenner/autodiff/distribution"

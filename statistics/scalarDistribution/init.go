@@ -32,6 +32,8 @@ func init() {
   ScalarDistributionRegistry["gamma distribution"]              = new(GammaDistribution)
   ScalarDistributionRegistry["generalized gamma distribution"]  = new(GeneralizedGammaDistribution)
   ScalarDistributionRegistry["nonparametric distribution"]      = new(NonparametricDistribution)
+  ScalarDistributionRegistry["normal distribution"]             = new(NormalDistribution)
+  ScalarDistributionRegistry["log-normal distribution"]         = new(LogNormalDistribution)
   ScalarDistributionRegistry["gev distribution"]                = new(GevDistribution)
   ScalarDistributionRegistry["exponential distribution"]        = new(ExponentialDistribution)
   ScalarDistributionRegistry["pareto distribution"]             = new(ParetoDistribution)
