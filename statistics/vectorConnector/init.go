@@ -26,7 +26,7 @@ import . "github.com/pbenner/ngstat/statistics"
 
 func init() {
   VectorDistributionRegistry["scalar id connector"]  = new(ScalarId)
-  VectorDistributionRegistry["scalar iid connector"] = new(ScalarId)
-  VectorDistributionRegistry["vector id connector"]  = new(ScalarId)
-  VectorDistributionRegistry["vector iid connector"] = new(ScalarId)
+  VectorDistributionRegistry["scalar iid connector"] = new(ScalarIid)
+  VectorDistributionRegistry["vector id connector"]  = new(VectorId)
+  VectorDistributionRegistry["vector iid connector"] = new(VectorIid)
 }
