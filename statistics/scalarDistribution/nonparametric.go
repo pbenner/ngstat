@@ -19,12 +19,10 @@ package scalarDistribution
 /* -------------------------------------------------------------------------- */
 
 import   "fmt"
-import   "io"
 import   "math"
 import   "sort"
 
 import . "github.com/pbenner/ngstat/statistics"
-import . "github.com/pbenner/ngstat/statistics/config"
 
 import . "github.com/pbenner/autodiff"
 
@@ -171,14 +169,7 @@ func (dist *NonparametricDistribution) SetParameters(parameters Vector) error {
 
 /* -------------------------------------------------------------------------- */
 
-func (dist *NonparametricDistribution) Import(reader io.Reader, args... interface{}) error {
-
-  var config ConfigDistribution
-
-  err := config.Import(reader, "nonparametric distribution")
-  if err != nil {
-    return err
-  }
+func (dist *NonparametricDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
   n := len(config.Parameters)/2
   x := make([]float64, n)
@@ -198,12 +189,10 @@ func (dist *NonparametricDistribution) Import(reader io.Reader, args... interfac
   return nil
 }
 
-func (dist *NonparametricDistribution) Export(writer io.Writer) error {
+func (dist *NonparametricDistribution) ExportConfig() ConfigDistribution {
 
   parameters := NewVector(BareRealType, dist.X)
   parameters  = parameters.AppendVector(dist.MargDensity)
 
-  config := NewConfigDistribution("nonparametric distribution", parameters)
-
-  return config.Export(writer)
+  return NewConfigDistribution("nonparametric distribution", parameters)
 }

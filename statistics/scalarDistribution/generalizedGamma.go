@@ -19,10 +19,8 @@ package scalarDistribution
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
-import   "io"
 
 import . "github.com/pbenner/ngstat/statistics"
-import . "github.com/pbenner/ngstat/statistics/config"
 
 import . "github.com/pbenner/autodiff"
 import   "github.com/pbenner/autodiff/distribution"
@@ -64,21 +62,7 @@ func (dist *GeneralizedGammaDistribution) LogPdf(r Scalar, x Scalar) error {
 
 /* -------------------------------------------------------------------------- */
 
-func (dist *GeneralizedGammaDistribution) Import(reader io.Reader, args... interface{}) error {
-
-  var config ConfigDistribution
-
-  if err := config.Import(reader, "generalized gamma distribution"); err != nil {
-    return err
-  }
-  // determine scalar type
-  t := BareRealType
-  for _, arg := range args {
-    switch v := arg.(type) {
-    case ScalarType:
-      t = v
-    }
-  }
+func (dist *GeneralizedGammaDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
   a := NewScalar(t, config.Parameters[0])
   d := NewScalar(t, config.Parameters[1])
@@ -93,12 +77,10 @@ func (dist *GeneralizedGammaDistribution) Import(reader io.Reader, args... inter
   return nil
 }
 
-func (dist *GeneralizedGammaDistribution) Export(writer io.Writer) error {
+func (dist *GeneralizedGammaDistribution) ExportConfig() ConfigDistribution {
 
   parameters := dist.GetParameters()
   parameters  = parameters.AppendScalar(dist.Pseudocount)
 
-  config := NewConfigDistribution("generalized gamma distribution", parameters)
-
-  return config.Export(writer)
+  return NewConfigDistribution("generalized gamma distribution", parameters)
 }

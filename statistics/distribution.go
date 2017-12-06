@@ -14,20 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package scalarDistribution
+package statistics
 
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
-
-import . "github.com/pbenner/ngstat/config"
+import   "reflect"
 
 import . "github.com/pbenner/autodiff"
 
 /* -------------------------------------------------------------------------- */
 
 type BasicDistribution interface {
-  Serializable
+  ImportConfig(config ConfigDistribution, t ScalarType) error
+  ExportConfig() ConfigDistribution
   GetParameters() Vector
   SetParameters(parameters Vector) error
   ScalarType() ScalarType
@@ -41,17 +41,54 @@ type ScalarDistribution interface {
   CloneScalarDistribution() ScalarDistribution
 }
 
-
 type VectorDistribution interface {
   BasicDistribution
   LogPdf(r Scalar, x Vector) error
   Dim() int
-  CloneDistribution() VectorDistribution
+  CloneVectorDistribution() VectorDistribution
 }
 
 type MatrixDistribution interface {
   BasicDistribution
   LogPdf(r Scalar, x Matrix) error
   Dims() (int, int)
-  CloneDistribution() MatrixDistribution
+  CloneMatrixDistribution() MatrixDistribution
+}
+
+/* -------------------------------------------------------------------------- */
+
+var ScalarDistributionRegistry map[string]ScalarDistribution
+var VectorDistributionRegistry map[string]VectorDistribution
+var MatrixDistributionRegistry map[string]MatrixDistribution
+
+func init() {
+  ScalarDistributionRegistry = make(map[string]ScalarDistribution)
+  VectorDistributionRegistry = make(map[string]VectorDistribution)
+  MatrixDistributionRegistry = make(map[string]MatrixDistribution)
+}
+
+/* -------------------------------------------------------------------------- */
+
+func NewScalarDistribution(name string) ScalarDistribution {
+  if x, ok := ScalarDistributionRegistry[name]; ok {
+    return reflect.New(reflect.TypeOf(x).Elem()).Interface().(ScalarDistribution)
+  } else {
+    return nil
+  }
+}
+
+func NewVectorDistribution(name string) VectorDistribution {
+  if x, ok := VectorDistributionRegistry[name]; ok {
+    return reflect.New(reflect.TypeOf(x).Elem()).Interface().(VectorDistribution)
+  } else {
+    return nil
+  }
+}
+
+func NewMatrixDistribution(name string) MatrixDistribution {
+  if x, ok := MatrixDistributionRegistry[name]; ok {
+    return reflect.New(reflect.TypeOf(x).Elem()).Interface().(MatrixDistribution)
+  } else {
+    return nil
+  }
 }

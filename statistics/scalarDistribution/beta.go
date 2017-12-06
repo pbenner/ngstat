@@ -19,10 +19,8 @@ package scalarDistribution
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
-import   "io"
 
 import . "github.com/pbenner/ngstat/statistics"
-import . "github.com/pbenner/ngstat/statistics/config"
 
 import . "github.com/pbenner/autodiff"
 import   "github.com/pbenner/autodiff/distribution"
@@ -55,21 +53,7 @@ func (dist *BetaDistribution) CloneScalarDistribution() ScalarDistribution {
 
 /* -------------------------------------------------------------------------- */
 
-func (dist *BetaDistribution) Import(reader io.Reader, args... interface{}) error {
-
-  var config ConfigDistribution
-
-  if err := config.Import(reader, "beta distribution"); err != nil {
-    return err
-  }
-  // determine scalar type
-  t := BareRealType
-  for _, arg := range args {
-    switch v := arg.(type) {
-    case ScalarType:
-      t = v
-    }
-  }
+func (dist *BetaDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
   alpha    := NewScalar(t, config.Parameters[0])
   beta     := NewScalar(t, config.Parameters[1])
@@ -83,9 +67,7 @@ func (dist *BetaDistribution) Import(reader io.Reader, args... interface{}) erro
   return nil
 }
 
-func (dist *BetaDistribution) Export(writer io.Writer) error {
+func (dist *BetaDistribution) ExportConfig() (config ConfigDistribution) {
 
-  config := NewConfigDistribution("beta distribution", dist.GetParameters())
-
-  return config.Export(writer)
+  return NewConfigDistribution("beta distribution", dist.GetParameters())
 }

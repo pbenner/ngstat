@@ -19,10 +19,8 @@ package scalarDistribution
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
-import   "io"
 
 import . "github.com/pbenner/ngstat/statistics"
-import . "github.com/pbenner/ngstat/statistics/config"
 
 import . "github.com/pbenner/autodiff"
 import   "github.com/pbenner/autodiff/distribution"
@@ -55,21 +53,7 @@ func (dist *ExponentialDistribution) CloneScalarDistribution() ScalarDistributio
 
 /* -------------------------------------------------------------------------- */
 
-func (dist *ExponentialDistribution) Import(reader io.Reader, args... interface{}) error {
-
-  var config ConfigDistribution
-
-  if err := config.Import(reader, "exponential distribution"); err != nil {
-    return err
-  }
-  // determine scalar type
-  t := BareRealType
-  for _, arg := range args {
-    switch v := arg.(type) {
-    case ScalarType:
-      t = v
-    }
-  }
+func (dist *ExponentialDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
   lambda := NewScalar(t, config.Parameters[0])
 
@@ -81,9 +65,7 @@ func (dist *ExponentialDistribution) Import(reader io.Reader, args... interface{
   return nil
 }
 
-func (dist *ExponentialDistribution) Export(writer io.Writer) error {
+func (dist *ExponentialDistribution) ExportConfig() ConfigDistribution {
 
-  config := NewConfigDistribution("exponential distribution", dist.GetParameters())
-
-  return config.Export(writer)
+  return NewConfigDistribution("exponential distribution", dist.GetParameters())
 }

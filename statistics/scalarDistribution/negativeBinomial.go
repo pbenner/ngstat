@@ -19,10 +19,8 @@ package scalarDistribution
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
-import   "io"
 
 import . "github.com/pbenner/ngstat/statistics"
-import . "github.com/pbenner/ngstat/statistics/config"
 
 import . "github.com/pbenner/autodiff"
 import   "github.com/pbenner/autodiff/distribution"
@@ -68,21 +66,7 @@ func (dist *NegativeBinomialDistribution) LogPdf(r Scalar, x Scalar) error {
 
 /* -------------------------------------------------------------------------- */
 
-func (dist *NegativeBinomialDistribution) Import(reader io.Reader, args... interface{}) error {
-
-  var config ConfigDistribution
-
-  if err := config.Import(reader, "negative binomial distribution"); err != nil {
-    return err
-  }
-  // determine scalar type
-  t := BareRealType
-  for _, arg := range args {
-    switch v := arg.(type) {
-    case ScalarType:
-      t = v
-    }
-  }
+func (dist *NegativeBinomialDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
   r := NewScalar(t, config.Parameters[0])
   p := NewScalar(t, config.Parameters[1])
@@ -96,12 +80,10 @@ func (dist *NegativeBinomialDistribution) Import(reader io.Reader, args... inter
   return nil
 }
 
-func (dist *NegativeBinomialDistribution) Export(writer io.Writer) error {
+func (dist *NegativeBinomialDistribution) ExportConfig() ConfigDistribution {
 
   parameters := dist.GetParameters()
   parameters  = parameters.AppendScalar(dist.Pseudocount)
 
-  config := NewConfigDistribution("negative binomial distribution", parameters)
-
-  return config.Export(writer)
+  return NewConfigDistribution("negative binomial distribution", parameters)
 }

@@ -19,10 +19,8 @@ package scalarDistribution
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
-import   "io"
 
 import . "github.com/pbenner/ngstat/statistics"
-import . "github.com/pbenner/ngstat/statistics/config"
 
 import . "github.com/pbenner/autodiff"
 import   "github.com/pbenner/autodiff/distribution"
@@ -55,21 +53,7 @@ func (dist *BinomialDistribution) CloneScalarDistribution() ScalarDistribution {
 
 /* -------------------------------------------------------------------------- */
 
-func (dist *BinomialDistribution) Import(reader io.Reader, args... interface{}) error {
-
-  var config ConfigDistribution
-
-  if err := config.Import(reader, "binomial distribution"); err != nil {
-    return err
-  }
-  // determine scalar type
-  t := BareRealType
-  for _, arg := range args {
-    switch v := arg.(type) {
-    case ScalarType:
-      t = v
-    }
-  }
+func (dist *BinomialDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
   theta := NewScalar(t, config.Parameters[0])
   n     := int(config.Parameters[1])
@@ -82,9 +66,7 @@ func (dist *BinomialDistribution) Import(reader io.Reader, args... interface{}) 
   return nil
 }
 
-func (dist *BinomialDistribution) Export(writer io.Writer) error {
+func (dist *BinomialDistribution) ExportConfig() ConfigDistribution {
 
-  config := NewConfigDistribution("binomial distribution", dist.GetParameters())
-
-  return config.Export(writer)
+  return NewConfigDistribution("binomial distribution", dist.GetParameters())
 }

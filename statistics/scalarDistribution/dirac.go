@@ -19,11 +19,9 @@ package scalarDistribution
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
-import   "io"
 import   "math"
 
 import . "github.com/pbenner/ngstat/statistics"
-import . "github.com/pbenner/ngstat/statistics/config"
 
 import . "github.com/pbenner/autodiff"
 
@@ -91,13 +89,7 @@ func (dist *DiracDistribution) SetParameters(parameters Vector) error {
 
 /* -------------------------------------------------------------------------- */
 
-func (dist *DiracDistribution) Import(reader io.Reader, args... interface{}) error {
-
-  var config ConfigDistribution
-
-  if err := config.Import(reader, "dirac distribution"); err != nil {
-    return err
-  }
+func (dist *DiracDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
   x := NewScalar(BareRealType, config.Parameters[0])
 
@@ -109,9 +101,7 @@ func (dist *DiracDistribution) Import(reader io.Reader, args... interface{}) err
   return nil
 }
 
-func (dist *DiracDistribution) Export(writer io.Writer) error {
+func (dist *DiracDistribution) ExportConfig() ConfigDistribution {
 
-  config := NewConfigDistribution("dirac distribution", dist.GetParameters())
-
-  return config.Export(writer)
+  return NewConfigDistribution("dirac distribution", dist.GetParameters())
 }

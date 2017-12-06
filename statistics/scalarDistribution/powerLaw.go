@@ -19,10 +19,8 @@ package scalarDistribution
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
-import   "io"
 
 import . "github.com/pbenner/ngstat/statistics"
-import . "github.com/pbenner/ngstat/statistics/config"
 
 import . "github.com/pbenner/autodiff"
 import   "github.com/pbenner/autodiff/distribution"
@@ -55,21 +53,7 @@ func (dist *PowerLawDistribution) CloneScalarDistribution() ScalarDistribution {
 
 /* -------------------------------------------------------------------------- */
 
-func (dist *PowerLawDistribution) Import(reader io.Reader, args... interface{}) error {
-
-  var config ConfigDistribution
-
-  if err := config.Import(reader, "power law distribution"); err != nil {
-    return err
-  }
-  // determine scalar type
-  t := BareRealType
-  for _, arg := range args {
-    switch v := arg.(type) {
-    case ScalarType:
-      t = v
-    }
-  }
+func (dist *PowerLawDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
   alpha   := NewScalar(t, config.Parameters[0])
   xmin    := NewScalar(t, config.Parameters[1])
@@ -83,9 +67,7 @@ func (dist *PowerLawDistribution) Import(reader io.Reader, args... interface{}) 
   return nil
 }
 
-func (dist *PowerLawDistribution) Export(writer io.Writer) error {
+func (dist *PowerLawDistribution) ExportConfig() ConfigDistribution {
 
-  config := NewConfigDistribution("power law distribution", dist.GetParameters())
-
-  return config.Export(writer)
+  return NewConfigDistribution("power law distribution", dist.GetParameters())
 }

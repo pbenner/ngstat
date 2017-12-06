@@ -1,4 +1,4 @@
-/* Copyright (C) 2016 Philipp Benner
+/* Copyright (C) 2017 Philipp Benner
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,16 +19,12 @@ package scalarDistribution
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
-import   "reflect"
 
 import . "github.com/pbenner/ngstat/statistics"
 
 /* -------------------------------------------------------------------------- */
 
-var ScalarDistributionRegistry map[string]ScalarDistribution
-
 func init() {
-  ScalarDistributionRegistry = make(map[string]ScalarDistribution)
   ScalarDistributionRegistry["beta distribution"]               = new(BetaDistribution)
   ScalarDistributionRegistry["binomial distribution"]           = new(BinomialDistribution)
   ScalarDistributionRegistry["negative binomial distribution"]  = new(NegativeBinomialDistribution)
@@ -43,13 +39,4 @@ func init() {
   ScalarDistributionRegistry["power law distribution"]          = new(PowerLawDistribution)
   ScalarDistributionRegistry["log-cauchy distribution"]         = new(LogCauchyDistribution)
   ScalarDistributionRegistry["dirac distribution"]              = new(DiracDistribution)
-
-}
-
-func NewScalarDistribution(name string) ScalarDistribution {
-  if x, ok := ScalarDistributionRegistry[name]; ok {
-    return reflect.New(reflect.TypeOf(x).Elem()).Interface().(ScalarDistribution)
-  } else {
-    return nil
-  }
 }
