@@ -679,23 +679,23 @@ func (obj *CoreHmm) String() string {
 
 func (obj *CoreHmm) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  pi, ok := config.GetNamedParametersAsFloats("Pi"); if !ok {
-    return fmt.Errorf("invalid config file")
-  }
-  tr, ok := config.GetNamedParametersAsFloats("Tr"); if !ok {
-    return fmt.Errorf("invalid config file")
-  }
   n, ok := config.GetNamedParameterAsInt("N"); if ! ok {
+    return fmt.Errorf("invalid config file")
+  }
+  pi, ok := config.GetNamedParametersAsVector("Pi", t); if !ok {
+    return fmt.Errorf("invalid config file")
+  }
+  tr, ok := config.GetNamedParametersAsMatrix("Tr", t, n, n); if !ok {
     return fmt.Errorf("invalid config file")
   }
   stateMap, ok := config.GetNamedParametersAsInts("StateMap"); if ! ok {
     return fmt.Errorf("invalid config file")
   }
 
-  Pi, err := NewHmmProbabilityVector(NewVector(t, pi)); if err != nil {
+  Pi, err := NewHmmProbabilityVector(pi); if err != nil {
     return err
   }
-  Tr, err := NewHmmTransitionMatrix(NewMatrix(t, n, n, tr)); if err != nil {
+  Tr, err := NewHmmTransitionMatrix(tr); if err != nil {
     return err
   }
 

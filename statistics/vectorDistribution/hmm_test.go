@@ -23,7 +23,7 @@ import   "math"
 import   "testing"
 
 import . "github.com/pbenner/ngstat/statistics"
-import . "github.com/pbenner/ngstat/statistics/scalarDistribution"
+import   "github.com/pbenner/ngstat/statistics/scalarDistribution"
 
 import . "github.com/pbenner/autodiff"
 import . "github.com/pbenner/autodiff/simple"
@@ -68,9 +68,9 @@ func TestHmm1(t *testing.T) {
   tr := NewMatrix(RealType, 2, 2,
     []float64{0.7, 0.3, 0.4, 0.6})
 
-  c1, _ := NewCategoricalDistribution(
+  c1, _ := scalarDistribution.NewCategoricalDistribution(
     NewVector(RealType, []float64{0.1, 0.9}))
-  c2, _ := NewCategoricalDistribution(
+  c2, _ := scalarDistribution.NewCategoricalDistribution(
     NewVector(RealType, []float64{0.7, 0.3}))
 
   pi := NewVector(RealType, []float64{0.6, 0.4})
@@ -295,8 +295,8 @@ func TestHmm2(t *testing.T) {
   pi := NewVector(BareRealType, []float64{1, 2})
   tr := NewMatrix(BareRealType, 2, 2, []float64{1,2,3,4})
 
-  d1, _ := NewGammaDistribution(NewReal(1.0), NewReal(2.0), NewReal(3.0))
-  d2, _ := NewGammaDistribution(NewReal(2.0), NewReal(3.0), NewReal(4.0))
+  d1, _ := scalarDistribution.NewGammaDistribution(NewReal(1.0), NewReal(2.0), NewReal(3.0))
+  d2, _ := scalarDistribution.NewGammaDistribution(NewReal(2.0), NewReal(3.0), NewReal(4.0))
 
   hmm1, _ := NewHmm(pi, tr, nil, []ScalarDistribution{d1, d2})
 

@@ -143,6 +143,22 @@ func (config ConfigDistribution) GetParametersAsFloats() ([]float64, bool) {
   return config.getFloats(config.Parameters)
 }
 
+func (config ConfigDistribution) GetParametersAsVector(t ScalarType) (Vector, bool) {
+  if v, ok := config.getFloats(config.Parameters); !ok {
+    return nil, false
+  } else {
+    return NewVector(t, v), true
+  }
+}
+
+func (config ConfigDistribution) GetParametersAsMatrix(t ScalarType, n, m int) (Matrix, bool) {
+  if v, ok := config.getFloats(config.Parameters); !ok {
+    return nil, false
+  } else {
+    return NewMatrix(t, n, m, v), true
+  }
+}
+
 func (config ConfigDistribution) GetNamedParametersAsFloats(name string) ([]float64, bool) {
   switch reflect.TypeOf(config.Parameters).Kind() {
   case reflect.Map:
@@ -177,6 +193,22 @@ func (config ConfigDistribution) GetNamedParameterAsFloat(name string) (float64,
     }
   }
   return 0, false
+}
+
+func (config ConfigDistribution) GetNamedParametersAsVector(name string, t ScalarType) (Vector, bool) {
+  if v, ok := config.GetNamedParametersAsFloats(name); !ok {
+    return nil, false
+  } else {
+    return NewVector(t, v), true
+  }
+}
+
+func (config ConfigDistribution) GetNamedParametersAsMatrix(name string, t ScalarType, n, m int) (Matrix, bool) {
+  if v, ok := config.GetNamedParametersAsFloats(name); !ok {
+    return nil, false
+  } else {
+    return NewMatrix(t, n, m, v), true
+  }
 }
 
 func (config ConfigDistribution) GetNamedParameterAsInt(name string) (int, bool) {
