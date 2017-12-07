@@ -43,7 +43,7 @@ type CoreHmm struct {
   Tf          TransitionMatrix  // transition matrix for last transition
   // state equivalence classes define which states share the same
   // emission distribution
-  stateMap  []int
+  StateMap  []int
   // number of states
   M           int
   // force start and end states
@@ -54,22 +54,22 @@ type CoreHmm struct {
 /* -------------------------------------------------------------------------- */
 
 func newCoreHmm(pi ProbabilityVector, tr TransitionMatrix, stateMap []int, normalize bool) (*CoreHmm, error) {
-  r       := CoreHmm{}
-  m, _    := tr.Dims()
-  r.Pi     = pi
-  r.Tr     = tr
-  r.Tf     = tr
-  r.M      = m
-  r.stateMap = stateMap
+  r    := CoreHmm{}
+  m, _ := tr.Dims()
+  r.Pi  = pi
+  r.Tr  = tr
+  r.Tf  = tr
+  r.M   = m
+  r.StateMap = stateMap
   if stateMap == nil {
     // generate new state map
     for i := 0; i < r.M; i++ {
-      r.stateMap = append(r.stateMap, i)
+      r.StateMap = append(r.StateMap, i)
     }
   } else {
     // clone state map
-    r.stateMap = make([]int, len(stateMap))
-    copy(r.stateMap, stateMap)
+    r.StateMap = make([]int, len(stateMap))
+    copy(r.StateMap, stateMap)
   }
   if normalize {
     // normalize transition matrix and Pi
@@ -116,7 +116,7 @@ func (CoreHmm) checkParameters(pi Vector, tr Matrix, stateMap []int) (int, error
 func (obj *CoreHmm) Clone() *CoreHmm {
   pi := obj.Pi.CloneProbabilityVector()
   tr := obj.Tr.CloneTransitionMatrix()
-  r, _ := newCoreHmm(pi, tr, obj.stateMap, false)
+  r, _ := newCoreHmm(pi, tr, obj.StateMap, false)
   if obj.startStates != nil {
     states := []int{}
     for i, _ := range obj.startStates {
@@ -267,7 +267,7 @@ func (obj *CoreHmm) LogPdf(r Scalar, data AbstractDataRecord) error {
   t2 := NullScalar(obj.ScalarType())
   // initialize alpha_s
   for i := 0; i < m; i++ {
-    if err := data.LogPdf(t2, obj.stateMap[i], 0); err != nil {
+    if err := data.LogPdf(t2, obj.StateMap[i], 0); err != nil {
       return err
     }
     alpha_s.At(i).Add(obj.Pi.At(i), t2)
@@ -285,7 +285,7 @@ func (obj *CoreHmm) LogPdf(r Scalar, data AbstractDataRecord) error {
         alpha_t.At(j).LogAdd(alpha_t.At(j), t1, t2)
       }
       // alpha_t(x_t) = p(y_t | x_t) sum_{x_s} p(x_t | x_s) alpha_s(x_s)
-      if err := data.LogPdf(t2, obj.stateMap[j], k); err != nil {
+      if err := data.LogPdf(t2, obj.StateMap[j], k); err != nil {
         return err
       }
       alpha_t.At(j).Add(alpha_t.At(j), t2)
@@ -306,7 +306,7 @@ func (obj *CoreHmm) LogPdf(r Scalar, data AbstractDataRecord) error {
         alpha_t.At(j).LogAdd(alpha_t.At(j), t1, t2)
       }
       // alpha_t(x_t) = p(y_t | x_t) sum_{x_s} p(x_t | x_s) alpha_s(x_s)
-      if err := data.LogPdf(t2, obj.stateMap[j], n-1); err != nil {
+      if err := data.LogPdf(t2, obj.StateMap[j], n-1); err != nil {
         return err
       }
       alpha_t.At(j).Add(alpha_t.At(j), t2)
@@ -351,13 +351,13 @@ func (obj *CoreHmm) Posterior(r Scalar, data AbstractDataRecord, states [][]int)
   t2 := NullScalar(obj.ScalarType())
   // initialize alpha_s
   for _, i := range states[0] {
-    if err := data.LogPdf(t2, obj.stateMap[i], 0); err != nil {
+    if err := data.LogPdf(t2, obj.StateMap[i], 0); err != nil {
       return err
     }
     alpha_s.At(i).Add(obj.Pi.At(i), t2)
   }
   for i := 0; i < m; i++ {
-    if err := data.LogPdf(t2, obj.stateMap[i], 0); err != nil {
+    if err := data.LogPdf(t2, obj.StateMap[i], 0); err != nil {
       return err
     }
     beta_s.At(i).Add(obj.Pi.At(i), t2)
@@ -375,7 +375,7 @@ func (obj *CoreHmm) Posterior(r Scalar, data AbstractDataRecord, states [][]int)
         alpha_t.At(j).LogAdd(alpha_t.At(j), t1, t2)
       }
       // alpha_t(x_t) = p(y_t | x_t) sum_{x_s} p(x_t | x_s) alpha_s(x_s)
-      if err := data.LogPdf(t2, obj.stateMap[j], k); err != nil {
+      if err := data.LogPdf(t2, obj.StateMap[j], k); err != nil {
         return err
       }
       alpha_t.At(j).Add(alpha_t.At(j), t2)
@@ -393,7 +393,7 @@ func (obj *CoreHmm) Posterior(r Scalar, data AbstractDataRecord, states [][]int)
         beta_t.At(j).LogAdd(beta_t.At(j), t1, t2)
       }
       // beta_t(x_t) = p(y_t | x_t) sum_{x_s} p(x_t | x_s) beta_s(x_s)
-      if err := data.LogPdf(t2, obj.stateMap[j], k); err != nil {
+      if err := data.LogPdf(t2, obj.StateMap[j], k); err != nil {
         return err
       }
       beta_t.At(j).Add(beta_t.At(j), t2)
@@ -414,7 +414,7 @@ func (obj *CoreHmm) Posterior(r Scalar, data AbstractDataRecord, states [][]int)
         alpha_t.At(j).LogAdd(alpha_t.At(j), t1, t2)
       }
       // alpha_t(x_t) = p(y_t | x_t) sum_{x_s} p(x_t | x_s) alpha_s(x_s)
-      if err := data.LogPdf(t2, obj.stateMap[j], n-1); err != nil {
+      if err := data.LogPdf(t2, obj.StateMap[j], n-1); err != nil {
         return err
       }
       alpha_t.At(j).Add(alpha_t.At(j), t2)
@@ -432,7 +432,7 @@ func (obj *CoreHmm) Posterior(r Scalar, data AbstractDataRecord, states [][]int)
         beta_t.At(j).LogAdd(beta_t.At(j), t1, t2)
       }
       // beta_t(x_t) = p(y_t | x_t) sum_{x_s} p(x_t | x_s) beta_s(x_s)
-      if err := data.LogPdf(t2, obj.stateMap[j], n-1); err != nil {
+      if err := data.LogPdf(t2, obj.StateMap[j], n-1); err != nil {
         return err
       }
       beta_t.At(j).Add(beta_t.At(j), t2)
@@ -461,7 +461,7 @@ func (obj *CoreHmm) forward(data AbstractDataRecord, alpha Matrix, t1, t2 Scalar
   // initialize first position
   if n > 0 {
     for i := 0; i < m; i++ {
-      if err := data.LogPdf(t2, obj.stateMap[i], 0); err != nil {
+      if err := data.LogPdf(t2, obj.StateMap[i], 0); err != nil {
         return nil, err
       }
       alpha.At(i, 0).Add(obj.Pi.At(i), t2)
@@ -482,7 +482,7 @@ func (obj *CoreHmm) forward(data AbstractDataRecord, alpha Matrix, t1, t2 Scalar
         at.LogAdd(at, t1, t2)
       }
       // alpha_t(x_j) = p(y_k | x_j) sum_i p(x_j | x_i) alpha_s(x_i)
-      if err := data.LogPdf(t2, obj.stateMap[j], k); err != nil {
+      if err := data.LogPdf(t2, obj.StateMap[j], k); err != nil {
         return nil, err
       }
       at.Add(at, t2)
@@ -505,7 +505,7 @@ func (obj *CoreHmm) forward(data AbstractDataRecord, alpha Matrix, t1, t2 Scalar
         }
       }
       // alpha_t(x_j) = p(y_k | x_j) sum_i p(x_j | x_i) alpha_s(x_i)
-      if err := data.LogPdf(t2, obj.stateMap[j], n-1); err != nil {
+      if err := data.LogPdf(t2, obj.StateMap[j], n-1); err != nil {
         return nil, err
       }
       at.Add(at, t2)
@@ -532,7 +532,7 @@ func (obj *CoreHmm) backward(data AbstractDataRecord, beta Matrix, t1, t2 Scalar
       // beta_s(x_i) = sum_j p(y_{k+1} | x_j) p(x_j | x_i) beta_t(x_j)
       // transition to state j
       for j := 0; j < m; j++ {
-        if err := data.LogPdf(t2, obj.stateMap[j], n-1); err != nil {
+        if err := data.LogPdf(t2, obj.StateMap[j], n-1); err != nil {
           return nil, err
         }
         t1.   Add(obj.Tf.At(i, j), t2)
@@ -552,7 +552,7 @@ func (obj *CoreHmm) backward(data AbstractDataRecord, beta Matrix, t1, t2 Scalar
       // transition to state j
       for j := 0; j < m; j++ {
         t1.   Add(obj.Tr.At(i, j), beta.At(j, k+1))
-        if err := data.LogPdf(t2, obj.stateMap[j], k+1); err != nil {
+        if err := data.LogPdf(t2, obj.StateMap[j], k+1); err != nil {
           return nil, err
         }
         t1.   Add(t1, t2)
@@ -719,7 +719,7 @@ func (obj *CoreHmm) ExportConfig() ConfigDistribution {
     N          int }{}
   config.Pi       = make([]float64, n)
   config.Tr       = make([]float64, n*n)
-  config.StateMap = obj.stateMap
+  config.StateMap = obj.StateMap
   config.N        = n
 
   for i := 0; i < n; i++ {

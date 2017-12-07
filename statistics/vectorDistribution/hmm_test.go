@@ -19,6 +19,7 @@ package vectorDistribution
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
+import   "math"
 import   "testing"
 
 import . "github.com/pbenner/ngstat/statistics"
@@ -29,7 +30,267 @@ import . "github.com/pbenner/autodiff/simple"
 
 /* -------------------------------------------------------------------------- */
 
-func TestScalarId(t *testing.T) {
+func (obj *Hmm) forwardLogPdf(r Scalar, x Vector) error {
+  alpha, _, err := obj.ForwardBackward(HmmDataRecord{obj.Edist, x}); if err != nil {
+    return err
+  }
+  t1 := NewScalar(x.ElementType(), 0.0)
+  t2 := NewScalar(x.ElementType(), 0.0)
+  r.SetValue(math.Inf(-1))
+  for i := 0; i < obj.M; i++ {
+    t1.Set(alpha.At(i, x.Dim()-1))
+    r .LogAdd(r, t1, t2)
+  }
+  return nil
+}
+
+func (obj *Hmm) backwardLogPdf(r Scalar, x Vector) error {
+  _, beta, err := obj.ForwardBackward(HmmDataRecord{obj.Edist, x}); if err != nil {
+    return err
+  }
+  t1 := NewScalar(x.ElementType(), 0.0)
+  t2 := NewScalar(x.ElementType(), 0.0)
+  r.SetValue(math.Inf(-1))
+  for i := 0; i < obj.M; i++ {
+    obj.Edist[obj.StateMap[i]].LogPdf(t2, x.At(0))
+    t1.Add(beta.At(i, 0), obj.Pi.At(i))
+    t1.Add(t1, t2)
+    r .LogAdd(r, t1, t2)
+  }
+  return nil
+}
+
+/* -------------------------------------------------------------------------- */
+
+func TestHmm1(t *testing.T) {
+  // Hmm definition
+  //////////////////////////////////////////////////////////////////////////////
+  tr := NewMatrix(RealType, 2, 2,
+    []float64{0.7, 0.3, 0.4, 0.6})
+
+  c1, _ := NewCategoricalDistribution(
+    NewVector(RealType, []float64{0.1, 0.9}))
+  c2, _ := NewCategoricalDistribution(
+    NewVector(RealType, []float64{0.7, 0.3}))
+
+  pi := NewVector(RealType, []float64{0.6, 0.4})
+
+  hmm, err := NewHmm(pi, tr, nil, []ScalarDistribution{c1, c2})
+  if err != nil {
+    t.Error(err)
+  }
+  // test conditioning on start and final states
+  //////////////////////////////////////////////////////////////////////////////
+  {
+    hmm := hmm.Clone()
+    hmm.SetStartStates([]int{1})
+    hmm.SetFinalStates([]int{1})
+    {
+      x := NewVector(RealType, []float64{1,1,1})
+
+      r1 := NullReal(); hmm.LogPdf(r1, x)
+      r2 := NullReal(); hmm. forwardLogPdf(r2, x)
+      r3 := NullReal(); hmm.backwardLogPdf(r3, x)
+
+      if math.Abs(Exp(r1).GetValue() - 0.0486) > 1e-4 {
+        t.Error("Hmm conditioning test failed")
+      }
+      if math.Abs(Exp(r2).GetValue() - 0.0486) > 1e-4 {
+        t.Error("Hmm conditioning test failed")
+      }
+      if math.Abs(Exp(r3).GetValue() - 0.0486) > 1e-4 {
+        t.Error("Hmm conditioning test failed")
+      }
+    }
+    {
+      x := NewVector(RealType, []float64{1,1,0,1})
+
+      r1 := NullReal(); hmm.LogPdf(r1, x)
+      r2 := NullReal(); hmm. forwardLogPdf(r2, x)
+      r3 := NullReal(); hmm.backwardLogPdf(r3, x)
+
+      if math.Abs(Exp(r1).GetValue() - 0.016524) > 1e-4 {
+        t.Error("Hmm conditioning test failed")
+      }
+      if math.Abs(Exp(r2).GetValue() - 0.016524) > 1e-4 {
+        t.Error("Hmm conditioning test failed")
+      }
+      if math.Abs(Exp(r3).GetValue() - 0.016524) > 1e-4 {
+        t.Error("Hmm conditioning test failed")
+      }
+    }
+  }
+  // test if Pdf is correctly normalized
+  //////////////////////////////////////////////////////////////////////////////
+  {
+    r := NullReal()
+
+    hmm := hmm.Clone()
+    //hmm.SetStartStates([]int{0})
+    //hmm.SetFinalStates([]int{0})
+    sum1 := 0.0
+    sum2 := 0.0
+    sum3 := 0.0
+    for _, u := range []float64{0, 1} {
+      for _, v := range []float64{0, 1} {
+        for _, x := range []float64{0, 1} {
+          for _, y := range []float64{0, 1} {
+            for _, z := range []float64{0, 1} {
+              x := NewVector(RealType, []float64{u,v,x,y,z})
+              hmm.LogPdf(r, x);         sum1 += Exp(r).GetValue()
+              hmm. forwardLogPdf(r, x); sum2 += Exp(r).GetValue()
+              hmm.backwardLogPdf(r, x); sum3 += Exp(r).GetValue()
+            }
+          }
+        }
+      }
+    }
+    if math.Abs(sum1-1.0) > 1e-8 {
+      t.Error("Hmm summation test failed")
+    }
+    if math.Abs(sum2-1.0) > 1e-8 {
+      t.Error("Hmm summation test failed")
+    }
+    if math.Abs(sum3-1.0) > 1e-8 {
+      t.Error("Hmm summation test failed")
+    }
+  }
+  // test if Pdf is correctly normalized with conditioning
+  //////////////////////////////////////////////////////////////////////////////
+  {
+    r := NullReal()
+
+    hmm := hmm.Clone()
+    hmm.SetStartStates([]int{0})
+    hmm.SetFinalStates([]int{0})
+    sum1 := 0.0
+    sum2 := 0.0
+    sum3 := 0.0
+    for _, u := range []float64{0, 1} {
+      for _, v := range []float64{0, 1} {
+        for _, x := range []float64{0, 1} {
+          for _, y := range []float64{0, 1} {
+            for _, z := range []float64{0, 1} {
+              x := NewVector(RealType, []float64{u,v,x,y,z})
+              hmm.LogPdf(r, x);         sum1 += Exp(r).GetValue()
+              hmm. forwardLogPdf(r, x); sum2 += Exp(r).GetValue()
+              hmm.backwardLogPdf(r, x); sum3 += Exp(r).GetValue()
+            }
+          }
+        }
+      }
+    }
+    if math.Abs(sum1-1.0) > 1e-8 {
+      t.Error("Hmm summation test failed")
+    }
+    if math.Abs(sum2-1.0) > 1e-8 {
+      t.Error("Hmm summation test failed")
+    }
+    if math.Abs(sum3-1.0) > 1e-8 {
+      t.Error("Hmm summation test failed")
+    }
+  }
+  // test forward/backward algorithm
+  //////////////////////////////////////////////////////////////////////////////
+  {
+    x := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
+
+    hmm := hmm.Clone()
+    //hmm.SetStartStates([]int{0})
+    //hmm.SetFinalStates([]int{0})
+
+    r1 := NullReal(); hmm.LogPdf(r1, x)
+    r2 := NullReal(); hmm. forwardLogPdf(r2, x)
+    r3 := NullReal(); hmm.backwardLogPdf(r3, x)
+
+    if math.Abs(Sub(r1, r2).GetValue()) > 1e-8 {
+      t.Error("Hmm forward test failed")
+    }
+    if math.Abs(Sub(r1, r3).GetValue()) > 1e-8 {
+      t.Error("Hmm backward test failed")
+    }
+  }
+  // test forward/backward algorithm with conditioning
+  //////////////////////////////////////////////////////////////////////////////
+  {
+    x := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
+
+    hmm := hmm.Clone()
+    hmm.SetStartStates([]int{0})
+    hmm.SetFinalStates([]int{0})
+
+    r1 := NullReal(); hmm.LogPdf(r1, x)
+    r2 := NullReal(); hmm. forwardLogPdf(r2, x)
+    r3 := NullReal(); hmm.backwardLogPdf(r3, x)
+
+    if math.Abs(Sub(r1, r2).GetValue()) > 1e-8 {
+      t.Error("Hmm forward test failed")
+    }
+    if math.Abs(Sub(r1, r3).GetValue()) > 1e-8 {
+      t.Error("Hmm backward test failed")
+    }
+  }
+  // test viterbi algorithm
+  //////////////////////////////////////////////////////////////////////////////
+  {
+    x := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
+
+    r    := []int{0, 0, 0, 0, 0, 0, 1, 1, 0, 1}
+    v, _ := hmm.Viterbi(x)
+
+    for i := 0; i < len(r); i++ {
+      if r[i] != v[i] {
+        t.Errorf("Viterbi test failed at position `%d'", i)
+      }
+    }
+  }
+  // test extremes
+  //////////////////////////////////////////////////////////////////////////////
+  {
+    x  := NewVector(RealType, []float64{1})
+
+    hmm := hmm.Clone()
+
+    r1 := NullReal(); hmm.LogPdf(r1, x)
+    r2 := NullReal(); hmm. forwardLogPdf(r2, x)
+    r3 := NullReal(); hmm.backwardLogPdf(r3, x)
+
+    if math.Abs(Exp(r1).GetValue() - 0.66) > 1e-4 {
+      t.Error("Hmm test failed")
+    }
+    if math.Abs(Exp(r2).GetValue() - 0.66) > 1e-4 {
+      t.Error("Hmm test failed")
+    }
+    if math.Abs(Exp(r3).GetValue() - 0.66) > 1e-4 {
+      t.Error("Hmm test failed")
+    }
+  }
+  // test extremes
+  //////////////////////////////////////////////////////////////////////////////
+  {
+    x  := NewVector(RealType, []float64{1})
+
+    hmm := hmm.Clone()
+    hmm.SetStartStates([]int{1})
+    hmm.SetFinalStates([]int{1})
+
+    r1 := NullReal(); hmm.LogPdf(r1, x)
+    r2 := NullReal(); hmm. forwardLogPdf(r2, x)
+    r3 := NullReal(); hmm.backwardLogPdf(r3, x)
+
+    if math.Abs(Exp(r1).GetValue() - 0.3) > 1e-4 {
+      t.Error("Hmm test failed")
+    }
+    if math.Abs(Exp(r2).GetValue() - 0.3) > 1e-4 {
+      t.Error("Hmm test failed")
+    }
+    if math.Abs(Exp(r3).GetValue() - 0.3) > 1e-4 {
+      t.Error("Hmm test failed")
+    }
+  }
+}
+
+func TestHmm2(t *testing.T) {
 
   pi := NewVector(BareRealType, []float64{1, 2})
   tr := NewMatrix(BareRealType, 2, 2, []float64{1,2,3,4})

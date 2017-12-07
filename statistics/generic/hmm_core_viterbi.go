@@ -44,7 +44,7 @@ func (obj *CoreHmm) Viterbi(data AbstractDataRecord) ([]int, error) {
   r := make([]int, n)
   // initialize tables at x(0)
   for j := 0; j < m; j++ {
-    if err := data.LogPdf(t3, obj.stateMap[j], 0); err != nil {
+    if err := data.LogPdf(t3, obj.StateMap[j], 0); err != nil {
       return nil, err
     }
     t1[j][0] = obj.Pi.At(j).GetValue() + t3.GetValue()
@@ -62,7 +62,7 @@ func (obj *CoreHmm) Viterbi(data AbstractDataRecord) ([]int, error) {
           i_val = v
         }
       }
-      if err := data.LogPdf(t3, obj.stateMap[j], k); err != nil {
+      if err := data.LogPdf(t3, obj.StateMap[j], k); err != nil {
         return nil, err
       }
       t1[j][k] = i_val + t3.GetValue()
@@ -82,7 +82,7 @@ func (obj *CoreHmm) Viterbi(data AbstractDataRecord) ([]int, error) {
           i_val = v
         }
       }
-      if err := data.LogPdf(t3, obj.stateMap[j], k); err != nil {
+      if err := data.LogPdf(t3, obj.StateMap[j], k); err != nil {
         return nil, err
       }
       t1[j][k] = i_val + t3.GetValue()

@@ -29,7 +29,7 @@ func (obj *CoreHmm) bareRealForward(data AbstractDataRecord, alpha *DenseBareRea
   // initialize first position
   if n > 0 {
     for i := 0; i < m; i++ {
-      if err := data.LogPdf(t2, obj.stateMap[i], 0); err != nil {
+      if err := data.LogPdf(t2, obj.StateMap[i], 0); err != nil {
         return nil, err
       }
       alpha.At(i, 0).Add(obj.Pi.At(i), t2)
@@ -50,7 +50,7 @@ func (obj *CoreHmm) bareRealForward(data AbstractDataRecord, alpha *DenseBareRea
         at.LOGADD(at, t1, t2)
       }
       // alpha_t(x_j) = p(y_k | x_j) sum_i p(x_j | x_i) alpha_s(x_i)
-      if err := data.LogPdf(t2, obj.stateMap[j], k); err != nil {
+      if err := data.LogPdf(t2, obj.StateMap[j], k); err != nil {
         return nil, err
       }
       at.ADD(at, t2)
@@ -73,7 +73,7 @@ func (obj *CoreHmm) bareRealForward(data AbstractDataRecord, alpha *DenseBareRea
         }
       }
       // alpha_t(x_j) = p(y_k | x_j) sum_i p(x_j | x_i) alpha_s(x_i)
-      if err := data.LogPdf(t2, obj.stateMap[j], n-1); err != nil {
+      if err := data.LogPdf(t2, obj.StateMap[j], n-1); err != nil {
         return nil, err
       }
       at.ADD(at, t2)
@@ -100,7 +100,7 @@ func (obj *CoreHmm) bareRealBackward(data AbstractDataRecord, beta *DenseBareRea
       // beta_s(x_i) = sum_j p(y_{k+1} | x_j) p(x_j | x_i) beta_t(x_j)
       // transition to state j
       for j := 0; j < m; j++ {
-        if err := data.LogPdf(t2, obj.stateMap[j], n-1); err != nil {
+        if err := data.LogPdf(t2, obj.StateMap[j], n-1); err != nil {
           return nil, err
         }
         t1.   Add(obj.Tf.At(i, j), t2)
@@ -120,7 +120,7 @@ func (obj *CoreHmm) bareRealBackward(data AbstractDataRecord, beta *DenseBareRea
       // transition to state j
       for j := 0; j < m; j++ {
         t1.   Add(obj.Tr.At(i, j), beta.At(j, k+1))
-        if err := data.LogPdf(t2, obj.stateMap[j], k+1); err != nil {
+        if err := data.LogPdf(t2, obj.StateMap[j], k+1); err != nil {
           return nil, err
         }
         t1.   Add(t1, t2)

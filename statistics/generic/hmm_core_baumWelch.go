@@ -91,7 +91,7 @@ func (obj *CoreHmm) baumWelchThread(hmm1, hmm2 *CoreHmm, data AbstractDataRecord
         // normalize gamma
         gammaTmp.AT(i).Sub(gammaTmp.AT(i), t1)
         // sum up gamma
-        c := obj.stateMap[i]
+        c := obj.StateMap[i]
         l := data.MapIndex(k)
         gamma[c].AT(l).LOGADD(gamma[c].AT(l), gammaTmp.AT(i), t3)
       }
@@ -110,7 +110,7 @@ func (obj *CoreHmm) baumWelchThread(hmm1, hmm2 *CoreHmm, data AbstractDataRecord
       for i := 0; i < m; i++ {
       // compute xi temporaries (to save memory xi is not fully evaluated)
         for j := 0; j < m; j++ {
-          c := obj.stateMap[j]
+          c := obj.StateMap[j]
           t := xi.AT(i, j)
           t.Add(alpha.At(i, k), hmm2.Tr.At(i, j))
           t.ADD(t, beta.AT(j, k+1))
