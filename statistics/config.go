@@ -46,6 +46,8 @@ func NewConfigDistribution(name string, parameters interface{}, distributions ..
       s[i] = parameters.At(i).GetValue()
     }
     p = s
+  default:
+    p = parameters
   }
   return ConfigDistribution{name, p, distributions}
 }
@@ -87,22 +89,106 @@ func (config ConfigDistribution) ExportJson(filename string) error {
 
 /* -------------------------------------------------------------------------- */
 
-func (config ConfigDistribution) GetParametersAsFloats() ([]float64, bool) {
-  switch reflect.TypeOf(config.Parameters).Kind() {
+func (config ConfigDistribution) getFloat(a interface{}) (float64, bool) {
+  switch reflect.TypeOf(a).Kind() {
+  case reflect.Float64:
+    return reflect.ValueOf(a).Float(), true
+  }
+  return 0, false
+}
+
+func (config ConfigDistribution) getInt(a interface{}) (int, bool) {
+  switch reflect.TypeOf(a).Kind() {
+  case reflect.Float64:
+    return int(reflect.ValueOf(a).Float()), true
+  }
+  return 0, false
+}
+
+func (config ConfigDistribution) getFloats(a interface{}) ([]float64, bool) {
+  switch reflect.TypeOf(a).Kind() {
   case reflect.Slice:
-    s := reflect.ValueOf(config.Parameters)
+    s := reflect.ValueOf(a)
     p := make([]float64, s.Len())
     for i := 0; i < s.Len(); i++ {
-      switch s.Index(i).Elem().Kind() {
-      case reflect.Float64:
-        p[i] = s.Index(i).Elem().Float()
-      default:
+      if v, ok := config.getFloat(s.Index(i).Elem().Interface()); !ok {
         return nil, false
+      } else {
+        p[i] = v
       }
     }
     return p, true
   }
   return nil, false
+}
+
+func (config ConfigDistribution) getInts(a interface{}) ([]int, bool) {
+  switch reflect.TypeOf(a).Kind() {
+  case reflect.Slice:
+    s := reflect.ValueOf(a)
+    p := make([]int, s.Len())
+    for i := 0; i < s.Len(); i++ {
+      if v, ok := config.getInt(s.Index(i).Elem().Interface()); !ok {
+        return nil, false
+      } else {
+        p[i] = v
+      }
+    }
+    return p, true
+  }
+  return nil, false
+}
+
+func (config ConfigDistribution) GetParametersAsFloats() ([]float64, bool) {
+  return config.getFloats(config.Parameters)
+}
+
+func (config ConfigDistribution) GetNamedParametersAsFloats(name string) ([]float64, bool) {
+  switch reflect.TypeOf(config.Parameters).Kind() {
+  case reflect.Map:
+    s := reflect.ValueOf(config.Parameters)
+    r := s.MapIndex(reflect.ValueOf(name))
+    if r.IsValid() {
+      return config.getFloats(r.Interface())
+    }
+  }
+  return nil, false
+}
+
+func (config ConfigDistribution) GetNamedParametersAsInts(name string) ([]int, bool) {
+  switch reflect.TypeOf(config.Parameters).Kind() {
+  case reflect.Map:
+    s := reflect.ValueOf(config.Parameters)
+    r := s.MapIndex(reflect.ValueOf(name))
+    if r.IsValid() {
+      return config.getInts(r.Interface())
+    }
+  }
+  return nil, false
+}
+
+func (config ConfigDistribution) GetNamedParameterAsFloat(name string) (float64, bool) {
+  switch reflect.TypeOf(config.Parameters).Kind() {
+  case reflect.Map:
+    s := reflect.ValueOf(config.Parameters)
+    r := s.MapIndex(reflect.ValueOf(name))
+    if r.IsValid() {
+      return config.getFloat(r.Interface())
+    }
+  }
+  return 0, false
+}
+
+func (config ConfigDistribution) GetNamedParameterAsInt(name string) (int, bool) {
+  switch reflect.TypeOf(config.Parameters).Kind() {
+  case reflect.Map:
+    s := reflect.ValueOf(config.Parameters)
+    r := s.MapIndex(reflect.ValueOf(name))
+    if r.IsValid() {
+      return config.getInt(r.Interface())
+    }
+  }
+  return 0, false
 }
 
 /* -------------------------------------------------------------------------- */
