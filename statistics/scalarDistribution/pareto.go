@@ -18,7 +18,7 @@ package scalarDistribution
 
 /* -------------------------------------------------------------------------- */
 
-//import   "fmt"
+import   "fmt"
 
 import . "github.com/pbenner/ngstat/statistics"
 
@@ -55,16 +55,20 @@ func (dist *ParetoDistribution) CloneScalarDistribution() ScalarDistribution {
 
 func (dist *ParetoDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  lambda  := NewScalar(t, config.Parameters[0])
-  kappa   := NewScalar(t, config.Parameters[1])
-  epsilon := NewScalar(t, config.Parameters[2])
-
-  if tmp, err := NewParetoDistribution(lambda, kappa, epsilon); err != nil {
-    return err
+  if parameters, ok := config.GetParametersAsFloats(); !ok {
+    return fmt.Errorf("invalid config file")
   } else {
-    *dist = *tmp
+    lambda  := NewScalar(t, parameters[0])
+    kappa   := NewScalar(t, parameters[1])
+    epsilon := NewScalar(t, parameters[2])
+
+    if tmp, err := NewParetoDistribution(lambda, kappa, epsilon); err != nil {
+      return err
+    } else {
+      *dist = *tmp
+    }
+    return nil
   }
-  return nil
 }
 
 func (dist *ParetoDistribution) ExportConfig() ConfigDistribution {

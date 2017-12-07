@@ -22,6 +22,7 @@ import   "fmt"
 import   "encoding/json"
 import   "io"
 import   "io/ioutil"
+import   "reflect"
 import   "os"
 
 import . "github.com/pbenner/autodiff"
@@ -30,17 +31,21 @@ import . "github.com/pbenner/autodiff"
 
 type ConfigDistribution struct {
   Name            string
-  Parameters    []float64
+  Parameters      interface{}
   Distributions []ConfigDistribution
 }
 
-func NewConfigDistribution(name string, parameters Vector, distributions ...ConfigDistribution) ConfigDistribution {
-  var p []float64
-  if parameters != nil {
-    p = make([]float64, parameters.Dim())
-    for i := 0; i < len(p); i++ {
-      p[i] = parameters.At(i).GetValue()
+func NewConfigDistribution(name string, parameters interface{}, distributions ...ConfigDistribution) ConfigDistribution {
+  var p interface{}
+  switch parameters := parameters.(type) {
+  case []float64:
+    p = parameters
+  case Vector:
+    s := make([]float64, parameters.Dim())
+    for i := 0; i < len(s); i++ {
+      s[i] = parameters.At(i).GetValue()
     }
+    p = s
   }
   return ConfigDistribution{name, p, distributions}
 }
@@ -78,6 +83,26 @@ func (config ConfigDistribution) ExportJson(filename string) error {
     return err
   }
   return config.WriteJson(f)
+}
+
+/* -------------------------------------------------------------------------- */
+
+func (config ConfigDistribution) GetParametersAsFloats() ([]float64, bool) {
+  switch reflect.TypeOf(config.Parameters).Kind() {
+  case reflect.Slice:
+    s := reflect.ValueOf(config.Parameters)
+    p := make([]float64, s.Len())
+    for i := 0; i < s.Len(); i++ {
+      switch s.Index(i).Elem().Kind() {
+      case reflect.Float64:
+        p[i] = s.Index(i).Elem().Float()
+      default:
+        return nil, false
+      }
+    }
+    return p, true
+  }
+  return nil, false
 }
 
 /* -------------------------------------------------------------------------- */

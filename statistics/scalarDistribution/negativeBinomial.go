@@ -18,7 +18,7 @@ package scalarDistribution
 
 /* -------------------------------------------------------------------------- */
 
-//import   "fmt"
+import   "fmt"
 
 import . "github.com/pbenner/ngstat/statistics"
 
@@ -68,16 +68,20 @@ func (dist *NegativeBinomialDistribution) LogPdf(r Scalar, x Scalar) error {
 
 func (dist *NegativeBinomialDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  r := NewScalar(t, config.Parameters[0])
-  p := NewScalar(t, config.Parameters[1])
-  c := NewScalar(t, config.Parameters[2])
-
-  if tmp, err := NewNegativeBinomialDistribution(r, p, c); err != nil {
-    return err
+  if parameters, ok := config.GetParametersAsFloats(); !ok {
+    return fmt.Errorf("invalid config file")
   } else {
-    *dist = *tmp
+    r := NewScalar(t, parameters[0])
+    p := NewScalar(t, parameters[1])
+    c := NewScalar(t, parameters[2])
+
+    if tmp, err := NewNegativeBinomialDistribution(r, p, c); err != nil {
+      return err
+    } else {
+      *dist = *tmp
+    }
+    return nil
   }
-  return nil
 }
 
 func (dist *NegativeBinomialDistribution) ExportConfig() ConfigDistribution {

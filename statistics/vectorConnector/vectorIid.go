@@ -94,23 +94,27 @@ func (obj *VectorIid) SetParameters(parameters Vector) error {
 
 func (obj *VectorIid) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  if len(config.Parameters) != 1 {
+  if parameters, ok := config.GetParametersAsFloats(); !ok {
     return fmt.Errorf("invalid config file")
-  }
-  if len(config.Distributions) != 1 {
-    return fmt.Errorf("invalid config file")
-  }
-
-  if dist, err := ImportVectorDistributionConfig(config.Distributions[0], t); err != nil {
-    return err
   } else {
-    if tmp, err := NewVectorIid(dist, int(config.Parameters[0])); err != nil {
+    if len(parameters) != 1 {
+      return fmt.Errorf("invalid config file")
+    }
+    if len(config.Distributions) != 1 {
+      return fmt.Errorf("invalid config file")
+    }
+
+    if dist, err := ImportVectorDistributionConfig(config.Distributions[0], t); err != nil {
       return err
     } else {
-      *obj = *tmp
+      if tmp, err := NewVectorIid(dist, int(parameters[0])); err != nil {
+        return err
+      } else {
+        *obj = *tmp
+      }
     }
+    return nil
   }
-  return nil
 }
 
 func (obj *VectorIid) ExportConfig() (config ConfigDistribution) {

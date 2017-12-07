@@ -18,7 +18,7 @@ package scalarDistribution
 
 /* -------------------------------------------------------------------------- */
 
-//import   "fmt"
+import   "fmt"
 
 import . "github.com/pbenner/ngstat/statistics"
 
@@ -55,15 +55,19 @@ func (dist *BinomialDistribution) CloneScalarDistribution() ScalarDistribution {
 
 func (dist *BinomialDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  theta := NewScalar(t, config.Parameters[0])
-  n     := int(config.Parameters[1])
-
-  if tmp, err := NewBinomialDistribution(theta, n); err != nil {
-    return err
+  if parameters, ok := config.GetParametersAsFloats(); !ok {
+    return fmt.Errorf("invalid config file")
   } else {
-    *dist = *tmp
+    theta := NewScalar(t, parameters[0])
+    n     := int(parameters[1])
+
+    if tmp, err := NewBinomialDistribution(theta, n); err != nil {
+      return err
+    } else {
+      *dist = *tmp
+    }
+    return nil
   }
-  return nil
 }
 
 func (dist *BinomialDistribution) ExportConfig() ConfigDistribution {

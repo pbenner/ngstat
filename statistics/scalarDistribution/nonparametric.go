@@ -171,22 +171,25 @@ func (dist *NonparametricDistribution) SetParameters(parameters Vector) error {
 
 func (dist *NonparametricDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  n := len(config.Parameters)/2
-  x := make([]float64, n)
-  y := make([]float64, n)
-
-  for i := 0; i < n; i++ {
-    x[i] = config.Parameters[0+i]
-    y[i] = config.Parameters[n+i]
-  }
-
-  if tmp, err := NewNonparametricDistribution(x, y); err != nil {
-    return err
+  if parameters, ok := config.GetParametersAsFloats(); !ok {
+    return fmt.Errorf("invalid config file")
   } else {
-    *dist = *tmp
-  }
+    n := len(parameters)/2
+    x := make([]float64, n)
+    y := make([]float64, n)
 
-  return nil
+    for i := 0; i < n; i++ {
+      x[i] = parameters[0+i]
+      y[i] = parameters[n+i]
+    }
+
+    if tmp, err := NewNonparametricDistribution(x, y); err != nil {
+      return err
+    } else {
+      *dist = *tmp
+    }
+    return nil
+  }
 }
 
 func (dist *NonparametricDistribution) ExportConfig() ConfigDistribution {

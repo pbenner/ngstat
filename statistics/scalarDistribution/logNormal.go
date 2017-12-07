@@ -125,16 +125,20 @@ func (obj *LogNormalDistribution) SetParameters(parameters Vector) error {
 
 func (obj *LogNormalDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  mu          := NewScalar(t, config.Parameters[0])
-  sigma       := NewScalar(t, config.Parameters[1])
-  pseudocount := NewScalar(t, config.Parameters[2])
-
-  if tmp, err := NewLogNormalDistribution(mu, sigma, pseudocount); err != nil {
-    return err
+  if parameters, ok := config.GetParametersAsFloats(); !ok {
+    return fmt.Errorf("invalid config file")
   } else {
-    *obj = *tmp
+    mu          := NewScalar(t, parameters[0])
+    sigma       := NewScalar(t, parameters[1])
+    pseudocount := NewScalar(t, parameters[2])
+
+    if tmp, err := NewLogNormalDistribution(mu, sigma, pseudocount); err != nil {
+      return err
+    } else {
+      *obj = *tmp
+    }
+    return nil
   }
-  return nil
 }
 
 func (obj *LogNormalDistribution) ExportConfig() ConfigDistribution {

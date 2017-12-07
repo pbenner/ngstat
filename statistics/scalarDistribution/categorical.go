@@ -18,7 +18,7 @@ package scalarDistribution
 
 /* -------------------------------------------------------------------------- */
 
-//import   "fmt"
+import   "fmt"
 
 import . "github.com/pbenner/ngstat/statistics"
 
@@ -55,14 +55,18 @@ func (dist *CategoricalDistribution) CloneScalarDistribution() ScalarDistributio
 
 func (dist *CategoricalDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  theta := NewVector(t, config.Parameters)
-
-  if tmp, err := NewCategoricalDistribution(theta); err != nil {
-    return err
+  if parameters, ok := config.GetParametersAsFloats(); !ok {
+    return fmt.Errorf("invalid config file")
   } else {
-    *dist = *tmp
+    theta := NewVector(t, parameters)
+
+    if tmp, err := NewCategoricalDistribution(theta); err != nil {
+      return err
+    } else {
+      *dist = *tmp
+    }
+    return nil
   }
-  return nil
 }
 
 func (dist *CategoricalDistribution) ExportConfig() ConfigDistribution {

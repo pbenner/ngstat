@@ -18,7 +18,7 @@ package scalarDistribution
 
 /* -------------------------------------------------------------------------- */
 
-//import   "fmt"
+import   "fmt"
 
 import . "github.com/pbenner/ngstat/statistics"
 
@@ -72,16 +72,20 @@ func (dist *LogCauchyDistribution) Pdf(r Scalar, x Scalar) error {
 
 func (dist *LogCauchyDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  mu          := NewScalar(t, config.Parameters[0])
-  sigma       := NewScalar(t, config.Parameters[1])
-  pseudocount := NewScalar(t, config.Parameters[2])
-
-  if tmp, err := NewLogCauchyDistribution(mu, sigma, pseudocount); err != nil {
-    return err
+  if parameters, ok := config.GetParametersAsFloats(); !ok {
+    return fmt.Errorf("invalid config file")
   } else {
-    *dist = *tmp
+    mu          := NewScalar(t, parameters[0])
+    sigma       := NewScalar(t, parameters[1])
+    pseudocount := NewScalar(t, parameters[2])
+
+    if tmp, err := NewLogCauchyDistribution(mu, sigma, pseudocount); err != nil {
+      return err
+    } else {
+      *dist = *tmp
+    }
+    return nil
   }
-  return nil
 }
 
 func (dist *LogCauchyDistribution) ExportConfig() ConfigDistribution {

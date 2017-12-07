@@ -18,7 +18,7 @@ package scalarDistribution
 
 /* -------------------------------------------------------------------------- */
 
-//import   "fmt"
+import   "fmt"
 
 import . "github.com/pbenner/ngstat/statistics"
 
@@ -55,14 +55,18 @@ func (dist *PoissonDistribution) CloneScalarDistribution() ScalarDistribution {
 
 func (dist *PoissonDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  lambda := NewScalar(t, config.Parameters[0])
-
-  if tmp, err := NewPoissonDistribution(lambda); err != nil {
-    return err
+  if parameters, ok := config.GetParametersAsFloats(); !ok {
+    return fmt.Errorf("invalid config file")
   } else {
-    *dist = *tmp
+    lambda := NewScalar(t, parameters[0])
+
+    if tmp, err := NewPoissonDistribution(lambda); err != nil {
+      return err
+    } else {
+      *dist = *tmp
+    }
+    return nil
   }
-  return nil
 }
 
 func (dist *PoissonDistribution) ExportConfig() ConfigDistribution {

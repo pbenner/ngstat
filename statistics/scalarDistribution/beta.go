@@ -18,7 +18,7 @@ package scalarDistribution
 
 /* -------------------------------------------------------------------------- */
 
-//import   "fmt"
+import   "fmt"
 
 import . "github.com/pbenner/ngstat/statistics"
 
@@ -55,16 +55,20 @@ func (dist *BetaDistribution) CloneScalarDistribution() ScalarDistribution {
 
 func (dist *BetaDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  alpha    := NewScalar(t, config.Parameters[0])
-  beta     := NewScalar(t, config.Parameters[1])
-  logScale := config.Parameters[2] == 1.0
-
-  if tmp, err := NewBetaDistribution(alpha, beta, logScale); err != nil {
-    return err
+  if parameters, ok := config.GetParametersAsFloats(); !ok {
+    return fmt.Errorf("invalid config file")
   } else {
-    *dist = *tmp
+    alpha    := NewScalar(t, parameters[0])
+    beta     := NewScalar(t, parameters[1])
+    logScale := parameters[2] == 1.0
+
+    if tmp, err := NewBetaDistribution(alpha, beta, logScale); err != nil {
+      return err
+    } else {
+      *dist = *tmp
+    }
+    return nil
   }
-  return nil
 }
 
 func (dist *BetaDistribution) ExportConfig() (config ConfigDistribution) {

@@ -18,7 +18,7 @@ package scalarDistribution
 
 /* -------------------------------------------------------------------------- */
 
-//import   "fmt"
+import   "fmt"
 
 import . "github.com/pbenner/ngstat/statistics"
 
@@ -64,17 +64,21 @@ func (dist *GeneralizedGammaDistribution) LogPdf(r Scalar, x Scalar) error {
 
 func (dist *GeneralizedGammaDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  a := NewScalar(t, config.Parameters[0])
-  d := NewScalar(t, config.Parameters[1])
-  p := NewScalar(t, config.Parameters[2])
-  q := NewScalar(t, config.Parameters[3])
-
-  if tmp, err := NewGeneralizedGammaDistribution(a, d, p, q); err != nil {
-    return err
+  if parameters, ok := config.GetParametersAsFloats(); !ok {
+    return fmt.Errorf("invalid config file")
   } else {
-    *dist = *tmp
+    a := NewScalar(t, parameters[0])
+    d := NewScalar(t, parameters[1])
+    p := NewScalar(t, parameters[2])
+    q := NewScalar(t, parameters[3])
+
+    if tmp, err := NewGeneralizedGammaDistribution(a, d, p, q); err != nil {
+      return err
+    } else {
+      *dist = *tmp
+    }
+    return nil
   }
-  return nil
 }
 
 func (dist *GeneralizedGammaDistribution) ExportConfig() ConfigDistribution {

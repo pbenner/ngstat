@@ -18,7 +18,7 @@ package scalarDistribution
 
 /* -------------------------------------------------------------------------- */
 
-//import   "fmt"
+import   "fmt"
 
 import . "github.com/pbenner/ngstat/statistics"
 
@@ -55,16 +55,20 @@ func (dist *PowerLawDistribution) CloneScalarDistribution() ScalarDistribution {
 
 func (dist *PowerLawDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  alpha   := NewScalar(t, config.Parameters[0])
-  xmin    := NewScalar(t, config.Parameters[1])
-  epsilon := NewScalar(t, config.Parameters[2])
-
-  if tmp, err := NewPowerLawDistribution(alpha, xmin, epsilon); err != nil {
-    return err
+  if parameters, ok := config.GetParametersAsFloats(); !ok {
+    return fmt.Errorf("invalid config file")
   } else {
-    *dist = *tmp
+    alpha   := NewScalar(t, parameters[0])
+    xmin    := NewScalar(t, parameters[1])
+    epsilon := NewScalar(t, parameters[2])
+
+    if tmp, err := NewPowerLawDistribution(alpha, xmin, epsilon); err != nil {
+      return err
+    } else {
+      *dist = *tmp
+    }
+    return nil
   }
-  return nil
 }
 
 func (dist *PowerLawDistribution) ExportConfig() ConfigDistribution {
