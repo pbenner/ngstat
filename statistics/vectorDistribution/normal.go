@@ -81,15 +81,9 @@ func (obj *NormalDistribution) ExportConfig() ConfigDistribution {
     Mu    []float64
     Sigma []float64
     N       int }{}
-  config.Mu    = make([]float64, n)
-  config.Sigma = make([]float64, n*n)
+  config.Mu    = obj.Mu   .GetValues()
+  config.Sigma = obj.Sigma.GetValues()
   config.N     = n
 
-  for i := 0; i < n; i++ {
-    config.Mu[i] = obj.Mu.At(i).GetValue()
-    for j := 0; j < n; j++ {
-      config.Sigma[i*n+j] = obj.Sigma.At(i,j).GetValue()
-    }
-  }
   return NewConfigDistribution("multivariate normal distribtion", config)
 }

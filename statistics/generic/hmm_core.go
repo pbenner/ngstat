@@ -717,16 +717,17 @@ func (obj *CoreHmm) ExportConfig() ConfigDistribution {
     Tr       []float64
     StateMap []int
     N          int }{}
-  config.Pi       = make([]float64, n)
-  config.Tr       = make([]float64, n*n)
+  config.Pi       = obj.Pi.GetValues()
+  config.Tr       = obj.Tr.GetValues()
   config.StateMap = obj.StateMap
   config.N        = n
 
-  for i := 0; i < n; i++ {
-    config.Pi[i] = math.Exp(obj.Pi.At(i).GetValue())
-    for j := 0; j < n; j++ {
-      config.Tr[i*n+j] = math.Exp(obj.Tr.At(i,j).GetValue())
-    }
+  // exponentiate
+  for i := 0; i < len(config.Pi); i++ {
+    config.Pi[i] = math.Exp(config.Pi[i])
+  }
+  for i := 0; i < len(config.Tr); i++ {
+    config.Tr[i] = math.Exp(config.Tr[i])
   }
 
   return NewConfigDistribution("hmm core", config)
