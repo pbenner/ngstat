@@ -28,28 +28,26 @@ import . "github.com/pbenner/autodiff"
 /* -------------------------------------------------------------------------- */
 
 type NormalDistribution struct {
-  Mu          Scalar
-  Sigma       Scalar
-  Pseudocount Scalar
+  Mu    Scalar
+  Sigma Scalar
 }
 
 /* -------------------------------------------------------------------------- */
 
-func NewNormalDistribution(mu, sigma, pseudocount Scalar) (*NormalDistribution, error) {
+func NewNormalDistribution(mu, sigma Scalar) (*NormalDistribution, error) {
   if sigma.GetValue() <= 0.0 {
     return nil, fmt.Errorf("invalid parameters")
   }
   dist := NormalDistribution{}
-  dist.Mu          = mu         .CloneScalar()
-  dist.Sigma       = sigma      .CloneScalar()
-  dist.Pseudocount = pseudocount.CloneScalar()
+  dist.Mu          = mu   .CloneScalar()
+  dist.Sigma       = sigma.CloneScalar()
   return &dist, nil
 }
 
 /* -------------------------------------------------------------------------- */
 
 func (obj *NormalDistribution) Clone() *NormalDistribution {
-  r, _ := NewNormalDistribution(obj.Mu.CloneScalar(), obj.Sigma.CloneScalar(), obj.Pseudocount.CloneScalar())
+  r, _ := NewNormalDistribution(obj.Mu.CloneScalar(), obj.Sigma.CloneScalar())
   return r
 }
 
@@ -66,10 +64,6 @@ func (obj *NormalDistribution) ScalarType() ScalarType {
 func (obj *NormalDistribution) LogPdf(r Scalar, x Scalar) error {
   t := obj.ScalarType()
 
-  // y = log(x + pseudocount)
-  y := x.CloneScalar()
-  y.Add(y, obj.Pseudocount)
-
   // z = -1/2 log(2 pi)
   z := NewScalar(t, -0.5*math.Log(2*math.Pi))
 
@@ -82,7 +76,7 @@ func (obj *NormalDistribution) LogPdf(r Scalar, x Scalar) error {
 
   // t2 = (log(x) - mu)^2/(2 sigma^2)
   t2 := obj.Mu.CloneScalar()
-  t2.Sub(y , t2)
+  t2.Sub(x , t2)
   t2.Mul(t2, t2)
   t2.Div(t2, NewBareReal(2.0))
   t2.Div(t2, obj.Sigma)
@@ -96,15 +90,14 @@ func (obj *NormalDistribution) LogPdf(r Scalar, x Scalar) error {
 /* -------------------------------------------------------------------------- */
 
 func (obj *NormalDistribution) GetParameters() Vector {
-  p := NullVector(obj.ScalarType(), 3)
+  p := NullVector(obj.ScalarType(), 2)
   p.At(0).Set(obj.Mu)
   p.At(1).Set(obj.Sigma)
-  p.At(2).Set(obj.Pseudocount)
   return p
 }
 
 func (obj *NormalDistribution) SetParameters(parameters Vector) error {
-  if tmp, err := NewNormalDistribution(parameters.At(0), parameters.At(1), parameters.At(2)); err != nil {
+  if tmp, err := NewNormalDistribution(parameters.At(0), parameters.At(1)); err != nil {
     return err
   } else {
     *obj = *tmp
@@ -119,11 +112,10 @@ func (obj *NormalDistribution) ImportConfig(config ConfigDistribution, t ScalarT
   if parameters, ok := config.GetParametersAsFloats(); !ok {
     return fmt.Errorf("invalid config file")
   } else {
-    mu          := NewScalar(t, parameters[0])
-    sigma       := NewScalar(t, parameters[1])
-    pseudocount := NewScalar(t, parameters[2])
+    mu    := NewScalar(t, parameters[0])
+    sigma := NewScalar(t, parameters[1])
 
-    if tmp, err := NewNormalDistribution(mu, sigma, pseudocount); err != nil {
+    if tmp, err := NewNormalDistribution(mu, sigma); err != nil {
       return err
     } else {
       *obj = *tmp
