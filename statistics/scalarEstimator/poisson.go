@@ -113,7 +113,6 @@ func (obj *PoissonEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) e
   return nil
 }
 
-
 func (estimator *PoissonEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealVector, p ThreadPool) error {
   if err := estimator.SetData(x, len(x)); err != nil {
     return err

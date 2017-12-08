@@ -29,34 +29,31 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-type NormalEstimator struct {
-  *scalarDistribution.NormalDistribution
+type LogNormalEstimator struct {
+  *scalarDistribution.LogNormalDistribution
   StdEstimator
   SigmaMin float64
 }
 
-func NewNormalEstimator(mu, sigma Scalar, sigmaMin float64) (*NormalEstimator, error) {
-  if dist, err := scalarDistribution.NewNormalDistribution(mu, sigma); err != nil {
+func NewLogNormalEstimator(mu, sigma, pseudocount Scalar, sigmaMin float64) (*LogNormalEstimator, error) {
+  if dist, err := scalarDistribution.NewLogNormalDistribution(mu, sigma, pseudocount); err != nil {
     return nil, err
   } else {
-    r := NormalEstimator{}
-    r.NormalDistribution = dist
+    r := LogNormalEstimator{}
+    r.LogNormalDistribution = dist
     return &r, nil
   }
 }
 
-func (obj *NormalEstimator) CloneScalarEstimator() ScalarEstimator {
-  r := NormalEstimator{}
-  r.NormalDistribution = obj.NormalDistribution.Clone()
+func (obj *LogNormalEstimator) CloneScalarEstimator() ScalarEstimator {
+  r := LogNormalEstimator{}
+  r.LogNormalDistribution = obj.LogNormalDistribution.Clone()
   r.SigmaMin = obj.SigmaMin
   r.x        = obj.x
   return &r
 }
 
-func (obj *NormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
-  if p.IsNil() {
-    p = NewThreadPool(1, 1)
-  }
+func (obj *LogNormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
   g := p.NewJobGroup()
   x := obj.x
 
@@ -79,7 +76,7 @@ func (obj *NormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) er
   if gamma != nil {
     for i := 0; i < gamma.Dim(); i++ {
       if g := gamma.At(i).GetValue(); gamma_max < g {
-        gamma_max = g
+      gamma_max = g
       }
     }
   }
@@ -89,14 +86,14 @@ func (obj *NormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) er
     p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
       id := p.GetThreadId()
       // sum over x
-      sum_m_[id] += x[i].GetValue()
+      sum_m_[id] += math.Log(x[i].GetValue() + obj.Pseudocount.GetValue())
       return nil
     })
   } else {
     p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
       id := p.GetThreadId()
-      g  := math.Exp(gamma.At(i).GetValue() - gamma_max)
-      y  := x[i].GetValue()
+      g  := math.Exp(gamma.At(i  ).GetValue() - gamma_max)
+      y  := math.Log(x[i].GetValue() + obj.Pseudocount.GetValue())
       // sum over gamma
       sum_g_[id] += g
       // sum over gamma*x
@@ -121,7 +118,7 @@ func (obj *NormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) er
   if gamma == nil {
     p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
       id := p.GetThreadId()
-      y  := x[i].GetValue()
+      y  := math.Log(x[i].GetValue() + obj.Pseudocount.GetValue())
       // sum over (x-mu)^2
       sum_s_[id] += (y-m)*(y-m)
       return nil
@@ -130,8 +127,8 @@ func (obj *NormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) er
     p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
       id := p.GetThreadId()
       g  := math.Exp(gamma.At(i  ).GetValue() - gamma_max)
-      y  := x[i].GetValue()
-      // sum over (x-mu)^2
+      y  := math.Log(x[i].GetValue() + obj.Pseudocount.GetValue())
+      // sum over gamma*(x-mu)^2
       sum_s_[id] += g*(y-m)*(y-m)
       return nil
     })
@@ -151,21 +148,21 @@ func (obj *NormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) er
   mu    := NewScalar(obj.ScalarType(), m)
   sigma := NewScalar(obj.ScalarType(), s)
 
-  if t, err := scalarDistribution.NewNormalDistribution(mu, sigma); err != nil {
+  if t, err := scalarDistribution.NewLogNormalDistribution(mu, sigma, obj.Pseudocount); err != nil {
     return err
   } else {
-    *obj.NormalDistribution = *t
+    *obj.LogNormalDistribution = *t
   }
   return nil
 }
 
-func (estimator *NormalEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealVector, p ThreadPool) error {
+func (estimator *LogNormalEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealVector, p ThreadPool) error {
   if err := estimator.SetData(x, len(x)); err != nil {
     return err
   }
   return estimator.Estimate(gamma, p)
 }
 
-func (estimator *NormalEstimator) GetEstimate() ScalarDistribution {
-  return estimator.NormalDistribution
+func (estimator *LogNormalEstimator) GetEstimate() ScalarDistribution {
+  return estimator.LogNormalDistribution
 }

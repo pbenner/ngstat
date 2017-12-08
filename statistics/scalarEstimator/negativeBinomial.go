@@ -107,7 +107,6 @@ func (obj *NegativeBinomialEstimator) Estimate(gamma DenseBareRealVector, p Thre
   return nil
 }
 
-
 func (estimator *NegativeBinomialEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealVector, p ThreadPool) error {
   if err := estimator.SetData(x, len(x)); err != nil {
     return err
