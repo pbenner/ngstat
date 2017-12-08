@@ -44,16 +44,16 @@ func NewCategoricalEstimator(theta Vector) (*CategoricalEstimator, error) {
   }
 }
 
-func (estimator *CategoricalEstimator) CloneScalarEstimator() ScalarEstimator {
+func (obj *CategoricalEstimator) CloneScalarEstimator() ScalarEstimator {
   r := CategoricalEstimator{}
-  r.CategoricalDistribution = estimator.CategoricalDistribution.Clone()
-  r.x = estimator.x
+  r.CategoricalDistribution = obj.CategoricalDistribution.Clone()
+  r.x = obj.x
   return &r
 }
 
-func (estimator *CategoricalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
-  theta := estimator.Theta
-  x     := estimator.x
+func (obj *CategoricalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
+  theta := obj.Theta
+  x     := obj.x
   sum   := NewBareReal(math.Inf(-1))
   tmp   := NewBareReal(0.0)
   // initialize theta
@@ -79,13 +79,13 @@ func (estimator *CategoricalEstimator) Estimate(gamma DenseBareRealVector, p Thr
   return nil
 }
 
-func (estimator *CategoricalEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealVector, p ThreadPool) error {
-  if err := estimator.SetData(x, len(x)); err != nil {
+func (obj *CategoricalEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealVector, p ThreadPool) error {
+  if err := obj.SetData(x, len(x)); err != nil {
     return err
   }
-  return estimator.Estimate(gamma, p)
+  return obj.Estimate(gamma, p)
 }
 
-func (estimator *CategoricalEstimator) GetEstimate() ScalarDistribution {
-  return estimator.CategoricalDistribution
+func (obj *CategoricalEstimator) GetEstimate() ScalarDistribution {
+  return obj.CategoricalDistribution
 }
