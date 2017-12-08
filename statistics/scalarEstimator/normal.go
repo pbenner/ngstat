@@ -76,23 +76,37 @@ func (obj *NormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) er
   // rescale gamma
   //////////////////////////////////////////////////////////////////////////////
   gamma_max := math.Inf(-1)
-  for i := 0; i < gamma.Dim(); i++ {
-    if g := gamma.At(i).GetValue(); gamma_max < g {
-      gamma_max = g
+  if gamma != nil {
+    for i := 0; i < gamma.Dim(); i++ {
+      if g := gamma.At(i).GetValue(); gamma_max < g {
+        gamma_max = g
+      }
     }
   }
   // compute mu
   //////////////////////////////////////////////////////////////////////////////
-  p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
-    id := p.GetThreadId()
-    g  := math.Exp(gamma.At(i).GetValue() - gamma_max)
-    y  := x[i].GetValue()
-    // sum over gamma
-    sum_g_[id] += g
-    // sum over gamma*x
-    sum_m_[id] += g*y
-    return nil
-  })
+  if gamma == nil {
+    p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
+      id := p.GetThreadId()
+      y  := x[i].GetValue()
+      // sum over gamma
+      sum_g_[id] += 1.0
+      // sum over gamma*x
+      sum_m_[id] += y
+      return nil
+    })
+  } else {
+    p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
+      id := p.GetThreadId()
+      g  := math.Exp(gamma.At(i).GetValue() - gamma_max)
+      y  := x[i].GetValue()
+      // sum over gamma
+      sum_g_[id] += g
+      // sum over gamma*x
+      sum_m_[id] += g*y
+      return nil
+    })
+  }
   if err := p.Wait(g); err != nil {
     return err
   }
@@ -104,14 +118,24 @@ func (obj *NormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) er
   m := sum_m/sum_g
   // compute sigma
   //////////////////////////////////////////////////////////////////////////////
-  p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
-    id := p.GetThreadId()
-    g  := math.Exp(gamma.At(i  ).GetValue() - gamma_max)
-    y  := x[i].GetValue()
-    // sum over (x-mu)^2
-    sum_s_[id] += g*(y-m)*(y-m)
-    return nil
-  })
+  if gamma == nil {
+    p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
+      id := p.GetThreadId()
+      y  := x[i].GetValue()
+      // sum over (x-mu)^2
+      sum_s_[id] += (y-m)*(y-m)
+      return nil
+    })
+  } else {
+    p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
+      id := p.GetThreadId()
+      g  := math.Exp(gamma.At(i  ).GetValue() - gamma_max)
+      y  := x[i].GetValue()
+      // sum over (x-mu)^2
+      sum_s_[id] += g*(y-m)*(y-m)
+      return nil
+    })
+  }
   if err := p.Wait(g); err != nil {
     return err
   }
