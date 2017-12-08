@@ -57,16 +57,29 @@ func (obj *CategoricalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPoo
   sum   := NewBareReal(math.Inf(-1))
   tmp   := NewBareReal(0.0)
   // initialize theta
-  for i := 0; i < theta.Dim(); i++ {
-    theta.At(i).Reset()
-    theta.At(i).SetValue(math.Inf(-1))
-  }
-  // loop over observations
-  for k := 0; k < len(x); k++ {
-    // discretize observation at position k
-    i := int(x[k].GetValue())
-    if !math.IsInf(gamma.At(k).GetValue(), -1) {
-      theta.At(i).LogAdd(theta.At(i), gamma.At(k), tmp)
+  if gamma == nil {
+    counts := make([]int, theta.Dim())
+    // loop over observations
+    for k := 0; k < len(x); k++ {
+      // discretize observation at position k
+      counts[int(x[k].GetValue())]++
+    }
+    // convert to log scale
+    for i := 0; i < theta.Dim(); i++ {
+      theta.At(i).SetValue(math.Log(float64(counts[i])))
+    }
+  } else {
+    for i := 0; i < theta.Dim(); i++ {
+      theta.At(i).Reset()
+      theta.At(i).SetValue(math.Inf(-1))
+    }
+    // loop over observations
+    for k := 0; k < len(x); k++ {
+      // discretize observation at position k
+      i := int(x[k].GetValue())
+      if !math.IsInf(gamma.At(k).GetValue(), -1) {
+        theta.At(i).LogAdd(theta.At(i), gamma.At(k), tmp)
+      }
     }
   }
   // normalize theta
