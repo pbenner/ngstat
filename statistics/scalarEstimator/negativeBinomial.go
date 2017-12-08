@@ -66,14 +66,23 @@ func (obj *NegativeBinomialEstimator) Estimate(gamma DenseBareRealVector, p Thre
     sum_r_[i] = math.Inf(-1)
   }
   // loop over observations
-  p.AddRangeJob(0, len(x), g, func(k int, p ThreadPool, erf func() error) error {
-    if !math.IsInf(gamma.At(k).GetValue(), -1) {
+  if gamma == nil {
+    p.AddRangeJob(0, len(x), g, func(k int, p ThreadPool, erf func() error) error {
+      if !math.IsInf(gamma.At(k).GetValue(), -1) {
+        id := p.GetThreadId()
+        sum_k_[id] = LogAdd(sum_k_[id], gamma.At(k).GetValue() + math.Log(x[k].GetValue() + obj.Pseudocount.GetValue()))
+        sum_r_[id] = LogAdd(sum_r_[id], gamma.At(k).GetValue() + math.Log(obj.R.GetValue()))
+      }
+      return nil
+    })
+  } else {
+    p.AddRangeJob(0, len(x), g, func(k int, p ThreadPool, erf func() error) error {
       id := p.GetThreadId()
-      sum_k_[id] = LogAdd(sum_k_[id], gamma.At(k).GetValue() + math.Log(x[k].GetValue() + obj.Pseudocount.GetValue()))
-      sum_r_[id] = LogAdd(sum_r_[id], gamma.At(k).GetValue() + math.Log(obj.R.GetValue()))
-    }
-    return nil
-  })
+      sum_k_[id] = LogAdd(sum_k_[id], math.Log(x[k].GetValue() + obj.Pseudocount.GetValue()))
+      sum_r_[id] = LogAdd(sum_r_[id], math.Log(obj.R.GetValue()))
+      return nil
+    })
+  }
   if err := p.Wait(g); err != nil {
     return err
   }
