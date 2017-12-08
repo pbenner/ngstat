@@ -76,7 +76,7 @@ func (obj *LogNormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool)
   if gamma != nil {
     for i := 0; i < gamma.Dim(); i++ {
       if g := gamma.At(i).GetValue(); gamma_max < g {
-      gamma_max = g
+        gamma_max = g
       }
     }
   }
