@@ -144,7 +144,7 @@ func (obj *CoreHmm) baumWelchThread(hmm1, hmm2 *CoreHmm, data AbstractDataRecord
   return nil
 }
 
-func (obj *CoreHmm) baumWelchStep(hmm1, hmm2 *CoreHmm, data AbstractDataSet, tmp []BaumWelchTmp, p ThreadPool) (float64, error) {
+func (obj *CoreHmm) BaumWelchStep(hmm1, hmm2 *CoreHmm, data AbstractDataSet, tmp []BaumWelchTmp, p ThreadPool) (float64, error) {
   if obj.finalStates != nil && len(obj.finalStates) > 1 {
     return math.Inf(-1), fmt.Errorf("cannot optimize models with more than one final state")
   }
