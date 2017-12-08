@@ -56,38 +56,50 @@ func TestHmm1(t *testing.T) {
   } else {
     x := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
 
-    estimator.EstimateOnData([]Vector{x}, nil, ThreadPool{})
+    if err := estimator.EstimateOnData([]Vector{x}, nil, ThreadPool{}); err != nil {
+      t.Error(err)
+    } else {
+      hmm1 := hmm
+      hmm2 := estimator.GetEstimate()
 
-    hmm1 := hmm
-    hmm2 := estimator.GetEstimate()
+      p1 := NullReal(); hmm1.LogPdf(p1, x)
+      p2 := NullReal(); hmm2.LogPdf(p2, x)
 
-    p1 := NullReal(); hmm1.LogPdf(p1, x)
-    p2 := NullReal(); hmm2.LogPdf(p2, x)
-
-    if p1.Greater(p2) {
+      if p1.Greater(p2) {
         t.Errorf("Baum-Welch test failed")
-    }
-    if math.Abs(p2.GetValue() - -4.493268e+00) > 1e-4 {
-      t.Errorf("Baum-Welch test failed")
+      }
+      if math.Abs(p2.GetValue() - -4.493268e+00) > 1e-4 {
+        t.Errorf("Baum-Welch test failed")
+      }
     }
   }
-  // // test Baum-Welch algorithm with conditioning
-  // //////////////////////////////////////////////////////////////////////////////
-  // {
-  //   x  := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
+  // test Baum-Welch algorithm with conditioning
+  //////////////////////////////////////////////////////////////////////////////
+  {
+    hmm := hmm.Clone()
+    hmm.SetStartStates([]int{0})
+    hmm.SetFinalStates([]int{0})
 
-  //   hmm := hmm.Clone()
-  //   hmm.SetStartStates([]int{0})
-  //   hmm.SetFinalStates([]int{0})
+    if estimator, err := NewHmmEstimator(hmm, []ScalarEstimator{e1, e2}, 1e-8, -1); err != nil {
+      t.Error(err)
+    } else {
+      x  := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
 
-  //   p1 := NullReal(); hmm.LogPdf(p1, x)
-  //   hmm, _ = hmm.BaumWelchSV([]Vector{x}, []ScalarEstimator{e1, e2}, 1e-8, -1)
-  //   p2 := NullReal(); hmm.LogPdf(p2, x)
-  //   if p1.Greater(p2) {
-  //     t.Errorf("Baum-Welch test failed")
-  //   }
-  //   if math.Abs(p2.GetValue() - -5.834855e+00) > 1e-4 {
-  //     t.Errorf("Baum-Welch test failed")
-  //   }
-  // }
+      if err := estimator.EstimateOnData([]Vector{x}, nil, ThreadPool{}); err != nil {
+        t.Error(err)
+      } else {
+        hmm1 := hmm
+        hmm2 := estimator.GetEstimate()
+
+        p1 := NullReal(); hmm1.LogPdf(p1, x)
+        p2 := NullReal(); hmm2.LogPdf(p2, x)
+        if p1.Greater(p2) {
+          t.Errorf("Baum-Welch test failed")
+        }
+        if math.Abs(p2.GetValue() - -5.834855e+00) > 1e-4 {
+          t.Errorf("Baum-Welch test failed")
+        }
+      }
+    }
+  }
 }

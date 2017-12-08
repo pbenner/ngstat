@@ -57,6 +57,9 @@ func NewHmmEstimator(hmm *vectorDistribution.Hmm, estimators []ScalarEstimator, 
   r.hmm2       = hmm.Clone()
   r.hmm3       = hmm.Clone()
   r.estimators = estimators
+  r.epsilon    = epsilon
+  r.maxSteps   = maxSteps
+  r.args       = args
   return &r, nil
 }
 

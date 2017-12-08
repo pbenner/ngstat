@@ -52,7 +52,7 @@ func (obj HmmDataRecord) GetN() int {
 }
 
 func (obj HmmDataRecord) LogPdf(r Scalar, c, k int) error {
-  r.Set(obj.p.At(c, k))
+  r.Set(obj.p.At(c, obj.MapIndex(k)))
   return nil
 }
 
