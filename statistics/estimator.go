@@ -37,6 +37,7 @@ type ScalarEstimator interface {
   CloneScalarEstimator()                  ScalarEstimator
   SetData             (x []Scalar, n int) error
   GetEstimate         ()                  ScalarDistribution
+  EstimateOnData      (x []Scalar, gamma DenseBareRealVector, p ThreadPool) error
 }
 
 type VectorEstimator interface {
@@ -44,6 +45,7 @@ type VectorEstimator interface {
   CloneVectorEstimator()                  VectorEstimator
   SetData             (x []Vector, n int) error
   GetEstimate         ()                  VectorDistribution
+  EstimateOnData      (x []Vector, gamma DenseBareRealVector, p ThreadPool) error
 }
 
 type MatrixEstimator interface {
@@ -51,4 +53,5 @@ type MatrixEstimator interface {
   CloneMatrixEstimator()                  MatrixEstimator
   SetData             (x []Matrix, n int) error
   GetEstimate         ()                  MatrixDistribution
+  EstimateOnData      (x []Matrix, gamma DenseBareRealVector, p ThreadPool) error
 }
