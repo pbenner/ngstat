@@ -42,7 +42,7 @@ type HmmEstimator struct {
 }
 
 func NewHmmEstimator(hmm *vectorDistribution.Hmm, estimators []ScalarEstimator, epsilon float64, maxSteps int, args... interface{}) (*HmmEstimator, error) {
-  if len(estimators) != hmm.NEDists() {
+  if hmm.NEDists() > 0 && len(estimators) != hmm.NEDists() {
     return nil, fmt.Errorf("invalid number of estimators")
   }
   for i, estimator := range estimators {
@@ -109,7 +109,7 @@ func (obj *HmmEstimator) Emissions(gamma []DenseBareRealVector, p ThreadPool) er
 func (obj *HmmEstimator) Step(tmp []generic.BaumWelchTmp, p ThreadPool) (float64, error) {
   hmm1 := obj.hmm1
   hmm2 := obj.hmm2
-  return hmm1.CoreHmm.BaumWelchStep(&hmm1.CoreHmm, &hmm2.CoreHmm, obj.data, tmp, p)
+  return hmm1.Hmm.BaumWelchStep(&hmm1.Hmm, &hmm2.Hmm, obj.data, tmp, p)
 }
 
 /* estimator interface

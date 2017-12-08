@@ -18,7 +18,8 @@ package vectorDistribution
 
 /* -------------------------------------------------------------------------- */
 
-//import   "fmt"
+import   "fmt"
+import   "bytes"
 
 import . "github.com/pbenner/ngstat/statistics"
 import   "github.com/pbenner/ngstat/statistics/generic"
@@ -35,9 +36,22 @@ type Hmm struct {
 /* -------------------------------------------------------------------------- */
 
 func NewHmm(pi Vector, tr Matrix, stateMap []int, edist []ScalarDistribution) (*Hmm, error) {
-  if hmm, err := generic.NewHmm(pi, tr, stateMap, ScalarDistributionSet(edist)); err != nil {
+  p, err := generic.NewHmmProbabilityVector(pi); if err != nil {
+    return nil, err
+  }
+  t, err := generic.NewHmmTransitionMatrix(tr); if err != nil {
+    return nil, err
+  }
+  if hmm, err := generic.NewHmm(p, t, stateMap); err != nil {
     return nil, err
   } else {
+    if len(edist) == 0 {
+      edist = make([]ScalarDistribution, hmm.NEDists())
+    } else {
+      if hmm.NEDists() != len(edist) {
+        return nil, fmt.Errorf("invalid number of emission distributions")
+      }
+    }
     return &Hmm{*hmm, edist}, nil
   }
 }
@@ -49,7 +63,7 @@ func (obj *Hmm) Clone() *Hmm {
   for i := 0; i < len(obj.Edist); i++ {
     edist[i] = obj.Edist[i].CloneScalarDistribution()
   }
-  return &Hmm{generic.Hmm{*obj.Hmm.CoreHmm.Clone(), ScalarDistributionSet(edist)}, edist}
+  return &Hmm{*obj.Hmm.Clone(), edist}
 }
 
 func (obj *Hmm) CloneVectorDistribution() VectorDistribution {
@@ -80,9 +94,48 @@ func (obj *Hmm) Viterbi(x Vector) ([]int, error) {
 
 /* -------------------------------------------------------------------------- */
 
+func (obj *Hmm) GetParameters() Vector {
+  p := obj.Hmm.GetParameters()
+  for i := 0; i < obj.NEDists(); i++ {
+    p = p.AppendVector(obj.Edist[i].GetParameters())
+  }
+  return p
+}
+
+func (obj *Hmm) SetParameters(parameters Vector) error {
+  n := obj.GetParameters().Dim()
+  obj.SetParameters(parameters.Slice(0,n))
+  parameters  = parameters.Slice(n,parameters.Dim())
+  if parameters.Dim() > 0 {
+    for i := 0; i < obj.NEDists(); i++ {
+      n := obj.Edist[i].GetParameters().Dim()
+      if err := obj.Edist[i].SetParameters(parameters.Slice(0,n)); err != nil {
+        return err
+      }
+      parameters = parameters.Slice(n, parameters.Dim())
+    }
+  }
+  return nil
+}
+
+/* -------------------------------------------------------------------------- */
+
+func (obj *Hmm) String() string {
+  var buffer bytes.Buffer
+
+  fmt.Fprintf(&buffer, obj.Hmm.String())
+  fmt.Fprintf(&buffer, "Emissions:\n")
+  for i := 0; i < obj.NEDists(); i++ {
+    fmt.Fprintf(&buffer, "-> %+v\n", obj.Edist[i].GetParameters())
+  }
+  return buffer.String()
+}
+
+/* -------------------------------------------------------------------------- */
+
 func (obj *Hmm) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  if err := obj.CoreHmm.ImportConfig(config, t); err != nil {
+  if err := obj.Hmm.ImportConfig(config, t); err != nil {
     return err
   }
 
@@ -94,8 +147,7 @@ func (obj *Hmm) ImportConfig(config ConfigDistribution, t ScalarType) error {
       distributions[i] = tmp
     }
   }
-  obj.Hmm.Edist = ScalarDistributionSet(distributions)
-  obj.Edist     = distributions
+  obj.Edist = distributions
 
   return nil
 }
@@ -106,7 +158,7 @@ func (obj *Hmm) ExportConfig() ConfigDistribution {
   for i := 0; i < len(obj.Edist); i++ {
     distributions[i] = obj.Edist[i].ExportConfig()
   }
-  config := obj.CoreHmm.ExportConfig()
+  config := obj.Hmm.ExportConfig()
   config.Name = "vector hmm distribution"
   config.Distributions = distributions
 

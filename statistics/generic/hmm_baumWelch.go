@@ -19,7 +19,6 @@ package generic
 /* -------------------------------------------------------------------------- */
 
 import   "fmt"
-import   "io"
 import   "math"
 
 import . "github.com/pbenner/autodiff"
@@ -27,188 +26,207 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-type BaumWelchHook struct {
-  Value func(hmm BasicHmm, i int, likelihood, epsilon float64)
-}
-
-type BaumWelchThreads struct {
-  Value int
-}
-
-type BaumWelchOptimizeEmissions struct {
-  Value bool
-}
-
-type BaumWelchOptimizeTransitions struct {
-  Value bool
-}
-
-type BaumWelchTmp struct {
-  alpha     *DenseBareRealMatrix
-  beta      *DenseBareRealMatrix
-  xi        *DenseBareRealMatrix
-  xiz       *BareReal
-  gamma    []DenseBareRealVector
-  gamma0     DenseBareRealVector
-  gammaTmp   DenseBareRealVector
-  t1        *BareReal
-  t2        *BareReal
-  t3        *BareReal
-  tr        *DenseBareRealMatrix
-  pi         DenseBareRealVector
-  likelihood float64
-  init       bool
-}
-
-func DefaultBaumWelchHook(writer io.Writer) BaumWelchHook {
-  hook := BaumWelchHook{}
-  hook.Value = func(hmm BasicHmm, i int, likelihood, epsilon float64) {
-    if i == 0 || i == 1 {
-      fmt.Fprintf(writer, "Baum-Welch iteration %v\n", i)
-    } else {
-      fmt.Fprintf(writer, "Baum-Welch iteration %v (epsilon=%f)\n", i, epsilon)
+func (obj *Hmm) baumWelchThread(hmm1, hmm2 *Hmm, data AbstractDataRecord, tmp *BaumWelchTmp, p ThreadPool) error {
+  n := data.GetN()
+  m := obj.M
+  // get temporary memory
+  alpha    := tmp.alpha
+  beta     := tmp.beta
+  xi       := tmp.xi
+  xiz      := tmp.xiz
+  gamma    := tmp.gamma
+  gamma0   := tmp.gamma0
+  gammaTmp := tmp.gammaTmp
+  t1       := tmp.t1
+  t2       := tmp.t2
+  t3       := tmp.t3
+  pi       := tmp.pi
+  tr       := tmp.tr
+  // reset variables if this is the first time this
+  // thread is executed
+  if tmp.init == false {
+    pi.Map(func(x Scalar) { x.SetValue(math.Inf(-1)) })
+    tr.Map(func(x Scalar) { x.SetValue(math.Inf(-1)) })
+    for c := 0; c < len(gamma); c++ {
+      gamma[c].Map(func(x Scalar) { x.SetValue(math.Inf(-1)) })
     }
-    fmt.Fprintf(writer, "----------------------------------------\n")
-    if !math.IsNaN(likelihood) {
-      fmt.Fprintf(writer, "log Pdf(x) = %v\n\n", likelihood)
-    }
-    fmt.Fprintf(writer, "%v\n", hmm)
-    fmt.Fprintf(writer, "\n")
+    tmp.likelihood = 0.0
+    tmp.init = true
   }
-  return hook
-}
-
-func PlainBaumWelchHook(writer io.Writer) BaumWelchHook {
-  hook := BaumWelchHook{}
-  hook.Value = func(hmm BasicHmm, i int, likelihood, epsilon float64) {
-    switch i {
-    case 0:
-      fmt.Fprintf(writer, "%10s %20s %15s\n", "Iteration", "Log Likelihood", "Change")
-    case 1:
-      fmt.Fprintf(writer, "%10d %20f %15s\n", i, likelihood, "-")
-    default:
-      fmt.Fprintf(writer, "%10d %20f %15f\n", i, likelihood, epsilon)
+  // execute forward-backward algorithm
+  hmm2.bareRealForwardBackward(data, alpha, beta, t1, t2)
+  // compute gamma at position 0
+  {
+    // normalization constant
+    t1.SetValue(math.Inf(-1))
+    for i := 0; i < m; i++ {
+      gamma0.AT(i).ADD(alpha.AT(i, 0), beta.AT(i, 0))
+      t1.LOGADD(t1, gamma0.AT(i), t3)
+    }
+    if math.IsInf(t1.GetValue(), -1) {
+      return fmt.Errorf("all paths have zero probability")
+    }
+    // normalize gamma0
+    for i := 0; i < m; i++ {
+      gamma0.AT(i).Sub(gamma0.AT(i), t1)
+    }
+    // update pi
+    for i := 0; i < m; i++ {
+      pi.AT(i).LOGADD(pi.AT(i), gamma0.AT(i), t3)
     }
   }
-  return hook
-}
-
-/* -------------------------------------------------------------------------- */
-
-type baumWelchCore interface {
-  EvaluateLogPdf(pool ThreadPool) error
-  GetBasicHmm   () BasicHmm
-  Swap          ()
-  Step          (tmp   []BaumWelchTmp, p ThreadPool) (float64, error)
-  Emissions     (gamma []DenseBareRealVector, p ThreadPool) error
-}
-
-/* -------------------------------------------------------------------------- */
-
-func baumWelchAlgorithm(obj baumWelchCore, tmp []BaumWelchTmp, epsilon float64, maxSteps int, hooks []BaumWelchHook, p ThreadPool) error {
-  for _, hook := range hooks {
-    if hook.Value != nil {
-      hook.Value(obj.GetBasicHmm(), 0, math.NaN(), math.NaN())
-    }
-  }
-  likelihood_old := math.NaN()
-
-  for k := 0; maxSteps == -1 || k < maxSteps; k++ {
-    // swap both distributions
-    obj.Swap()
-    // initialize px
-    if err := obj.EvaluateLogPdf(p); err != nil {
-      return err
-    }
-    // update hmm1
-    if likelihood_new, err := obj.Step(tmp, p); err != nil {
-      return err
-    } else {
-      if tmp[0].gamma != nil {
-        if err := obj.Emissions(tmp[0].gamma, p); err != nil {
-          return err
-        }
+  // compute gamma temporaries
+  if gamma != nil {
+    for k := 0; k < n; k++ {
+      // normalization constant
+      t1.SetValue(math.Inf(-1))
+      for i := 0; i < m; i++ {
+        gammaTmp.AT(i).ADD(alpha.AT(i, k), beta.AT(i, k))
+        t1.LOGADD(t1, gammaTmp.AT(i), t3)
       }
-      for _, hook := range hooks {
-        if hook.Value != nil {
-          hook.Value(obj.GetBasicHmm(), k+1, likelihood_new, likelihood_new - likelihood_old)
-        }
+      if math.IsInf(t1.GetValue(), -1) {
+        return fmt.Errorf("all paths have zero probability")
       }
-      // check convergence (and cycles)
-      if likelihood_new - likelihood_old < epsilon {
+      for i := 0; i < m; i++ {
+        // normalize gamma
+        gammaTmp.AT(i).Sub(gammaTmp.AT(i), t1)
+        // sum up gamma
+        c := obj.StateMap[i]
+        l := data.MapIndex(k)
+        gamma[c].AT(l).LOGADD(gamma[c].AT(l), gammaTmp.AT(i), t3)
+      }
+    }
+  }
+  if xi != nil {
+    // compute xi and update transition matrix
+    for k := 0; k < n-1; k++ {
+      if k == n-2 && obj.finalStates != nil {
+        // skip last transition if a final state is set
         break
       }
-      likelihood_old = likelihood_new
+      // reset normalization constant for xi
+      xiz.SetValue(math.Inf(-1))
+      // compute xi temporaries and update parameters
+      for i := 0; i < m; i++ {
+      // compute xi temporaries (to save memory xi is not fully evaluated)
+        for j := 0; j < m; j++ {
+          c := obj.StateMap[j]
+          t := xi.AT(i, j)
+          t.Add(alpha.At(i, k), hmm2.Tr.At(i, j))
+          t.ADD(t, beta.AT(j, k+1))
+          if err := data.LogPdf(t3, c, k+1); err != nil {
+            return err
+          }
+          t.ADD(t, t3)
+          // sum up values for normalization
+          xiz.LOGADD(xiz, t, t3)
+        }
+      }
+      // update transition matrix
+      for i := 0; i < m; i++ {
+        for j := 0; j < m; j++ {
+          t := tr.AT(i, j)
+          s := xi.AT(i, j)
+          // normalize xi
+          s.SUB(s, xiz)
+          // sum up xi
+          t.LOGADD(t, xi.AT(i, j), t3)
+        }
+      }
     }
   }
+  // compute log-likelihood
+  t1.SetValue(math.Inf(-1))
+  for i := 0; i < m; i++ {
+    t1.LOGADD(t1, alpha.AT(i, n-1), t3)
+  }
+  tmp.likelihood += t1.GetValue()
   return nil
 }
 
-func BaumWelchAlgorithm(obj baumWelchCore, nRecords, nData, nMapped, nStates, nEdists int, epsilon float64, maxSteps int, args... interface{}) error {
-  if nRecords == 0 {
-    return nil
+func (obj *Hmm) BaumWelchStep(hmm1, hmm2 *Hmm, data AbstractDataSet, tmp []BaumWelchTmp, p ThreadPool) (float64, error) {
+  if obj.finalStates != nil && len(obj.finalStates) > 1 {
+    return math.Inf(-1), fmt.Errorf("cannot optimize models with more than one final state")
   }
-  // declare optional arguments
-  hooks               := []BaumWelchHook{}
-  threads             := 1
-  p                   := ThreadPool{}
-  optimizeEmissions   := true
-  optimizeTransitions := true
-  // parse optional arguments
-  for _, arg := range args {
-    switch a := arg.(type) {
-    case BaumWelchHook:
-      hooks = append(hooks, a)
-    case BaumWelchThreads:
-      if a.Value > 0 {
-        threads = a.Value
+  m := obj.M
+  // tell every thread that it needs to reset all variables
+  for threadIdx := 0; threadIdx < len(tmp); threadIdx++ {
+    tmp[threadIdx].init = false
+  }
+  g := p.NewJobGroup()
+  // loop over sequences
+  for d_ := 0; d_ < data.GetNRecords(); d_++ {
+    // make a thread-safe copy of d
+    d := d_
+    p.AddJob(g, func(p ThreadPool, erf func() error) error {
+      if erf() != nil {
+        return nil
       }
-    case BaumWelchOptimizeEmissions:
-      optimizeEmissions = a.Value
-    case BaumWelchOptimizeTransitions:
-      optimizeTransitions = a.Value
-    case ThreadPool:
-      p = a
+      r := data.GetRecord(d)
+      return obj.baumWelchThread(hmm1, hmm2, r, &tmp[p.GetThreadId()], p)
+    })
+  }
+  // set pi and the transition matrix to zero
+  hmm1.Pi.Map(func(x Scalar) { x.SetValue(math.Inf(-1)) })
+  if tmp[0].tr != nil {
+    hmm1.Tr.Map(func(x Scalar) { x.SetValue(math.Inf(-1)) })
+  }
+  // wait for all threads to finish
+  if err := p.Wait(g); err != nil {
+    return math.Inf(-1), nil
+  }
+  // get some temporary variables
+  t1 := tmp[0].t1
+  t2 := tmp[0].t2
+  t3 := tmp[0].t3
+  // merge contributions from all threads
+  for threadIdx := 0; threadIdx < len(tmp); threadIdx++ {
+    if tmp[threadIdx].init == false {
+      // this thread was never used
+      continue
+    }
+    for i := 0; i < m; i++ {
+      hmm1.Pi.At(i).LogAdd(hmm1.Pi.At(i), tmp[threadIdx].pi.At(i), t3)
     }
   }
-  bufsize := 1000
-  if n := threads*nRecords; n > bufsize {
-    bufsize = n
-  }
-  if p.IsNil() {
-    p = NewThreadPool(threads, bufsize)
-  } else {
-    threads = p.NumberOfThreads()
-  }
-  // number of states
-  m1 := nStates
-  m2 := nEdists
-  // allocate memory
-  tmp := make([]BaumWelchTmp, threads)
-  for threadIdx := 0; threadIdx < threads; threadIdx++ {
-    // forward and backward probabilities
-    tmp[threadIdx].alpha  = NullDenseBareRealMatrix(m1, nData)
-    tmp[threadIdx].beta   = NullDenseBareRealMatrix(m1, nData)
-    // initial probabilities
-    tmp[threadIdx].pi = NullDenseBareRealVector(m1)
-    // transition matrix
-    if optimizeTransitions {
-      tmp[threadIdx].tr   = NullDenseBareRealMatrix(m1, m1)
-      tmp[threadIdx].xi   = NullDenseBareRealMatrix(m1, m1)
-      tmp[threadIdx].xiz  = NullBareReal()
-    }
-    if optimizeEmissions {
-      tmp[threadIdx].gamma  = make([]DenseBareRealVector, m2)
-      for c := 0; c < m2; c++ {
-        tmp[threadIdx].gamma[c] = NullDenseBareRealVector(nMapped)
+  if tmp[0].tr != nil {
+    for threadIdx := 0; threadIdx < len(tmp); threadIdx++ {
+      if tmp[threadIdx].init == false {
+        // this thread was never used
+        continue
       }
-      tmp[threadIdx].gammaTmp = NullDenseBareRealVector(m1)
+      for i := 0; i < m; i++ {
+        for j := 0; j < m; j++ {
+          t := hmm1.Tr.At(i, j)
+          t.LogAdd(t, tmp[threadIdx].tr.At(i,j), t3)
+        }
+      }
     }
-    tmp[threadIdx].gamma0 = NullDenseBareRealVector(m1)
-    // some temporary variables
-    tmp[threadIdx].t1 = NewBareReal(0.0)
-    tmp[threadIdx].t2 = NewBareReal(0.0)
-    tmp[threadIdx].t3 = NewBareReal(0.0)
   }
-  return baumWelchAlgorithm(obj, tmp, epsilon, maxSteps, hooks, p)
+  if tmp[0].init == false {
+    for c := 0; c < len(tmp[0].gamma); c++ {
+      tmp[0].gamma[c].Map(func(x Scalar) { x.SetValue(math.Inf(-1)) })
+    }
+    tmp[0].likelihood = 0.0
+    tmp[0].init       = true
+  }
+  // merge gamma variables and log-likelihoods
+  for threadIdx := 1; threadIdx < len(tmp); threadIdx++ {
+    if tmp[threadIdx].init == false {
+      // this thread was never used
+      continue
+    }
+    for c := 0; c < len(tmp[0].gamma); c++ {
+      for l := 0; l < data.GetNMapped(); l++ {
+        tmp[0].gamma[c].AT(l).LOGADD(
+          tmp[        0].gamma[c].AT(l),
+          tmp[threadIdx].gamma[c].AT(l), t3)
+      }
+    }
+    tmp[0].likelihood += tmp[threadIdx].likelihood
+  }
+  // normalize pi and the transition matrix
+  hmm1.normalize(t1, t2)
+
+  return tmp[0].likelihood, nil
 }
