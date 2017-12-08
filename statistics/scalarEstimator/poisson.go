@@ -72,14 +72,22 @@ func (obj *PoissonEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) e
 
   // loop over observations
   //////////////////////////////////////////////////////////////////////////////
-  p.AddRangeJob(0, gamma.Dim(), g, func(k int, p ThreadPool, erf func() error) error {
-    if !math.IsInf(gamma.At(k).GetValue(), -1) {
+  if gamma == nil {
+    p.AddRangeJob(0, gamma.Dim(), g, func(k int, p ThreadPool, erf func() error) error {
       id := p.GetThreadId()
-      sum_mu_[id] = LogAdd(sum_mu_[id], gamma.At(k).GetValue() + math.Log(x[k].GetValue()))
-      sum_g_ [id] = LogAdd(sum_g_ [id], gamma.At(k).GetValue())
-    }
-    return nil
-  })
+      sum_mu_[id] = LogAdd(sum_mu_[id], math.Log(x[k].GetValue()))
+      return nil
+    })
+  } else {
+    p.AddRangeJob(0, gamma.Dim(), g, func(k int, p ThreadPool, erf func() error) error {
+      if !math.IsInf(gamma.At(k).GetValue(), -1) {
+        id := p.GetThreadId()
+        sum_mu_[id] = LogAdd(sum_mu_[id], gamma.At(k).GetValue() + math.Log(x[k].GetValue()))
+        sum_g_ [id] = LogAdd(sum_g_ [id], gamma.At(k).GetValue())
+      }
+      return nil
+    })
+  }
   if err := p.Wait(g); err != nil {
     return err
   }
@@ -88,6 +96,9 @@ func (obj *PoissonEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) e
   for i := 0; i < p.NumberOfThreads(); i++ {
     sum_mu = LogAdd(sum_mu, sum_mu_[i])
     sum_g  = LogAdd(sum_g,  sum_g_ [i])
+  }
+  if gamma == nil {
+    sum_g = math.Log(float64(len(x)))
   }
   // compute new means
   //////////////////////////////////////////////////////////////////////////////
