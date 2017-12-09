@@ -165,7 +165,7 @@ func (obj *Hmm) BaumWelchStep(hmm1, hmm2 *Hmm, data AbstractDataSet, tmp []BaumW
       r := data.GetRecord(d)
       return obj.baumWelchThread(hmm1, hmm2, r, &tmp[p.GetThreadId()], p)
     }); err != nil {
-      return err
+      return math.Inf(-1), err
     }
   }
   // set pi and the transition matrix to zero
