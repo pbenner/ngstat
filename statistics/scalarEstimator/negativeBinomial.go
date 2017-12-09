@@ -33,10 +33,17 @@ import . "github.com/pbenner/threadpool"
 type NegativeBinomialEstimator struct {
   *scalarDistribution.NegativeBinomialDistribution
   StdEstimator
+  // parameters
+  SigmaMin float64
+  // state
+  sum_r []float64
+  sum_k []float64
 }
 
-func NewNegativeBinomialEstimator(r, p, pseudocount Scalar) (*NegativeBinomialEstimator, error) {
-  if dist, err := scalarDistribution.NewNegativeBinomialDistribution(r, p, pseudocount); err != nil {
+/* -------------------------------------------------------------------------- */
+
+func NewNegativeBinomialEstimator(mu, sigma, pseudocount Scalar, sigmaMin float64) (*NegativeBinomialEstimator, error) {
+  if dist, err := scalarDistribution.NewNegativeBinomialDistribution(mu, sigma, pseudocount); err != nil {
     return nil, err
   } else {
     r := NegativeBinomialEstimator{}
@@ -45,53 +52,64 @@ func NewNegativeBinomialEstimator(r, p, pseudocount Scalar) (*NegativeBinomialEs
   }
 }
 
-func (obj *NegativeBinomialEstimator) CloneScalarEstimator() ScalarEstimator {
+/* -------------------------------------------------------------------------- */
+
+func (obj *NegativeBinomialEstimator) Clone() *NegativeBinomialEstimator {
   r := NegativeBinomialEstimator{}
   r.NegativeBinomialDistribution = obj.NegativeBinomialDistribution.Clone()
-  r.x = obj.x
+  r.SigmaMin = obj.SigmaMin
+  r.x        = obj.x
   return &r
 }
 
-func (obj *NegativeBinomialEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
-  if p.IsNil() {
-    p = NewThreadPool(1, 1)
-  }
-  g := p.NewJobGroup()
-  x := obj.x
+func (obj *NegativeBinomialEstimator) CloneScalarEstimator() ScalarEstimator {
+  return obj.Clone()
+}
 
-  sum_k_ := make([]float64, p.NumberOfThreads())
-  sum_r_ := make([]float64, p.NumberOfThreads())
+func (obj *NegativeBinomialEstimator) CloneScalarBatchEstimator() ScalarBatchEstimator {
+  return obj.Clone()
+}
+
+/* batch estimator interface
+ * -------------------------------------------------------------------------- */
+
+func (obj *NegativeBinomialEstimator) Initialize(p ThreadPool) error {
+  obj.sum_r = make([]float64, p.NumberOfThreads())
+  obj.sum_k = make([]float64, p.NumberOfThreads())
   for i := 0; i < p.NumberOfThreads(); i++ {
-    sum_k_[i] = math.Inf(-1)
-    sum_r_[i] = math.Inf(-1)
+    obj.sum_r[i] = math.Inf(-1)
+    obj.sum_k[i] = math.Inf(-1)
   }
-  // loop over observations
+  return nil
+}
+
+func (obj *NegativeBinomialEstimator) NewObservation(x, gamma Scalar, p ThreadPool) error {
+  id := p.GetThreadId()
   if gamma == nil {
-    p.AddRangeJob(0, len(x), g, func(k int, p ThreadPool, erf func() error) error {
-      if !math.IsInf(gamma.At(k).GetValue(), -1) {
-        id := p.GetThreadId()
-        sum_k_[id] = LogAdd(sum_k_[id], gamma.At(k).GetValue() + math.Log(x[k].GetValue() + obj.Pseudocount.GetValue()))
-        sum_r_[id] = LogAdd(sum_r_[id], gamma.At(k).GetValue() + math.Log(obj.R.GetValue()))
-      }
-      return nil
-    })
+    x := x.GetValue() + obj.Pseudocount.GetValue()
+    r := obj.R.GetValue()
+    obj.sum_k[id] = LogAdd(obj.sum_k[id], math.Log(x))
+    obj.sum_r[id] = LogAdd(obj.sum_r[id], math.Log(r))
   } else {
-    p.AddRangeJob(0, len(x), g, func(k int, p ThreadPool, erf func() error) error {
-      id := p.GetThreadId()
-      sum_k_[id] = LogAdd(sum_k_[id], math.Log(x[k].GetValue() + obj.Pseudocount.GetValue()))
-      sum_r_[id] = LogAdd(sum_r_[id], math.Log(obj.R.GetValue()))
-      return nil
-    })
+    x := x.GetValue() + obj.Pseudocount.GetValue()
+    g := gamma.GetValue()
+    r := obj.R.GetValue()
+    obj.sum_k[id] = LogAdd(obj.sum_k[id], g + math.Log(x))
+    obj.sum_r[id] = LogAdd(obj.sum_r[id], g + math.Log(r))
   }
-  if err := p.Wait(g); err != nil {
-    return err
-  }
+  return nil
+}
+
+/* estimator interface
+ * -------------------------------------------------------------------------- */
+
+func (obj *NegativeBinomialEstimator) updateEstimate() error {
   // sum up partial results
   sum_k := math.Inf(-1)
   sum_r := math.Inf(-1)
-  for i := 0; i < p.NumberOfThreads(); i++ {
-    sum_k = LogAdd(sum_k, sum_k_[i])
-    sum_r = LogAdd(sum_r, sum_r_[i])
+  for i := 0; i < len(obj.sum_k); i++ {
+    sum_k = LogAdd(sum_k, obj.sum_k[i])
+    sum_r = LogAdd(sum_r, obj.sum_r[i])
   }
   if math.IsInf(sum_r, -1) && math.IsInf(sum_k, -1) {
     return fmt.Errorf("negative binomial parameter estimation failed")
@@ -104,16 +122,54 @@ func (obj *NegativeBinomialEstimator) Estimate(gamma DenseBareRealVector, p Thre
   } else {
     *obj.NegativeBinomialDistribution = *t
   }
+  obj.sum_k = nil
+  obj.sum_r = nil
   return nil
 }
 
-func (estimator *NegativeBinomialEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealVector, p ThreadPool) error {
-  if err := estimator.SetData(x, len(x)); err != nil {
+func (obj *NegativeBinomialEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
+  if p.IsNil() {
+    p = NewThreadPool(1, 1)
+  }
+  g := p.NewJobGroup()
+  x := obj.x
+
+  // initialize estimator
+  obj.Initialize(p)
+
+  // compute sigma
+  //////////////////////////////////////////////////////////////////////////////
+  if gamma == nil {
+    p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
+      obj.NewObservation(x[i], nil, p)
+      return nil
+    })
+  } else {
+    p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
+      obj.NewObservation(x[i], gamma.At(i), p)
+      return nil
+    })
+  }
+  if err := p.Wait(g); err != nil {
     return err
   }
-  return estimator.Estimate(gamma, p)
+  // update estimate
+  if err := obj.updateEstimate(); err != nil {
+    return err
+  }
+  return nil
 }
 
-func (estimator *NegativeBinomialEstimator) GetEstimate() ScalarDistribution {
-  return estimator.NegativeBinomialDistribution
+func (obj *NegativeBinomialEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealVector, p ThreadPool) error {
+  if err := obj.SetData(x, len(x)); err != nil {
+    return err
+  }
+  return obj.Estimate(gamma, p)
+}
+
+func (obj *NegativeBinomialEstimator) GetEstimate() ScalarDistribution {
+  if obj.sum_k != nil {
+    obj.updateEstimate()
+  }
+  return obj.NegativeBinomialDistribution
 }
