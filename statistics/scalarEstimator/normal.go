@@ -32,8 +32,16 @@ import . "github.com/pbenner/threadpool"
 type NormalEstimator struct {
   *scalarDistribution.NormalDistribution
   StdEstimator
+  // parameters
   SigmaMin float64
+  // state
+  sum_g []float64
+  sum_m []float64
+  sum_s []float64
+  gamma_max float64
 }
+
+/* -------------------------------------------------------------------------- */
 
 func NewNormalEstimator(mu, sigma Scalar, sigmaMin float64) (*NormalEstimator, error) {
   if dist, err := scalarDistribution.NewNormalDistribution(mu, sigma); err != nil {
@@ -45,12 +53,88 @@ func NewNormalEstimator(mu, sigma Scalar, sigmaMin float64) (*NormalEstimator, e
   }
 }
 
-func (obj *NormalEstimator) CloneScalarEstimator() ScalarEstimator {
+/* -------------------------------------------------------------------------- */
+
+func (obj *NormalEstimator) Clone() *NormalEstimator {
   r := NormalEstimator{}
   r.NormalDistribution = obj.NormalDistribution.Clone()
   r.SigmaMin = obj.SigmaMin
   r.x        = obj.x
   return &r
+}
+
+func (obj *NormalEstimator) CloneScalarEstimator() ScalarEstimator {
+  return obj.Clone()
+}
+
+func (obj *NormalEstimator) CloneScalarBatchEstimator() ScalarBatchEstimator {
+  return obj.Clone()
+}
+
+/* batch estimator interface
+ * -------------------------------------------------------------------------- */
+
+func (obj *NormalEstimator) Initialize(p ThreadPool) error {
+  obj.sum_g = make([]float64, p.NumberOfThreads())
+  obj.sum_m = make([]float64, p.NumberOfThreads())
+  obj.sum_s = make([]float64, p.NumberOfThreads())
+  for i := 0; i < p.NumberOfThreads(); i++ {
+    obj.sum_g[i] = 0.0
+    obj.sum_m[i] = 0.0
+    obj.sum_s[i] = 0.0
+  }
+  obj.gamma_max = 0.0
+  return nil
+}
+
+func (obj *NormalEstimator) NewObservation(x, gamma Scalar, p ThreadPool) error {
+  id := p.GetThreadId()
+  if gamma == nil {
+    x := x.GetValue()
+    obj.sum_m[id] += x
+    obj.sum_s[id] += x*x
+    obj.sum_g[id] += 1.0
+  } else {
+    x := x.GetValue()
+    g := math.Exp(gamma.GetValue() - obj.gamma_max)
+    obj.sum_m[id] += g*x
+    obj.sum_s[id] += g*x*x
+    obj.sum_g[id] += g
+  }
+  return nil
+}
+
+/* estimator interface
+ * -------------------------------------------------------------------------- */
+
+func (obj *NormalEstimator) updateEstimate() error {
+  sum_g := 0.0
+  sum_m := 0.0
+  sum_s := 0.0
+  for i := 0; i < len(obj.sum_m); i++ {
+    sum_m += obj.sum_m[i]
+    sum_s += obj.sum_s[i]
+    sum_g += obj.sum_g[i]
+  }
+  s1 := sum_m/float64(sum_g)
+  s2 := sum_s/float64(sum_g)
+
+  mu    := NewScalar(obj.ScalarType(), s1)
+  sigma := NewScalar(obj.ScalarType(), math.Sqrt(s2 - s1*s1))
+
+  if sigma.GetValue() < obj.SigmaMin {
+    sigma.SetValue(obj.SigmaMin)
+  }
+
+  if t, err := scalarDistribution.NewNormalDistribution(mu, sigma); err != nil {
+    return err
+  } else {
+    *obj.NormalDistribution = *t
+  }
+  obj.sum_g = nil
+  obj.sum_m = nil
+  obj.sum_s = nil
+  return nil
 }
 
 func (obj *NormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
@@ -60,112 +144,52 @@ func (obj *NormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) er
   g := p.NewJobGroup()
   x := obj.x
 
-  // allocate memory
-  //////////////////////////////////////////////////////////////////////////////
-  sum_g_ := make([]float64, p.NumberOfThreads())
-  sum_m_ := make([]float64, p.NumberOfThreads())
-  sum_s_ := make([]float64, p.NumberOfThreads())
-  for i := 0; i < p.NumberOfThreads(); i++ {
-    sum_g_[i] = 0.0
-    sum_m_[i] = 0.0
-    sum_s_[i] = 0.0
-  }
-  sum_g := 0.0
-  sum_m := 0.0
-  sum_s := 0.0
+  // initialize estimator
+  obj.Initialize(p)
+
   // rescale gamma
   //////////////////////////////////////////////////////////////////////////////
-  gamma_max := math.Inf(-1)
   if gamma != nil {
+    obj.gamma_max = math.Inf(-1)
     for i := 0; i < gamma.Dim(); i++ {
-      if g := gamma.At(i).GetValue(); gamma_max < g {
-        gamma_max = g
+      if g := gamma.At(i).GetValue(); obj.gamma_max < g {
+        obj.gamma_max = g
       }
     }
   }
-  // compute mu
-  //////////////////////////////////////////////////////////////////////////////
-  if gamma == nil {
-    p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
-      id := p.GetThreadId()
-      // sum over x
-      sum_m_[id] += x[i].GetValue()
-      return nil
-    })
-  } else {
-    p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
-      id := p.GetThreadId()
-      g  := math.Exp(gamma.At(i).GetValue() - gamma_max)
-      y  := x[i].GetValue()
-      // sum over gamma
-      sum_g_[id] += g
-      // sum over gamma*x
-      sum_m_[id] += g*y
-      return nil
-    })
-  }
-  if err := p.Wait(g); err != nil {
-    return err
-  }
-  for i := 0; i < p.NumberOfThreads(); i++ {
-    sum_g += sum_g_[i]
-    sum_m += sum_m_[i]
-  }
-  if gamma == nil {
-    sum_g = float64(len(x))
-  }
-  // new mu value
-  m := sum_m/sum_g
   // compute sigma
   //////////////////////////////////////////////////////////////////////////////
   if gamma == nil {
-    p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
-      id := p.GetThreadId()
-      y  := x[i].GetValue()
-      // sum over (x-mu)^2
-      sum_s_[id] += (y-m)*(y-m)
+    p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
+      obj.NewObservation(x[i], nil, p)
       return nil
     })
   } else {
-    p.AddRangeJob(0, gamma.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
-      id := p.GetThreadId()
-      g  := math.Exp(gamma.At(i  ).GetValue() - gamma_max)
-      y  := x[i].GetValue()
-      // sum over (x-mu)^2
-      sum_s_[id] += g*(y-m)*(y-m)
+    p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
+      obj.NewObservation(x[i], gamma.At(i), p)
       return nil
     })
   }
   if err := p.Wait(g); err != nil {
     return err
   }
-  for i := 0; i < p.NumberOfThreads(); i++ {
-    sum_s += sum_s_[i]
-  }
-  s := math.Sqrt(sum_s/sum_g)
-
-  if s < obj.SigmaMin {
-    s = obj.SigmaMin
-  }
-  // new parameters
-  mu    := NewScalar(obj.ScalarType(), m)
-  sigma := NewScalar(obj.ScalarType(), s)
-
-  if t, err := scalarDistribution.NewNormalDistribution(mu, sigma); err != nil {
+  // update estimate
+  if err := obj.updateEstimate(); err != nil {
     return err
-  } else {
-    *obj.NormalDistribution = *t
   }
   return nil
 }
 
-func (estimator *NormalEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealVector, p ThreadPool) error {
-  if err := estimator.SetData(x, len(x)); err != nil {
+func (obj *NormalEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealVector, p ThreadPool) error {
+  if err := obj.SetData(x, len(x)); err != nil {
     return err
   }
-  return estimator.Estimate(gamma, p)
+  return obj.Estimate(gamma, p)
 }
 
-func (estimator *NormalEstimator) GetEstimate() ScalarDistribution {
-  return estimator.NormalDistribution
+func (obj *NormalEstimator) GetEstimate() ScalarDistribution {
+  if obj.sum_m != nil {
+    obj.updateEstimate()
+  }
+  return obj.NormalDistribution
 }
