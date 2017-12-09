@@ -23,6 +23,7 @@ import   "math"
 
 import . "github.com/pbenner/ngstat/statistics"
 import   "github.com/pbenner/ngstat/statistics/scalarDistribution"
+import . "github.com/pbenner/ngstat/utility"
 
 import . "github.com/pbenner/autodiff"
 import . "github.com/pbenner/threadpool"
@@ -32,62 +33,135 @@ import . "github.com/pbenner/threadpool"
 type CategoricalEstimator struct {
   *scalarDistribution.CategoricalDistribution
   StdEstimator
+  // state
+  sum_t [][]float64
+  sum_c [][]int
 }
 
+/* -------------------------------------------------------------------------- */
+
 func NewCategoricalEstimator(theta Vector) (*CategoricalEstimator, error) {
-  if f, err := scalarDistribution.NewCategoricalDistribution(theta); err != nil {
+  if dist, err := scalarDistribution.NewCategoricalDistribution(theta); err != nil {
     return nil, err
   } else {
     r := CategoricalEstimator{}
-    r.CategoricalDistribution = f
+    r.CategoricalDistribution = dist
     return &r, nil
   }
 }
 
-func (obj *CategoricalEstimator) CloneScalarEstimator() ScalarEstimator {
+/* -------------------------------------------------------------------------- */
+
+func (obj *CategoricalEstimator) Clone() *CategoricalEstimator {
   r := CategoricalEstimator{}
   r.CategoricalDistribution = obj.CategoricalDistribution.Clone()
   r.x = obj.x
   return &r
 }
 
-func (obj *CategoricalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
-  theta := obj.Theta
-  x     := obj.x
-  sum   := NewBareReal(math.Inf(-1))
-  tmp   := NewBareReal(0.0)
-  // initialize theta
+func (obj *CategoricalEstimator) CloneScalarEstimator() ScalarEstimator {
+  return obj.Clone()
+}
+
+func (obj *CategoricalEstimator) CloneScalarBatchEstimator() ScalarBatchEstimator {
+  return obj.Clone()
+}
+
+/* batch estimator interface
+ * -------------------------------------------------------------------------- */
+
+func (obj *CategoricalEstimator) Initialize(p ThreadPool) error {
+  obj.sum_t = make([][]float64, p.NumberOfThreads())
+  obj.sum_c = make([][]int,     p.NumberOfThreads())
+  for i := 0; i < p.NumberOfThreads(); i++ {
+    obj.sum_t[i] = make([]float64, obj.Theta.Dim())
+    obj.sum_c[i] = make([]int,     obj.Theta.Dim())
+    for j := 0; j < obj.Theta.Dim(); j++ {
+      obj.sum_t[i][j] = math.Inf(-1)
+      obj.sum_c[i][j] = 0
+    }
+  }
+  return nil
+}
+
+func (obj *CategoricalEstimator) NewObservation(x, gamma Scalar, p ThreadPool) error {
+  id := p.GetThreadId()
+  i  := int(x.GetValue())
   if gamma == nil {
-    counts := make([]int, theta.Dim())
-    // loop over observations
-    for k := 0; k < len(x); k++ {
-      // discretize observation at position k
-      counts[int(x[k].GetValue())]++
-    }
-    // convert to log scale
-    for i := 0; i < theta.Dim(); i++ {
-      theta.At(i).SetValue(math.Log(float64(counts[i])))
-    }
+    obj.sum_c[id][i]++
   } else {
-    for i := 0; i < theta.Dim(); i++ {
-      theta.At(i).Reset()
-      theta.At(i).SetValue(math.Inf(-1))
-    }
-    // loop over observations
-    for k := 0; k < len(x); k++ {
-      // discretize observation at position k
-      i := int(x[k].GetValue())
-      if !math.IsInf(gamma.At(k).GetValue(), -1) {
-        theta.At(i).LogAdd(theta.At(i), gamma.At(k), tmp)
-      }
+    obj.sum_t[id][i] = LogAdd(obj.sum_t[id][i], gamma.GetValue())
+  }
+  return nil
+}
+
+/* estimator interface
+ * -------------------------------------------------------------------------- */
+
+func (obj *CategoricalEstimator) updateEstimate() error {
+  sum_t := make([]float64, obj.Theta.Dim())
+  for j := 0; j < len(sum_t); j++ {
+    sum_t[j] = math.Inf(-1)
+  }
+  // loop over threads
+  for i := 0; i < len(obj.sum_t); i++ {
+    // loop over categories
+    for j := 0; j < len(obj.sum_t[i]); j++ {
+      // sum contributions from gamma
+      sum_t[j] = LogAdd(sum_t[j], obj.sum_t[i][j])
+      // sum contributions from counts
+      sum_t[j] = LogAdd(sum_t[j], math.Log(float64(obj.sum_c[i][j])))
     }
   }
+  sum := math.Inf(-1)
   // normalize theta
-  for i := 0; i < theta.Dim(); i++ {
-    sum.LogAdd(sum, theta.At(i), tmp)
+  for j := 0; j < len(sum_t); j++ {
+    sum = LogAdd(sum, sum_t[j])
   }
-  for i := 0; i < theta.Dim(); i++ {
-    theta.At(i).Sub(theta.At(i), sum)
+  for j := 0; j < len(sum_t); j++ {
+    sum_t[j] = sum_t[j] - sum
+  }
+  theta := NewVector(obj.ScalarType(), sum_t)
+
+  if t, err := scalarDistribution.NewCategoricalDistribution(theta); err != nil {
+    return err
+  } else {
+    *obj.CategoricalDistribution = *t
+  }
+  obj.sum_t = nil
+  obj.sum_c = nil
+  return nil
+}
+
+func (obj *CategoricalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
+  if p.IsNil() {
+    p = NewThreadPool(1, 1)
+  }
+  g := p.NewJobGroup()
+  x := obj.x
+
+  // initialize estimator
+  obj.Initialize(p)
+
+  // compute sigma
+  //////////////////////////////////////////////////////////////////////////////
+  if gamma == nil {
+    p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
+      obj.NewObservation(x[i], nil, p)
+      return nil
+    })
+  } else {
+    p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
+      obj.NewObservation(x[i], gamma.At(i), p)
+      return nil
+    })
+  }
+  if err := p.Wait(g); err != nil {
+    return err
+  }
+  // update estimate
+  if err := obj.updateEstimate(); err != nil {
+    return err
   }
   return nil
 }
@@ -100,5 +174,8 @@ func (obj *CategoricalEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealV
 }
 
 func (obj *CategoricalEstimator) GetEstimate() ScalarDistribution {
+  if obj.sum_t != nil {
+    obj.updateEstimate()
+  }
   return obj.CategoricalDistribution
 }

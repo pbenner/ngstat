@@ -33,8 +33,6 @@ import . "github.com/pbenner/threadpool"
 type NegativeBinomialEstimator struct {
   *scalarDistribution.NegativeBinomialDistribution
   StdEstimator
-  // parameters
-  SigmaMin float64
   // state
   sum_r []float64
   sum_k []float64
@@ -57,8 +55,7 @@ func NewNegativeBinomialEstimator(mu, sigma, pseudocount Scalar, sigmaMin float6
 func (obj *NegativeBinomialEstimator) Clone() *NegativeBinomialEstimator {
   r := NegativeBinomialEstimator{}
   r.NegativeBinomialDistribution = obj.NegativeBinomialDistribution.Clone()
-  r.SigmaMin = obj.SigmaMin
-  r.x        = obj.x
+  r.x = obj.x
   return &r
 }
 
