@@ -119,7 +119,7 @@ func (obj *CategoricalEstimator) updateEstimate() error {
     sum = LogAdd(sum, sum_t[j])
   }
   for j := 0; j < len(sum_t); j++ {
-    sum_t[j] = sum_t[j] - sum
+    sum_t[j] = math.Exp(sum_t[j] - sum)
   }
   theta := NewVector(obj.ScalarType(), sum_t)
 
