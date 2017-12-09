@@ -125,9 +125,6 @@ func (obj *NegativeBinomialEstimator) updateEstimate() error {
 }
 
 func (obj *NegativeBinomialEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
-  if p.IsNil() {
-    p = NewThreadPool(1, 1)
-  }
   g := p.NewJobGroup()
   x := obj.x
 
@@ -137,15 +134,19 @@ func (obj *NegativeBinomialEstimator) Estimate(gamma DenseBareRealVector, p Thre
   // compute sigma
   //////////////////////////////////////////////////////////////////////////////
   if gamma == nil {
-    p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
+    if err := p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
       obj.NewObservation(x[i], nil, p)
       return nil
-    })
+    }); err != nil {
+      return err
+    }
   } else {
-    p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
+    if err := p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
       obj.NewObservation(x[i], gamma.At(i), p)
       return nil
-    })
+    }); err != nil {
+      return err
+    }
   }
   if err := p.Wait(g); err != nil {
     return err
