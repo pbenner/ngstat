@@ -43,8 +43,8 @@ type LogNormalEstimator struct {
 
 /* -------------------------------------------------------------------------- */
 
-func NewLogNormalEstimator(mu, sigma, pseudocount Scalar, sigmaMin float64) (*LogNormalEstimator, error) {
-  if dist, err := scalarDistribution.NewLogNormalDistribution(mu, sigma, pseudocount); err != nil {
+func NewLogNormalEstimator(mu, sigma, pseudocount, sigmaMin float64) (*LogNormalEstimator, error) {
+  if dist, err := scalarDistribution.NewLogNormalDistribution(NewBareReal(mu), NewBareReal(sigma), NewBareReal(pseudocount)); err != nil {
     return nil, err
   } else {
     r := LogNormalEstimator{}
