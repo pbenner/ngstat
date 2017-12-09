@@ -158,13 +158,15 @@ func (obj *Hmm) BaumWelchStep(hmm1, hmm2 *Hmm, data AbstractDataSet, tmp []BaumW
   for d_ := 0; d_ < data.GetNRecords(); d_++ {
     // make a thread-safe copy of d
     d := d_
-    p.AddJob(g, func(p ThreadPool, erf func() error) error {
+    if err := p.AddJob(g, func(p ThreadPool, erf func() error) error {
       if erf() != nil {
         return nil
       }
       r := data.GetRecord(d)
       return obj.baumWelchThread(hmm1, hmm2, r, &tmp[p.GetThreadId()], p)
-    })
+    }); err != nil {
+      return err
+    }
   }
   // set pi and the transition matrix to zero
   hmm1.Pi.Map(func(x Scalar) { x.SetValue(math.Inf(-1)) })

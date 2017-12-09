@@ -83,7 +83,7 @@ func (obj *HmmEstimator) Emissions(gamma []DenseBareRealVector, p ThreadPool) er
   hmm2 := obj.hmm2
   // estimate emission parameters
   g := p.NewJobGroup()
-  p.AddRangeJob(0, len(hmm1.Edist), g, func(c int, p ThreadPool, erf func() error) error {
+  if err := p.AddRangeJob(0, len(hmm1.Edist), g, func(c int, p ThreadPool, erf func() error) error {
     // copy parameters for faster convergence
     p1 := hmm1.Edist[c].GetParameters()
     p2 := hmm2.Edist[c].GetParameters()
@@ -102,7 +102,9 @@ func (obj *HmmEstimator) Emissions(gamma []DenseBareRealVector, p ThreadPool) er
       return err
     }
     return nil
-  })
+  }); err != nil {
+    return err
+  }
   if err := p.Wait(g); err != nil {
     return err
   }
@@ -171,7 +173,7 @@ func (obj *HmmEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error
       nData = r.GetN()
     }
   }
-  return generic.BaumWelchAlgorithm(obj, nRecords, nData, nMapped, obj.hmm1.NStates(), obj.hmm1.NEDists(), obj.epsilon, obj.maxSteps, obj.args...)
+  return generic.BaumWelchAlgorithm(obj, nRecords, nData, nMapped, obj.hmm1.NStates(), obj.hmm1.NEDists(), obj.epsilon, obj.maxSteps, p, obj.args...)
 }
 
 func (obj *HmmEstimator) EstimateOnData(x []Vector, gamma DenseBareRealVector, p ThreadPool) error {

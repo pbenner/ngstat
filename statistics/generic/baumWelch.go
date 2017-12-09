@@ -31,10 +31,6 @@ type BaumWelchHook struct {
   Value func(hmm BasicHmm, i int, likelihood, epsilon float64)
 }
 
-type BaumWelchThreads struct {
-  Value int
-}
-
 type BaumWelchOptimizeEmissions struct {
   Value bool
 }
@@ -144,14 +140,12 @@ func baumWelchAlgorithm(obj baumWelchCore, tmp []BaumWelchTmp, epsilon float64, 
   return nil
 }
 
-func BaumWelchAlgorithm(obj baumWelchCore, nRecords, nData, nMapped, nStates, nEdists int, epsilon float64, maxSteps int, args... interface{}) error {
+func BaumWelchAlgorithm(obj baumWelchCore, nRecords, nData, nMapped, nStates, nEdists int, epsilon float64, maxSteps int, p ThreadPool, args... interface{}) error {
   if nRecords == 0 {
     return nil
   }
   // declare optional arguments
   hooks               := []BaumWelchHook{}
-  threads             := 1
-  p                   := ThreadPool{}
   optimizeEmissions   := true
   optimizeTransitions := true
   // parse optional arguments
@@ -159,27 +153,13 @@ func BaumWelchAlgorithm(obj baumWelchCore, nRecords, nData, nMapped, nStates, nE
     switch a := arg.(type) {
     case BaumWelchHook:
       hooks = append(hooks, a)
-    case BaumWelchThreads:
-      if a.Value > 0 {
-        threads = a.Value
-      }
     case BaumWelchOptimizeEmissions:
       optimizeEmissions = a.Value
     case BaumWelchOptimizeTransitions:
       optimizeTransitions = a.Value
-    case ThreadPool:
-      p = a
     }
   }
-  bufsize := 1000
-  if n := threads*nRecords; n > bufsize {
-    bufsize = n
-  }
-  if p.IsNil() {
-    p = NewThreadPool(threads, bufsize)
-  } else {
-    threads = p.NumberOfThreads()
-  }
+  threads := p.NumberOfThreads()
   // number of states
   m1 := nStates
   m2 := nEdists

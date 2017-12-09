@@ -128,9 +128,6 @@ func (obj *StdHmmDataSet) EvaluateLogPdf(edist []ScalarDistribution, pool Thread
   if len(edist) != m {
     return fmt.Errorf("data has invalid dimension")
   }
-  if pool.IsNil() {
-    pool = NewThreadPool(1, 1)
-  }
   // distributions may have state and must be cloned
   // for each thread
   d := make([][]ScalarDistribution, pool.NumberOfThreads())
@@ -143,7 +140,7 @@ func (obj *StdHmmDataSet) EvaluateLogPdf(edist []ScalarDistribution, pool Thread
   }
   g := pool.NewJobGroup()
   // evaluate emission distributions
-  pool.AddRangeJob(0, n, g, func(i int, pool ThreadPool, erf func() error) error {
+  if err := pool.AddRangeJob(0, n, g, func(i int, pool ThreadPool, erf func() error) error {
     if erf() != nil {
       return nil
     }
@@ -159,7 +156,9 @@ func (obj *StdHmmDataSet) EvaluateLogPdf(edist []ScalarDistribution, pool Thread
       return fmt.Errorf("probability is zero for all models on observation `%v'", x[i])
     }
     return nil
-  })
+  }); err != nil {
+    return fmt.Errorf("evaluating emission probabilities failed: %v", err)
+  }
   if err := pool.Wait(g); err != nil {
     return fmt.Errorf("evaluating emission probabilities failed: %v", err)
   }
