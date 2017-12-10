@@ -25,7 +25,7 @@ import . "github.com/pbenner/autodiff"
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *Hmm) Viterbi(data AbstractDataRecord) ([]int, error) {
+func (obj *Hmm) Viterbi(data DataRecord) ([]int, error) {
   n := data.GetN()
   if n == 0 {
     return nil, nil

@@ -24,7 +24,7 @@ import . "github.com/pbenner/autodiff"
 
 /* -------------------------------------------------------------------------- */
 
-type AbstractDataRecord interface {
+type DataRecord interface {
   // map index of the kth observation
   MapIndex(k int) int
   // get number of observations in this record
@@ -35,8 +35,8 @@ type AbstractDataRecord interface {
 
 /* -------------------------------------------------------------------------- */
 
-type AbstractDataSet interface {
-  GetRecord(i int) AbstractDataRecord
+type DataSet interface {
+  GetRecord(i int) DataRecord
   // number of mapped observations
   GetNMapped()     int
   // number of records in the data set

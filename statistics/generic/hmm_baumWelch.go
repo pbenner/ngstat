@@ -26,7 +26,7 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *Hmm) baumWelchThread(hmm1, hmm2 *Hmm, data AbstractDataRecord, tmp *BaumWelchTmp, p ThreadPool) error {
+func (obj *Hmm) baumWelchThread(hmm1, hmm2 *Hmm, data DataRecord, tmp *BaumWelchTmp, p ThreadPool) error {
   n := data.GetN()
   m := obj.M
   // get temporary memory
@@ -144,7 +144,7 @@ func (obj *Hmm) baumWelchThread(hmm1, hmm2 *Hmm, data AbstractDataRecord, tmp *B
   return nil
 }
 
-func (obj *Hmm) BaumWelchStep(hmm1, hmm2 *Hmm, data AbstractDataSet, tmp []BaumWelchTmp, p ThreadPool) (float64, error) {
+func (obj *Hmm) BaumWelchStep(hmm1, hmm2 *Hmm, data DataSet, tmp []BaumWelchTmp, p ThreadPool) (float64, error) {
   if obj.finalStates != nil && len(obj.finalStates) > 1 {
     return math.Inf(-1), fmt.Errorf("cannot optimize models with more than one final state")
   }
