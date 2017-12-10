@@ -22,8 +22,9 @@ import   "fmt"
 import   "bytes"
 import   "math"
 
+import . "github.com/pbenner/ngstat/statistics"
+
 import . "github.com/pbenner/autodiff"
-import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
@@ -32,26 +33,22 @@ type Mixture struct {
   // state
   t1 Scalar
   t2 Scalar
-  t3 Scalar
 }
 
 /* -------------------------------------------------------------------------- */
 
-func NewMixture(weights Vector, n int, normalize bool) (*Mixture, error) {
-  r := Mixture{}
+func NewMixture(weights Vector) (*Mixture, error) {
   for i := 0; i < weights.Dim(); i++ {
     if weights.At(i).GetValue() < 0.0 {
       return nil, fmt.Errorf("weights must be positive")
     }
   }
+  r := Mixture{}
   r.LogWeights = weights.CloneVector()
   r.LogWeights.Map(func(x Scalar) { x.Log(x) })
   r.t1 = NullScalar(weights.ElementType())
   r.t2 = NullScalar(weights.ElementType())
-  r.t3 = NullScalar(weights.ElementType())
-  if normalize {
-    r.normalize()
-  }
+  r.normalize()
   return &r, nil
 }
 
@@ -62,7 +59,6 @@ func (obj *Mixture) Clone() *Mixture {
   r.LogWeights = obj.LogWeights.CloneVector()
   r.t1         = obj.t1.CloneScalar()
   r.t2         = obj.t2.CloneScalar()
-  r.t3         = obj.t3.CloneScalar()
   return &r
 }
 
@@ -90,24 +86,19 @@ func (obj *Mixture) ScalarType() ScalarType {
   return obj.LogWeights.ElementType()
 }
 
-func (obj *Mixture) LogPdf(r Scalar, data DataRecord, p ThreadPool) error {
+func (obj *Mixture) LogPdf(r Scalar, data MixtureDataRecord) error {
   r.SetValue(0.0)
   t1 := obj.t1
   t2 := obj.t2
-  t3 := obj.t3
-  // loop over observations
-  for i := 0; i < data.GetN(); i++ {
-    // likelihood at position i
-    t1.SetValue(math.Inf(-1))
-    // loop over components
-    for j := 0; j < obj.NComponents(); j++ {
-      if err := data.LogPdf(t3, j, i); err != nil {
-        return err
-      }
-      t2.Add(t3, obj.LogWeights.At(j))
-      t1.LogAdd(t1, t2, t3)
+  // likelihood at position i
+  r.SetValue(math.Inf(-1))
+  // loop over components
+  for j := 0; j < obj.NComponents(); j++ {
+    if err := data.LogPdf(t1, j); err != nil {
+      return err
     }
-    r.Add(r, t1)
+    t1.Add(t1, obj.LogWeights.At(j))
+    r.LogAdd(r, t1, t2)
   }
   return nil
 }
@@ -139,4 +130,26 @@ func (obj *Mixture) String() string {
   fmt.Fprintf(&buffer, "Mixture weights:\n%s\n", weights)
 
   return buffer.String()
+}
+
+/* -------------------------------------------------------------------------- */
+
+func (obj *Mixture) ImportConfig(config ConfigDistribution, t ScalarType) error {
+  weights, ok := config.GetParametersAsVector(obj.ScalarType()); if ! ok {
+    return fmt.Errorf("invalid config file")
+  }
+  if tmp, err := NewMixture(weights); err != nil {
+    return err
+  } else {
+    *obj = *tmp
+  }
+  return nil
+}
+
+func (obj *Mixture) ExportConfig() ConfigDistribution {
+
+  weights := obj.LogWeights.CloneVector()
+  weights.Map(func(x Scalar) { x.Exp(x) })
+
+  return NewConfigDistribution("generic mixture", weights)
 }

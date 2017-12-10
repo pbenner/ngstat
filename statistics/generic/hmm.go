@@ -265,7 +265,7 @@ func (obj *Hmm) NEDists() int {
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *Hmm) LogPdf(r Scalar, data DataRecord) error {
+func (obj *Hmm) LogPdf(r Scalar, data HmmDataRecord) error {
   n := data.GetN()
   m := obj.M
   // test length of x
@@ -342,7 +342,7 @@ func (obj *Hmm) LogPdf(r Scalar, data DataRecord) error {
 // Compute the posterior:
 // P(Y_1 in y_1, Y_2 in y_2, ..., Y_n in y_n | X_1, dots, X_n)
 //
-func (obj *Hmm) Posterior(r Scalar, data DataRecord, states [][]int) error {
+func (obj *Hmm) Posterior(r Scalar, data HmmDataRecord, states [][]int) error {
   n := data.GetN()
   m := obj.M
   // test length of x
@@ -472,7 +472,7 @@ func (obj *Hmm) Posterior(r Scalar, data DataRecord, states [][]int) error {
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *Hmm) forward(data DataRecord, alpha Matrix, t1, t2 Scalar, n, m int) (Matrix, error) {
+func (obj *Hmm) forward(data HmmDataRecord, alpha Matrix, t1, t2 Scalar, n, m int) (Matrix, error) {
   // initialize first position
   if n > 0 {
     for i := 0; i < m; i++ {
@@ -529,7 +529,7 @@ func (obj *Hmm) forward(data DataRecord, alpha Matrix, t1, t2 Scalar, n, m int) 
   return alpha, nil
 }
 
-func (obj *Hmm) backward(data DataRecord, beta Matrix, t1, t2 Scalar, n, m int) (Matrix, error) {
+func (obj *Hmm) backward(data HmmDataRecord, beta Matrix, t1, t2 Scalar, n, m int) (Matrix, error) {
   // initialize last position
   if n > 0 {
     for i := 0; i < m; i++ {
@@ -578,7 +578,7 @@ func (obj *Hmm) backward(data DataRecord, beta Matrix, t1, t2 Scalar, n, m int) 
   return beta, nil
 }
 
-func (obj *Hmm) forwardBackward(data DataRecord, alpha, beta Matrix, t1, t2 Scalar) (Matrix, Matrix, error) {
+func (obj *Hmm) forwardBackward(data HmmDataRecord, alpha, beta Matrix, t1, t2 Scalar) (Matrix, Matrix, error) {
   var err error
   // length of the sequence
   n := data.GetN()
@@ -594,7 +594,7 @@ func (obj *Hmm) forwardBackward(data DataRecord, alpha, beta Matrix, t1, t2 Scal
   return alpha, beta, nil
 }
 
-func (obj *Hmm) ForwardBackward(data DataRecord) (Matrix, Matrix, error) {
+func (obj *Hmm) ForwardBackward(data HmmDataRecord) (Matrix, Matrix, error) {
   t := obj.ScalarType()
   // length of the sequence
   n := data.GetN()
@@ -609,7 +609,7 @@ func (obj *Hmm) ForwardBackward(data DataRecord) (Matrix, Matrix, error) {
   return obj.forwardBackward(data, alpha, beta, t1, t2)
 }
 
-func (obj *Hmm) PosteriorMarginals(data DataRecord) ([]Vector, error) {
+func (obj *Hmm) PosteriorMarginals(data HmmDataRecord) ([]Vector, error) {
   t := BareRealType
   n := data.GetN()
   m := obj.M
@@ -745,5 +745,5 @@ func (obj *Hmm) ExportConfig() ConfigDistribution {
     config.Tr[i] = math.Exp(config.Tr[i])
   }
 
-  return NewConfigDistribution("hmm core", config)
+  return NewConfigDistribution("generic hmm", config)
 }

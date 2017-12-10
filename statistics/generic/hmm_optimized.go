@@ -25,7 +25,7 @@ import . "github.com/pbenner/autodiff"
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *Hmm) bareRealForward(data DataRecord, alpha *DenseBareRealMatrix, t1, t2 *BareReal, n, m int) (*DenseBareRealMatrix, error) {
+func (obj *Hmm) bareRealForward(data HmmDataRecord, alpha *DenseBareRealMatrix, t1, t2 *BareReal, n, m int) (*DenseBareRealMatrix, error) {
   // initialize first position
   if n > 0 {
     for i := 0; i < m; i++ {
@@ -82,7 +82,7 @@ func (obj *Hmm) bareRealForward(data DataRecord, alpha *DenseBareRealMatrix, t1,
   return alpha, nil
 }
 
-func (obj *Hmm) bareRealBackward(data DataRecord, beta *DenseBareRealMatrix, t1, t2 *BareReal, n, m int) (*DenseBareRealMatrix, error) {
+func (obj *Hmm) bareRealBackward(data HmmDataRecord, beta *DenseBareRealMatrix, t1, t2 *BareReal, n, m int) (*DenseBareRealMatrix, error) {
   // initialize last position
   if n > 0 {
     for i := 0; i < m; i++ {
@@ -131,7 +131,7 @@ func (obj *Hmm) bareRealBackward(data DataRecord, beta *DenseBareRealMatrix, t1,
   return beta, nil
 }
 
-func (obj *Hmm) bareRealForwardBackward(data DataRecord, alpha, beta *DenseBareRealMatrix, t1, t2 *BareReal) (*DenseBareRealMatrix, *DenseBareRealMatrix, error) {
+func (obj *Hmm) bareRealForwardBackward(data HmmDataRecord, alpha, beta *DenseBareRealMatrix, t1, t2 *BareReal) (*DenseBareRealMatrix, *DenseBareRealMatrix, error) {
   var err error
   // length of the sequence
   n := data.GetN()

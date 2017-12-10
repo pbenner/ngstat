@@ -18,7 +18,7 @@ package generic
 
 /* -------------------------------------------------------------------------- */
 
-import   "fmt"
+//import   "fmt"
 import   "math"
 
 import . "github.com/pbenner/autodiff"
@@ -26,19 +26,15 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *Mixture) EmStep(mixture1, mixture2 *Mixture, data DataSet, meta DenseBareRealVector, tmp []EmTmp, p ThreadPool) (float64, error) {
-  if data.GetNRecords() != 1 {
-    return 0, fmt.Errorf("mixture data set is expected to have only one record")
-  }
+func (obj *Mixture) EmStep(mixture1, mixture2 *Mixture, data MixtureDataSet, meta DenseBareRealVector, tmp []EmTmp, p ThreadPool) (float64, error) {
   m  := obj.NComponents()
-  r  := data.GetRecord(0)
   g  := p.NewJobGroup()
   // tell every thread that it needs to reset all variables
   for threadIdx := 0; threadIdx < len(tmp); threadIdx++ {
     tmp[threadIdx].init = false
   }
   // compute gamma temporaries
-  if err := p.AddRangeJob(0, r.GetN(), g, func(l int, p ThreadPool, erf func() error) error {
+  if err := p.AddRangeJob(0, data.GetN(), g, func(l int, p ThreadPool, erf func() error) error {
     gammaTmp   := tmp[p.GetThreadId()].gammaTmp
     gamma      := tmp[p.GetThreadId()].gamma
     logWeights := tmp[p.GetThreadId()].logWeights
@@ -56,13 +52,13 @@ func (obj *Mixture) EmStep(mixture1, mixture2 *Mixture, data DataSet, meta Dense
     // normalization constant
     t1.SetValue(math.Inf(-1))
     for i := 0; i < m; i++ {
-      if err := r.LogPdf(t2, i, l); err != nil {
+      if err := data.LogPdf(t2, i, l); err != nil {
         return err
       }
       gammaTmp.AT(i).Add(t2, mixture2.LogWeights.At(i))
       t1.LOGADD(t1, gammaTmp.AT(i), t2)
     }
-    k := r.MapIndex(l)
+    k := data.MapIndex(l)
     // update log-likelihood
     tmp[p.GetThreadId()].likelihood += t1.GetValue()
     // normalize gammaTmp
