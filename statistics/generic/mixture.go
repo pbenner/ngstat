@@ -97,12 +97,11 @@ func (obj *Mixture) LogPdf(r Scalar, data DataRecord, p ThreadPool) error {
   t3 := obj.t3
   // loop over observations
   for i := 0; i < data.GetN(); i++ {
-    k := data.MapIndex(i)
     // likelihood at position i
     t1.SetValue(math.Inf(-1))
     // loop over components
     for j := 0; j < obj.NComponents(); j++ {
-      if err := data.LogPdf(t3, j, k); err != nil {
+      if err := data.LogPdf(t3, j, i); err != nil {
         return err
       }
       t2.Add(t3, obj.LogWeights.At(j))

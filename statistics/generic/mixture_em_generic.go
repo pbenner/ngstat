@@ -39,10 +39,6 @@ type EmTmp struct {
 
 /* -------------------------------------------------------------------------- */
 
-type EmGamma struct {
-  Value DenseBareRealVector
-}
-
 type EmHook struct {
   Value func(mixture BasicMixture, i int, likelihood, epsilon float64)
 }
@@ -94,13 +90,13 @@ type emCore interface {
   EvaluateLogPdf (p ThreadPool) error
   GetBasicMixture() BasicMixture
   Swap           ()
-  Step           (gamma   DenseBareRealVector, tmp []EmTmp, p ThreadPool) (float64, error)
+  Step           (meta    DenseBareRealVector, tmp []EmTmp, p ThreadPool) (float64, error)
   Emissions      (gamma []DenseBareRealVector,              p ThreadPool) error
 }
 
 /* -------------------------------------------------------------------------- */
 
-func emAlgorithm(obj emCore, gamma DenseBareRealVector, tmp []EmTmp, epsilon float64, maxSteps int, hooks []EmHook, p ThreadPool) error {
+func emAlgorithm(obj emCore, meta DenseBareRealVector, tmp []EmTmp, epsilon float64, maxSteps int, hooks []EmHook, p ThreadPool) error {
   for _, hook := range hooks {
     if hook.Value != nil {
       hook.Value(obj.GetBasicMixture(), 0, math.NaN(), math.NaN())
@@ -116,7 +112,7 @@ func emAlgorithm(obj emCore, gamma DenseBareRealVector, tmp []EmTmp, epsilon flo
       return err
     }
     // update mixture1
-    if likelihood_new, err := obj.Step(gamma, tmp, p); err != nil {
+    if likelihood_new, err := obj.Step(meta, tmp, p); err != nil {
       return err
     } else {
       if tmp[0].gamma != nil {
@@ -139,9 +135,8 @@ func emAlgorithm(obj emCore, gamma DenseBareRealVector, tmp []EmTmp, epsilon flo
   return nil
 }
 
-func EmAlgorithm(obj emCore, nData, nMapped, nComponents int, epsilon float64, maxSteps int, p ThreadPool, args... interface{}) error {
+func EmAlgorithm(obj emCore, meta DenseBareRealVector, nData, nMapped, nComponents int, epsilon float64, maxSteps int, p ThreadPool, args... interface{}) error {
   // gamma values used for hierarchical EM algorithms
-  gamma             := DenseBareRealVector(nil)
   hooks             := []EmHook{}
   optimizeEmissions := true
   optimizeWeights   := true
@@ -150,8 +145,6 @@ func EmAlgorithm(obj emCore, nData, nMapped, nComponents int, epsilon float64, m
     switch a := arg.(type) {
     case EmHook:
       hooks = append(hooks, a)
-    case EmGamma:
-      gamma = a.Value
     case EmOptimizeEmissions:
       optimizeEmissions = a.Value
     case EmOptimizeWeights:
@@ -178,5 +171,5 @@ func EmAlgorithm(obj emCore, nData, nMapped, nComponents int, epsilon float64, m
       }
     }
   }
-  return emAlgorithm(obj, gamma, tmp, epsilon, maxSteps, hooks, p)
+  return emAlgorithm(obj, meta, tmp, epsilon, maxSteps, hooks, p)
 }

@@ -26,7 +26,7 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *Mixture) EmStep(mixture1, mixture2 *Mixture, data DataSet, gammaMeta DenseBareRealVector, tmp []EmTmp, p ThreadPool) (float64, error) {
+func (obj *Mixture) EmStep(mixture1, mixture2 *Mixture, data DataSet, meta DenseBareRealVector, tmp []EmTmp, p ThreadPool) (float64, error) {
   if data.GetNRecords() != 1 {
     return 0, fmt.Errorf("mixture data set is expected to have only one record")
   }
@@ -53,23 +53,23 @@ func (obj *Mixture) EmStep(mixture1, mixture2 *Mixture, data DataSet, gammaMeta 
       tmp[p.GetThreadId()].likelihood = 0.0
       tmp[p.GetThreadId()].init       = true
     }
-    k := r.MapIndex(l)
     // normalization constant
     t1.SetValue(math.Inf(-1))
     for i := 0; i < m; i++ {
-      if err := r.LogPdf(t2, i, k); err != nil {
+      if err := r.LogPdf(t2, i, l); err != nil {
         return err
       }
       gammaTmp.AT(i).Add(t2, mixture2.LogWeights.At(i))
       t1.LOGADD(t1, gammaTmp.AT(i), t2)
     }
+    k := r.MapIndex(l)
     // update log-likelihood
     tmp[p.GetThreadId()].likelihood += t1.GetValue()
     // normalize gammaTmp
     for i := 0; i < m; i++ {
       gammaTmp.AT(i).Sub(gammaTmp.AT(i), t1)
-      if gammaMeta != nil {
-        gammaTmp.AT(i).ADD(gammaTmp.AT(i), gammaMeta.AT(k))
+      if meta != nil {
+        gammaTmp.AT(i).ADD(gammaTmp.AT(i), meta.AT(k))
       }
     }
     if gamma != nil {

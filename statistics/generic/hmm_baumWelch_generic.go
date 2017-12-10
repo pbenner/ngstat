@@ -95,13 +95,13 @@ type baumWelchCore interface {
   EvaluateLogPdf(pool ThreadPool) error
   GetBasicHmm   () BasicHmm
   Swap          ()
-  Step          (tmp   []BaumWelchTmp, p ThreadPool) (float64, error)
-  Emissions     (gamma []DenseBareRealVector, p ThreadPool) error
+  Step          (meta    DenseBareRealVector, tmp []BaumWelchTmp, p ThreadPool) (float64, error)
+  Emissions     (gamma []DenseBareRealVector,                     p ThreadPool) error
 }
 
 /* -------------------------------------------------------------------------- */
 
-func baumWelchAlgorithm(obj baumWelchCore, tmp []BaumWelchTmp, epsilon float64, maxSteps int, hooks []BaumWelchHook, p ThreadPool) error {
+func baumWelchAlgorithm(obj baumWelchCore, meta DenseBareRealVector, tmp []BaumWelchTmp, epsilon float64, maxSteps int, hooks []BaumWelchHook, p ThreadPool) error {
   for _, hook := range hooks {
     if hook.Value != nil {
       hook.Value(obj.GetBasicHmm(), 0, math.NaN(), math.NaN())
@@ -117,7 +117,7 @@ func baumWelchAlgorithm(obj baumWelchCore, tmp []BaumWelchTmp, epsilon float64, 
       return err
     }
     // update hmm1
-    if likelihood_new, err := obj.Step(tmp, p); err != nil {
+    if likelihood_new, err := obj.Step(meta, tmp, p); err != nil {
       return err
     } else {
       if tmp[0].gamma != nil {
@@ -140,7 +140,7 @@ func baumWelchAlgorithm(obj baumWelchCore, tmp []BaumWelchTmp, epsilon float64, 
   return nil
 }
 
-func BaumWelchAlgorithm(obj baumWelchCore, nRecords, nData, nMapped, nStates, nEdists int, epsilon float64, maxSteps int, p ThreadPool, args... interface{}) error {
+func BaumWelchAlgorithm(obj baumWelchCore, meta DenseBareRealVector, nRecords, nData, nMapped, nStates, nEdists int, epsilon float64, maxSteps int, p ThreadPool, args... interface{}) error {
   if nRecords == 0 {
     return nil
   }
@@ -190,5 +190,5 @@ func BaumWelchAlgorithm(obj baumWelchCore, nRecords, nData, nMapped, nStates, nE
     tmp[threadIdx].t2 = NewBareReal(0.0)
     tmp[threadIdx].t3 = NewBareReal(0.0)
   }
-  return baumWelchAlgorithm(obj, tmp, epsilon, maxSteps, hooks, p)
+  return baumWelchAlgorithm(obj, meta, tmp, epsilon, maxSteps, hooks, p)
 }

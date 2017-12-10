@@ -173,7 +173,7 @@ func (obj *HmmEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error
       nData = r.GetN()
     }
   }
-  return generic.BaumWelchAlgorithm(obj, nRecords, nData, nMapped, obj.hmm1.NStates(), obj.hmm1.NEDists(), obj.epsilon, obj.maxSteps, p, obj.args...)
+  return generic.BaumWelchAlgorithm(obj, gamma, nRecords, nData, nMapped, obj.hmm1.NStates(), obj.hmm1.NEDists(), obj.epsilon, obj.maxSteps, p, obj.args...)
 }
 
 func (obj *HmmEstimator) EstimateOnData(x []Vector, gamma DenseBareRealVector, p ThreadPool) error {
