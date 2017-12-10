@@ -31,7 +31,7 @@ import . "github.com/pbenner/threadpool"
 /* -------------------------------------------------------------------------- */
 
 type HmmDataSet interface {
-  generic.DataSet
+  generic.HmmDataSet
   GetMappedData () []Scalar
   EvaluateLogPdf(edist []ScalarDistribution, pool ThreadPool) error
 }
@@ -105,7 +105,7 @@ func (obj *StdHmmDataSet) GetMappedData() []Scalar {
   return obj.values
 }
 
-func (obj *StdHmmDataSet) GetRecord(i int) generic.DataRecord {
+func (obj *StdHmmDataSet) GetRecord(i int) generic.HmmDataRecord {
   return HmmDataRecord{obj.index[i], obj.p}
 }
 

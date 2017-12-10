@@ -111,10 +111,10 @@ func (obj *HmmEstimator) Emissions(gamma []DenseBareRealVector, p ThreadPool) er
   return nil
 }
 
-func (obj *HmmEstimator) Step(tmp []generic.BaumWelchTmp, p ThreadPool) (float64, error) {
+func (obj *HmmEstimator) Step(meta DenseBareRealVector, tmp []generic.BaumWelchTmp, p ThreadPool) (float64, error) {
   hmm1 := obj.hmm1
   hmm2 := obj.hmm2
-  return hmm1.Hmm.BaumWelchStep(&hmm1.Hmm, &hmm2.Hmm, obj.data, tmp, p)
+  return hmm1.Hmm.BaumWelchStep(&hmm1.Hmm, &hmm2.Hmm, obj.data, meta, tmp, p)
 }
 
 /* estimator interface
