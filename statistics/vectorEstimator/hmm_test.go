@@ -31,6 +31,7 @@ import   "github.com/pbenner/ngstat/statistics/scalarEstimator"
 import . "github.com/pbenner/autodiff"
 import . "github.com/pbenner/autodiff/simple"
 import   "github.com/pbenner/autodiff/algorithm/bfgs"
+import   "github.com/pbenner/autodiff/algorithm/newton"
 
 import . "github.com/pbenner/threadpool"
 
@@ -196,5 +197,86 @@ func TestHmm2(t *testing.T) {
      math.Abs(Exp(vn.At(3)).GetValue() - 6.402134e-01) > 1e-3 {
     t.Error("Hmm test failed!")
   }
+}
 
+func TestHmm3(t *testing.T) {
+  // Hmm definition
+  //////////////////////////////////////////////////////////////////////////////
+  tr := NewMatrix(RealType, 2, 2,
+    []float64{5,1,1,10})
+
+  c1, _ := scalarDistribution.NewCategoricalDistribution(
+    NewVector(RealType, []float64{0.1, 0.9}))
+  c2, _ := scalarDistribution.NewCategoricalDistribution(
+    NewVector(RealType, []float64{0.7, 0.3}))
+  edist := []ScalarDistribution{c1, c2}
+
+  pi := NewVector(RealType, []float64{0.6, 0.4})
+
+  x  := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
+  r  := NewReal(0.0)
+
+  hmm, err := vectorDistribution.NewHmm(pi, tr, nil, edist)
+  if err != nil {
+    t.Error(err)
+  }
+
+  constraint := func(p1, p2, lambda Scalar) Scalar {
+    r := NewReal(0.0)
+    r.Add(p1, p2)
+    r.Sub(r, NewReal(1.0))
+    r.Mul(r, lambda)
+    return r
+  }
+  objective := func(variables Vector) (Scalar, error) {
+    // create a new initial normal distribution
+    tr := NullMatrix(RealType, 2, 2)
+    // copy the variables
+    tr.At(0, 0).Exp(variables.At(0))
+    tr.At(0, 1).Exp(variables.At(1))
+    tr.At(1, 0).Exp(variables.At(2))
+    tr.At(1, 1).Exp(variables.At(3))
+    // lambda parameters of the Lagrangian
+    lambda := variables.Slice(4,6)
+    // construct new Hmm
+    hmm, _ := vectorDistribution.NewHmm(pi, tr, nil, edist)
+    // compute objective function
+    result := NewScalar(RealType, 0.0)
+    // density function
+    hmm.LogPdf(r, x)
+    result.Add(result, r)
+    result.Neg(result)
+    // constraints
+    result.Add(result, constraint(tr.At(0, 0), tr.At(0, 1), lambda.At(0)))
+    result.Add(result, constraint(tr.At(1, 0), tr.At(1, 1), lambda.At(1)))
+    return result, nil
+  }
+  // hook_newton := func(x Vector, hessian Matrix, gradient Vector) bool {
+  //   fmt.Println("hessian :", hessian)
+  //   fmt.Println("gradient:", gradient)
+  //   fmt.Println("x       :", x)
+  //   fmt.Println("")
+  //   return false
+  // }
+  // initial value
+  vn := hmm.GetParameters()
+  // drop pi and parameters from the emission distributions
+  vn  = vn.Slice(2,6)
+  // append Lagriangian lambda parameters
+  vn  = vn.AppendScalar(NewReal(1.0), NewReal(1.0))
+  // find critical points of the Lagrangian
+  vn, err = newton.RunCrit(objective, vn,
+//    newton.HookCrit{hook_newton},
+    newton.Epsilon{1e-4})
+  if err != nil {
+    t.Error(err)
+  } else {
+    // check result
+    if math.Abs(Exp(vn.At(0)).GetValue() - 8.230221e-01) > 1e-4 ||
+       math.Abs(Exp(vn.At(1)).GetValue() - 1.769779e-01) > 1e-4 ||
+       math.Abs(Exp(vn.At(2)).GetValue() - 7.975104e-09) > 1e-4 ||
+       math.Abs(Exp(vn.At(3)).GetValue() - 1.000000e+00) > 1e-4 {
+      t.Error("Hmm test failed!")
+    }
+  }
 }
