@@ -26,11 +26,13 @@ import . "github.com/pbenner/autodiff"
 
 type StdEstimator struct {
   x Vector
+  n int
 }
 
 /* -------------------------------------------------------------------------- */
 
 func (obj *StdEstimator) SetData(x Vector, n int) error {
   obj.x = x
+  obj.n = n
   return nil
 }
