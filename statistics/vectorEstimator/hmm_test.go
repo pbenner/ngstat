@@ -366,3 +366,73 @@ func TestHmm4(t *testing.T) {
     }
   }
 }
+
+func TestHmm5(t *testing.T) {
+
+  pi := NewVector(RealType, []float64{0.6, 0.4})
+
+  var tr Matrix = NewMatrix(RealType, 2, 2,
+    []float64{0.7, 0.3, 0.4, 0.6})
+
+  c1, _ := scalarDistribution.NewGammaDistribution(NewReal( 0.5), NewReal(2.0), NewReal(0))
+  c2, _ := scalarDistribution.NewGammaDistribution(NewReal(10.0), NewReal(2.0), NewReal(0))
+
+  e1, _ := scalarEstimator.NewNumericEstimator(c1)
+  e2, _ := scalarEstimator.NewNumericEstimator(c2)
+
+  e1.Epsilon = 1e-7
+  e2.Epsilon = 1e-7
+
+  x  := []Vector{
+    NewVector(RealType, []float64{0.23092451, 0.23092451, 0.23092451, 5.975650, 5.975650, 5.975650}),
+    NewVector(RealType, []float64{1.15626248, 1.15626248, 1.15626248, 3.074001, 3.074001, 3.074001}),
+    NewVector(RealType, []float64{0.39937995, 0.39937995, 0.39937995, 3.806467, 3.806467, 3.806467}),
+    NewVector(RealType, []float64{0.51252240, 0.51252240, 0.51252240, 6.654319, 6.654319, 6.654319}),
+    NewVector(RealType, []float64{2.35671304, 2.35671304, 2.35671304, 2.904598, 2.904598, 2.904598}),
+    NewVector(RealType, []float64{0.18067285, 0.18067285, 0.18067285, 2.895080, 2.895080, 2.895080}),
+    NewVector(RealType, []float64{0.06068149, 0.06068149, 0.06068149, 3.088718, 3.088718, 3.088718}),
+    NewVector(RealType, []float64{1.71700325, 1.71700325, 1.71700325, 4.068132, 4.068132, 4.068132}),
+    NewVector(RealType, []float64{0.06229591, 0.06229591, 0.06229591, 4.466460, 4.466460, 4.466460}),
+    NewVector(RealType, []float64{0.43543498, 0.43543498, 0.43543498, 6.193897, 6.193897, 6.193897}) }
+
+  hmm, err := vectorDistribution.NewHmm(pi, tr, nil, nil)
+  if err != nil {
+    t.Error(err); return
+  }
+  estimator, err := NewHmmEstimator(hmm, []ScalarEstimator{e1, e2}, 1e-10, -1)
+  if err != nil {
+    t.Error(err); return
+  }
+  if err := estimator.EstimateOnData(x, nil, ThreadPool{}); err != nil {
+    t.Error(err); return
+  }
+  hmm = estimator.GetEstimate().(*vectorDistribution.Hmm)
+
+  // correct values
+  qi := NewVector(RealType, []float64{7.249908e-01, 2.750092e-01})
+  sr := NewMatrix(RealType, 2, 2, []float64{
+    6.592349e-01, 3.407651e-01,
+    0.000000e+00, 1.000000e+00 })
+
+  pi = hmm.Pi; pi.MapSet(Exp)
+  tr = hmm.Tr; tr.MapSet(Exp)
+
+  if Vnorm(VsubV(pi, qi)).GetValue() > 1e-3 {
+    t.Error("Hmm test failed!")
+  }
+  if Mnorm(MsubM(tr, sr)).GetValue() > 1e-4 {
+    t.Error("Hmm test failed!")
+  }
+  if math.Abs(hmm.Edist[0].GetParameters().At(0).GetValue() - 1.792786e+00) > 1e-4 {
+    t.Error("Hmm test failed!")
+  }
+  if math.Abs(hmm.Edist[0].GetParameters().At(1).GetValue() - 6.371870e+00) > 1e-4 {
+    t.Error("Hmm test failed!")
+  }
+  if math.Abs(hmm.Edist[1].GetParameters().At(0).GetValue() - 4.855799e+00) > 1e-4 {
+    t.Error("Hmm test failed!")
+  }
+  if math.Abs(hmm.Edist[1].GetParameters().At(1).GetValue() - 1.299225e+00) > 1e-4 {
+    t.Error("Hmm test failed!")
+  }
+}
