@@ -109,7 +109,7 @@ func (obj *ScalarIdEstimator) SetParameters(parameters Vector) error {
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *ScalarIdEstimator) SetData(x Matrix, n int) error {
+func (obj *ScalarIdEstimator) SetData(x []Vector, n int) error {
   if x == nil {
     for _, estimator := range obj.Estimators {
       if err := estimator.SetData(nil, n); err != nil {
@@ -117,13 +117,19 @@ func (obj *ScalarIdEstimator) SetData(x Matrix, n int) error {
       }
     }
   } else {
-    _, ncol := x.Dims()
-
-    if ncol != obj.Dim() {
-      return fmt.Errorf("data has invalid dimension (expected dimension `%d' but data has dimension `%d')", obj.Dim(), ncol)
+    // check data
+    for j := 0; j < len(x); j++ {
+      if n := x[j].Dim(); n != obj.Dim() {
+        return fmt.Errorf("data has invalid dimension (expected dimension `%d' but data has dimension `%d')", obj.Dim(), n)
+      }
     }
     for i, estimator := range obj.Estimators {
-      if err := estimator.SetData(x.Col(i), n); err != nil {
+      // get column i
+      y := NullVector(x[0].ElementType(), 0)
+      for j := 0; j < len(x); j++ {
+        y = y.AppendScalar(x[j].At(i))
+      }
+      if err := estimator.SetData(y, n); err != nil {
         return err
       }
     }
@@ -159,10 +165,8 @@ func (obj *ScalarIdEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) 
   return nil
 }
 
-func (obj *ScalarIdEstimator) EstimateOnData(x Matrix, gamma DenseBareRealVector, p ThreadPool) error {
-  n, _ := x.Dims()
-
-  if err := obj.SetData(x, n); err != nil {
+func (obj *ScalarIdEstimator) EstimateOnData(x []Vector, gamma DenseBareRealVector, p ThreadPool) error {
+  if err := obj.SetData(x, len(x)); err != nil {
     return err
   }
   return obj.Estimate(gamma, p)

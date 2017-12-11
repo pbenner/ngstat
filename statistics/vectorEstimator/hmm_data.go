@@ -70,33 +70,34 @@ type StdHmmDataSet struct {
   n int
 }
 
-func NewStdHmmDataSet(t ScalarType, x Matrix, k int) (*StdHmmDataSet, error) {
-  n, m   := x.Dims()
+func NewStdHmmDataSet(t ScalarType, x []Vector, k int) (*StdHmmDataSet, error) {
   xMap   := make(map[[1]float64]int)
-  index  := make([][]int, n)
-  values := NullVector(x.ElementType(), 0)
+  index  := make([][]int, len(x))
+  values := NullVector(x[0].ElementType(), 0)
+  m      := 0
   // convert vector elements to arrays, which can be used
   // as keys for xMap
   datum := [1]float64{0}
-  for d := 0; d < n; d++ {
-    index[d] = make([]int, m)
-    for i := 0; i < m; i++ {
-      datum[0] = x.At(d,i).GetValue()
+  for d := 0; d < len(x); d++ {
+    index[d] = make([]int, x[d].Dim())
+    for i := 0; i < x[d].Dim(); i++ {
+      datum[0] = x[d].At(i).GetValue()
       if idx, ok := xMap[datum]; ok {
         index [d][i]  = idx
       } else {
         idx   := values.Dim()
-        values = values.AppendScalar(x.At(d,i))
+        values = values.AppendScalar(x[d].At(i))
         xMap [datum] = idx
         index[d][i]  = idx
       }
     }
+    m += x[d].Dim()
   }
   r := StdHmmDataSet{}
   r.values = values
   r.index  = index
   r.p      = NullMatrix(t, k, values.Dim())
-  r.n      = n*m
+  r.n      = m
   return &r, nil
 }
 

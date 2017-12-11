@@ -32,24 +32,23 @@ import . "github.com/pbenner/threadpool"
 
 type MixtureDataSet interface {
   generic.MixtureDataSet
-  GetMappedData () Matrix
+  GetMappedData () []Vector
   EvaluateLogPdf(edist []VectorDistribution, pool ThreadPool) error
 }
 
 /* -------------------------------------------------------------------------- */
 
 type StdMixtureDataSet struct {
-  values Matrix
-  p      Matrix
-  n      int
+  values []Vector
+  n        int
+  p        Matrix
 }
 
-func NewStdMixtureDataSet(t ScalarType, x Matrix, k int) (*StdMixtureDataSet, error) {
-  n, _ := x.Dims()
-  r    := StdMixtureDataSet{}
+func NewStdMixtureDataSet(t ScalarType, x []Vector, k int) (*StdMixtureDataSet, error) {
+  r := StdMixtureDataSet{}
   r.values = x
-  r.p      = NullMatrix(t, k, n)
-  r.n      = n
+  r.p      = NullMatrix(t, k, len(x))
+  r.n      = len(x)
   return &r, nil
 }
 
@@ -57,7 +56,7 @@ func (obj *StdMixtureDataSet) MapIndex(k int) int {
   return k
 }
 
-func (obj *StdMixtureDataSet) GetMappedData() Matrix {
+func (obj *StdMixtureDataSet) GetMappedData() []Vector {
   return obj.values
 }
 
@@ -102,13 +101,13 @@ func (obj *StdMixtureDataSet) EvaluateLogPdf(edist []VectorDistribution, pool Th
     s = math.Inf(-1)
     // loop over emission distributions
     for j := 0; j < m; j++ {
-      if err := d[j].LogPdf(p.At(j, i), x.Row(i)); err != nil {
+      if err := d[j].LogPdf(p.At(j, i), x[i]); err != nil {
         return err
       }
       s = LogAdd(s, p.At(j, i).GetValue())
     }
     if math.IsInf(s, -1) {
-      return fmt.Errorf("probability is zero for all models on observation `%v'", x.Row(i))
+      return fmt.Errorf("probability is zero for all models on observation `%v'", x[i])
     }
     return nil
   }); err != nil {

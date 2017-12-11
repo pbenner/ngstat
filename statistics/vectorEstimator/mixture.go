@@ -144,7 +144,7 @@ func (obj *MixtureEstimator) SetParameters(parameters Vector) error {
   return obj.mixture1.SetParameters(parameters)
 }
 
-func (obj *MixtureEstimator) SetData(x Matrix, n int) error {
+func (obj *MixtureEstimator) SetData(x []Vector, n int) error {
   if data, err := NewStdMixtureDataSet(obj.ScalarType(), x, obj.mixture1.NComponents()); err != nil {
     return err
   } else {
@@ -166,9 +166,8 @@ func (obj *MixtureEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) e
   return generic.EmAlgorithm(obj, gamma, nData, nMapped, obj.mixture1.NComponents(), obj.epsilon, obj.maxSteps, p, obj.args...)
 }
 
-func (obj *MixtureEstimator) EstimateOnData(x Matrix, gamma DenseBareRealVector, p ThreadPool) error {
-  n, _ := x.Dims()
-  if err := obj.SetData(x, n); err != nil {
+func (obj *MixtureEstimator) EstimateOnData(x []Vector, gamma DenseBareRealVector, p ThreadPool) error {
+  if err := obj.SetData(x, len(x)); err != nil {
     return err
   }
   return obj.Estimate(gamma, p)
