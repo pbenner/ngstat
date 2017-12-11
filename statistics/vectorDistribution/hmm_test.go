@@ -313,3 +313,31 @@ func TestHmm2(t *testing.T) {
   }
   os.Remove("hmm_test.json")
 }
+
+func TestHmm3(t *testing.T) {
+  // Hmm definition
+  //////////////////////////////////////////////////////////////////////////////
+  tr := NewMatrix(RealType, 2, 2,
+    []float64{0.7, 0.3, 0.4, 0.6})
+
+  pi := NewVector(RealType, []float64{0.6, 0.4})
+
+  stateMap := []int{0, 0}
+
+  hmm1, err := NewHmm(pi, tr, nil, nil)
+  if err != nil {
+    t.Error(err)
+  }
+
+  hmm2, err := NewHmm(pi, tr, stateMap, nil)
+  if err != nil {
+    t.Error(err)
+  }
+
+  if len(hmm1.Edist) != 2 {
+    t.Error("test failed")
+  }
+  if len(hmm2.Edist) != 1 {
+    t.Error("test failed")
+  }
+}
