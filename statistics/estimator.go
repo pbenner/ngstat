@@ -45,9 +45,9 @@ type ScalarEstimator interface {
 type VectorEstimator interface {
   BasicEstimator
   CloneVectorEstimator()                  VectorEstimator
-  SetData             (x []Vector, n int) error
+  SetData             (x Matrix, n int) error
   GetEstimate         ()                  VectorDistribution
-  EstimateOnData      (x []Vector, gamma DenseBareRealVector, p ThreadPool) error
+  EstimateOnData      (x Matrix, gamma DenseBareRealVector, p ThreadPool) error
 }
 
 type MatrixEstimator interface {
@@ -72,4 +72,18 @@ type ScalarBatchEstimator interface {
   CloneScalarBatchEstimator() ScalarBatchEstimator
   NewObservation(x, gamma Scalar, p ThreadPool) error
   GetEstimate() ScalarDistribution
+}
+
+type VectorBatchEstimator interface {
+  BasicBatchEstimator
+  CloneVectorBatchEstimator() VectorBatchEstimator
+  NewObservation(x Vector, gamma Scalar, p ThreadPool) error
+  GetEstimate() VectorDistribution
+}
+
+type MatrixBatchEstimator interface {
+  BasicBatchEstimator
+  CloneMatrixBatchEstimator() MatrixBatchEstimator
+  NewObservation(x Matrix, gamma Scalar, p ThreadPool) error
+  GetEstimate() MatrixDistribution
 }

@@ -54,16 +54,16 @@ func TestHmm1(t *testing.T) {
   if estimator, err := NewHmmEstimator(hmm, []ScalarEstimator{e1, e2}, 1e-8, -1); err != nil {
     t.Error(err)
   } else {
-    x := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
+    x := NewMatrix(RealType, 1, 10, []float64{1,1,1,1,1,1,0,0,1,0})
 
-    if err := estimator.EstimateOnData([]Vector{x}, nil, ThreadPool{}); err != nil {
+    if err := estimator.EstimateOnData(x, nil, ThreadPool{}); err != nil {
       t.Error(err)
     } else {
       hmm1 := hmm
       hmm2 := estimator.GetEstimate()
 
-      p1 := NullReal(); hmm1.LogPdf(p1, x)
-      p2 := NullReal(); hmm2.LogPdf(p2, x)
+      p1 := NullReal(); hmm1.LogPdf(p1, x.Row(0))
+      p2 := NullReal(); hmm2.LogPdf(p2, x.Row(0))
 
       if p1.Greater(p2) {
         t.Errorf("Baum-Welch test failed")
@@ -83,16 +83,16 @@ func TestHmm1(t *testing.T) {
     if estimator, err := NewHmmEstimator(hmm, []ScalarEstimator{e1, e2}, 1e-8, -1); err != nil {
       t.Error(err)
     } else {
-      x  := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
+      x  := NewMatrix(RealType, 1, 10, []float64{1,1,1,1,1,1,0,0,1,0})
 
-      if err := estimator.EstimateOnData([]Vector{x}, nil, ThreadPool{}); err != nil {
+      if err := estimator.EstimateOnData(x, nil, ThreadPool{}); err != nil {
         t.Error(err)
       } else {
         hmm1 := hmm
         hmm2 := estimator.GetEstimate()
 
-        p1 := NullReal(); hmm1.LogPdf(p1, x)
-        p2 := NullReal(); hmm2.LogPdf(p2, x)
+        p1 := NullReal(); hmm1.LogPdf(p1, x.Row(0))
+        p2 := NullReal(); hmm2.LogPdf(p2, x.Row(0))
         if p1.Greater(p2) {
           t.Errorf("Baum-Welch test failed")
         }

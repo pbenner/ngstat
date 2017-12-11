@@ -146,7 +146,7 @@ func (obj *HmmEstimator) SetParameters(parameters Vector) error {
   return obj.hmm1.SetParameters(parameters)
 }
 
-func (obj *HmmEstimator) SetData(x []Vector, n int) error {
+func (obj *HmmEstimator) SetData(x Matrix, n int) error {
   if data, err := NewStdHmmDataSet(obj.ScalarType(), x, obj.hmm1.NEDists()); err != nil {
     return err
   } else {
@@ -176,8 +176,9 @@ func (obj *HmmEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error
   return generic.BaumWelchAlgorithm(obj, gamma, nRecords, nData, nMapped, obj.hmm1.NStates(), obj.hmm1.NEDists(), obj.epsilon, obj.maxSteps, p, obj.args...)
 }
 
-func (obj *HmmEstimator) EstimateOnData(x []Vector, gamma DenseBareRealVector, p ThreadPool) error {
-  if err := obj.SetData(x, len(x)); err != nil {
+func (obj *HmmEstimator) EstimateOnData(x Matrix, gamma DenseBareRealVector, p ThreadPool) error {
+  n, m := x.Dims()
+  if err := obj.SetData(x, n*m); err != nil {
     return err
   }
   return obj.Estimate(gamma, p)
