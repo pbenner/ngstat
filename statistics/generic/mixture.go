@@ -135,7 +135,7 @@ func (obj *Mixture) String() string {
 /* -------------------------------------------------------------------------- */
 
 func (obj *Mixture) ImportConfig(config ConfigDistribution, t ScalarType) error {
-  weights, ok := config.GetParametersAsVector(obj.ScalarType()); if ! ok {
+  weights, ok := config.GetParametersAsVector(t); if ! ok {
     return fmt.Errorf("invalid config file")
   }
   if tmp, err := NewMixture(weights); err != nil {

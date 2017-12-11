@@ -20,6 +20,7 @@ package vectorDistribution
 
 //import   "fmt"
 import   "math"
+import   "os"
 import   "testing"
 
 import . "github.com/pbenner/ngstat/statistics"
@@ -310,4 +311,5 @@ func TestHmm2(t *testing.T) {
       t.Error("test failed")
     }
   }
+  os.Remove("hmm_test.json")
 }
