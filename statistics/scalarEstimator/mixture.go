@@ -145,7 +145,7 @@ func (obj *MixtureEstimator) SetParameters(parameters Vector) error {
 }
 
 func (obj *MixtureEstimator) SetData(x Vector, n int) error {
-  if data, err := NewStdMixtureDataSet(obj.ScalarType(), x, obj.mixture1.NComponents()); err != nil {
+  if data, err := NewMixtureStdDataSet(obj.ScalarType(), x, obj.mixture1.NComponents()); err != nil {
     return err
   } else {
     for _, estimator := range obj.estimators {

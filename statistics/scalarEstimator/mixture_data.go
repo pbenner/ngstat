@@ -38,42 +38,42 @@ type MixtureDataSet interface {
 
 /* -------------------------------------------------------------------------- */
 
-type StdMixtureDataSet struct {
+type MixtureStdDataSet struct {
   values Vector
   n      int
   p      Matrix
 }
 
-func NewStdMixtureDataSet(t ScalarType, x Vector, k int) (*StdMixtureDataSet, error) {
-  r := StdMixtureDataSet{}
+func NewMixtureStdDataSet(t ScalarType, x Vector, k int) (*MixtureStdDataSet, error) {
+  r := MixtureStdDataSet{}
   r.values = x
   r.p      = NullMatrix(t, k, x.Dim())
   r.n      = x.Dim()
   return &r, nil
 }
 
-func (obj *StdMixtureDataSet) MapIndex(k int) int {
+func (obj *MixtureStdDataSet) MapIndex(k int) int {
   return k
 }
 
-func (obj *StdMixtureDataSet) GetMappedData() Vector {
+func (obj *MixtureStdDataSet) GetMappedData() Vector {
   return obj.values
 }
 
-func (obj *StdMixtureDataSet) GetN() int {
+func (obj *MixtureStdDataSet) GetN() int {
   return obj.n
 }
 
-func (obj *StdMixtureDataSet) GetNMapped() int {
+func (obj *MixtureStdDataSet) GetNMapped() int {
   return obj.n
 }
 
-func (obj *StdMixtureDataSet) LogPdf(r Scalar, c, i int) error {
+func (obj *MixtureStdDataSet) LogPdf(r Scalar, c, i int) error {
   r.Set(obj.p.At(c, i))
   return nil
 }
 
-func (obj *StdMixtureDataSet) EvaluateLogPdf(edist []ScalarDistribution, pool ThreadPool) error {
+func (obj *MixtureStdDataSet) EvaluateLogPdf(edist []ScalarDistribution, pool ThreadPool) error {
   x    := obj.values
   p    := obj.p
   m, n := obj.p.Dims()
