@@ -85,7 +85,7 @@ func (obj *Mixture) GetParameters() Vector {
 }
 
 func (obj *Mixture) SetParameters(parameters Vector) error {
-  n := obj.GetParameters().Dim()
+  n := obj.Mixture.GetParameters().Dim()
   obj.SetParameters(parameters.Slice(0,n))
   if err := obj.Mixture.SetParameters(parameters.Slice(0,n)); err != nil {
     return err

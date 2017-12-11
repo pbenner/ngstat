@@ -103,9 +103,11 @@ func (obj *Hmm) GetParameters() Vector {
 }
 
 func (obj *Hmm) SetParameters(parameters Vector) error {
-  n := obj.GetParameters().Dim()
-  obj.SetParameters(parameters.Slice(0,n))
-  parameters  = parameters.Slice(n,parameters.Dim())
+  n := obj.Hmm.GetParameters().Dim()
+  if err := obj.Hmm.SetParameters(parameters.Slice(0,n)); err != nil {
+    return err
+  }
+  parameters = parameters.Slice(n,parameters.Dim())
   if parameters.Dim() > 0 {
     for i := 0; i < obj.NEDists(); i++ {
       n := obj.Edist[i].GetParameters().Dim()
