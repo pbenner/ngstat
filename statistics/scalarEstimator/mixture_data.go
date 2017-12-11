@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package vectorEstimator
+package scalarEstimator
 
 /* -------------------------------------------------------------------------- */
 
@@ -30,98 +30,50 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-type HmmDataSet interface {
-  generic.HmmDataSet
+type MixtureDataSet interface {
+  generic.MixtureDataSet
   GetMappedData () Vector
   EvaluateLogPdf(edist []ScalarDistribution, pool ThreadPool) error
 }
 
 /* -------------------------------------------------------------------------- */
 
-type HmmDataRecord struct {
-  index []int
-  p       Matrix
+type StdMixtureDataSet struct {
+  values Vector
+  n      int
+  p      Matrix
 }
 
-func (obj HmmDataRecord) MapIndex(k int) int {
-  return obj.index[k]
-}
-
-func (obj HmmDataRecord) GetN() int {
-  return len(obj.index)
-}
-
-func (obj HmmDataRecord) LogPdf(r Scalar, c, k int) error {
-  r.Set(obj.p.At(c, obj.MapIndex(k)))
-  return nil
-}
-
-/* -------------------------------------------------------------------------- */
-
-type StdHmmDataSet struct {
-  // vector of unique observations
-  values     Vector
-  index  [][]int
-  // matrix with emission probabilities, each row corresponds
-  // to an emission distribution and each column to a unique
-  // observation
-  p Matrix
-  // number of observations
-  n int
-}
-
-func NewStdHmmDataSet(t ScalarType, x []Vector, k int) (*StdHmmDataSet, error) {
-  xMap   := make(map[[1]float64]int)
-  index  := make([][]int, len(x))
-  values := NullVector(x[0].ElementType(), 0)
-  m      := 0
-  // convert vector elements to arrays, which can be used
-  // as keys for xMap
-  datum := [1]float64{0}
-  for d := 0; d < len(x); d++ {
-    index[d] = make([]int, x[d].Dim())
-    for i := 0; i < x[d].Dim(); i++ {
-      datum[0] = x[d].At(i).GetValue()
-      if idx, ok := xMap[datum]; ok {
-        index [d][i]  = idx
-      } else {
-        idx   := values.Dim()
-        values = values.AppendScalar(x[d].At(i))
-        xMap [datum] = idx
-        index[d][i]  = idx
-      }
-    }
-    m += x[d].Dim()
-  }
-  r := StdHmmDataSet{}
-  r.values = values
-  r.index  = index
-  r.p      = NullMatrix(t, k, values.Dim())
-  r.n      = m
+func NewStdMixtureDataSet(t ScalarType, x Vector, k int) (*StdMixtureDataSet, error) {
+  r := StdMixtureDataSet{}
+  r.values = x
+  r.p      = NullMatrix(t, k, x.Dim())
+  r.n      = x.Dim()
   return &r, nil
 }
 
-func (obj *StdHmmDataSet) GetMappedData() Vector {
+func (obj *StdMixtureDataSet) MapIndex(k int) int {
+  return k
+}
+
+func (obj *StdMixtureDataSet) GetMappedData() Vector {
   return obj.values
 }
 
-func (obj *StdHmmDataSet) GetRecord(i int) generic.HmmDataRecord {
-  return HmmDataRecord{obj.index[i], obj.p}
-}
-
-func (obj *StdHmmDataSet) GetNMapped() int {
-  return obj.values.Dim()
-}
-
-func (obj *StdHmmDataSet) GetNRecords() int {
-  return len(obj.index)
-}
-
-func (obj *StdHmmDataSet) GetN() int {
+func (obj *StdMixtureDataSet) GetN() int {
   return obj.n
 }
 
-func (obj *StdHmmDataSet) EvaluateLogPdf(edist []ScalarDistribution, pool ThreadPool) error {
+func (obj *StdMixtureDataSet) GetNMapped() int {
+  return obj.n
+}
+
+func (obj *StdMixtureDataSet) LogPdf(r Scalar, c, i int) error {
+  r.Set(obj.p.At(c, i))
+  return nil
+}
+
+func (obj *StdMixtureDataSet) EvaluateLogPdf(edist []ScalarDistribution, pool ThreadPool) error {
   x    := obj.values
   p    := obj.p
   m, n := obj.p.Dims()
@@ -131,7 +83,7 @@ func (obj *StdHmmDataSet) EvaluateLogPdf(edist []ScalarDistribution, pool Thread
   // distributions may have state and must be cloned
   // for each thread
   d := make([][]ScalarDistribution, pool.NumberOfThreads())
-  s := make([]float64,              pool.NumberOfThreads())
+  s := make([]float64, pool.NumberOfThreads())
   for threadIdx := 0; threadIdx < pool.NumberOfThreads(); threadIdx++ {
     d[threadIdx] = make([]ScalarDistribution, m)
     for j := 0; j < m; j++ {
@@ -144,15 +96,17 @@ func (obj *StdHmmDataSet) EvaluateLogPdf(edist []ScalarDistribution, pool Thread
     if erf() != nil {
       return nil
     }
-    s[pool.GetThreadId()] = math.Inf(-1)
+    s := s[pool.GetThreadId()]
+    d := d[pool.GetThreadId()]
+    s = math.Inf(-1)
     // loop over emission distributions
     for j := 0; j < m; j++ {
-      if err := d[pool.GetThreadId()][j].LogPdf(p.At(j, i), x.At(i)); err != nil {
+      if err := d[j].LogPdf(p.At(j, i), x.At(i)); err != nil {
         return err
       }
-      s[pool.GetThreadId()] = LogAdd(s[pool.GetThreadId()], p.At(j, i).GetValue())
+      s = LogAdd(s, p.At(j, i).GetValue())
     }
-    if math.IsInf(s[pool.GetThreadId()], -1) {
+    if math.IsInf(s, -1) {
       return fmt.Errorf("probability is zero for all models on observation `%v'", x.At(i))
     }
     return nil

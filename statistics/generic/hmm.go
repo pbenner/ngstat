@@ -647,7 +647,7 @@ func (obj *Hmm) PosteriorMarginals(data HmmDataRecord) ([]Vector, error) {
 
 func (obj *Hmm) GetParameters() Vector {
   p := Vector(obj.Pi)
-  p  = p.AppendVector(obj.Tr.ToVector())
+  p  = p.AppendVector(obj.Tr.AsVector())
   return p
 }
 
@@ -655,10 +655,10 @@ func (obj *Hmm) SetParameters(parameters Vector) error {
   m := obj.M
   obj.Pi.Set(parameters.Slice(0, m)); parameters = parameters.Slice(m, parameters.Dim())
   if obj.Tr == obj.Tf {
-    obj.Tr.Set(parameters.Slice(0 ,m*m).ToMatrix(m,m)); parameters = parameters.Slice(m*m, parameters.Dim())
+    obj.Tr.Set(parameters.Slice(0 ,m*m).AsMatrix(m,m)); parameters = parameters.Slice(m*m, parameters.Dim())
     obj.Tf = obj.Tr
   } else {
-    obj.Tr.Set(parameters.Slice(0, m*m).ToMatrix(m,m)); parameters = parameters.Slice(m*m, parameters.Dim())
+    obj.Tr.Set(parameters.Slice(0, m*m).AsMatrix(m,m)); parameters = parameters.Slice(m*m, parameters.Dim())
     obj.Tf = obj.Tr.CloneTransitionMatrix()
     t1 := NewReal(0.0)
     t2 := NewReal(0.0)

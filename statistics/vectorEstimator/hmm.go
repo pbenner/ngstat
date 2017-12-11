@@ -152,7 +152,7 @@ func (obj *HmmEstimator) SetData(x []Vector, n int) error {
   } else {
     for _, estimator := range obj.estimators {
       // set data
-      if err := estimator.SetData(data.GetMappedData(), data.GetN()); err != nil {
+      if err := estimator.SetData(data.GetMappedData(), n); err != nil {
         return err
       }
     }

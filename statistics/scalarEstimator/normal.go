@@ -43,8 +43,8 @@ type NormalEstimator struct {
 
 /* -------------------------------------------------------------------------- */
 
-func NewNormalEstimator(mu, sigma Scalar, sigmaMin float64) (*NormalEstimator, error) {
-  if dist, err := scalarDistribution.NewNormalDistribution(mu, sigma); err != nil {
+func NewNormalEstimator(mu, sigma, sigmaMin float64) (*NormalEstimator, error) {
+  if dist, err := scalarDistribution.NewNormalDistribution(NewBareReal(mu), NewBareReal(sigma)); err != nil {
     return nil, err
   } else {
     r := NormalEstimator{}
@@ -157,15 +157,15 @@ func (obj *NormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) er
   // compute sigma
   //////////////////////////////////////////////////////////////////////////////
   if gamma == nil {
-    if err := p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
-      obj.NewObservation(x[i], nil, p)
+    if err := p.AddRangeJob(0, x.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
+      obj.NewObservation(x.At(i), nil, p)
       return nil
     }); err != nil {
       return err
     }
   } else {
-    if err := p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
-      obj.NewObservation(x[i], gamma.At(i), p)
+    if err := p.AddRangeJob(0, x.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
+      obj.NewObservation(x.At(i), gamma.At(i), p)
       return nil
     }); err != nil {
       return err
@@ -181,8 +181,8 @@ func (obj *NormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) er
   return nil
 }
 
-func (obj *NormalEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealVector, p ThreadPool) error {
-  if err := obj.SetData(x, len(x)); err != nil {
+func (obj *NormalEstimator) EstimateOnData(x Vector, gamma DenseBareRealVector, p ThreadPool) error {
+  if err := obj.SetData(x, x.Dim()); err != nil {
     return err
   }
   return obj.Estimate(gamma, p)

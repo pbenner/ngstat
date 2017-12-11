@@ -25,12 +25,12 @@ import . "github.com/pbenner/autodiff"
 /* -------------------------------------------------------------------------- */
 
 type StdEstimator struct {
-  x []Scalar
+  x Vector
 }
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *StdEstimator) SetData(x []Scalar, n int) error {
+func (obj *StdEstimator) SetData(x Vector, n int) error {
   obj.x = x
   return nil
 }

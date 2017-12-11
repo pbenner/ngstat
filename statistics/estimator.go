@@ -37,9 +37,9 @@ type BasicEstimator interface {
 type ScalarEstimator interface {
   BasicEstimator
   CloneScalarEstimator()                  ScalarEstimator
-  SetData             (x []Scalar, n int) error
+  SetData             (x Vector, n int)   error
   GetEstimate         ()                  ScalarDistribution
-  EstimateOnData      (x []Scalar, gamma DenseBareRealVector, p ThreadPool) error
+  EstimateOnData      (x Vector, gamma DenseBareRealVector, p ThreadPool) error
 }
 
 type VectorEstimator interface {

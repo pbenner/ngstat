@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package vectorEstimator
+package scalarEstimator
 
 /* -------------------------------------------------------------------------- */
 
@@ -22,7 +22,7 @@ import   "fmt"
 
 import . "github.com/pbenner/ngstat/statistics"
 import   "github.com/pbenner/ngstat/statistics/generic"
-import   "github.com/pbenner/ngstat/statistics/vectorDistribution"
+import   "github.com/pbenner/ngstat/statistics/scalarDistribution"
 
 import . "github.com/pbenner/autodiff"
 import . "github.com/pbenner/threadpool"
@@ -30,18 +30,18 @@ import . "github.com/pbenner/threadpool"
 /* -------------------------------------------------------------------------- */
 
 type MixtureEstimator struct {
-  mixture1    *vectorDistribution.Mixture
-  mixture2    *vectorDistribution.Mixture
-  mixture3    *vectorDistribution.Mixture
+  mixture1    *scalarDistribution.Mixture
+  mixture2    *scalarDistribution.Mixture
+  mixture3    *scalarDistribution.Mixture
   data         MixtureDataSet
-  estimators []VectorEstimator
+  estimators []ScalarEstimator
   // EM arguments
   epsilon      float64
   maxSteps     int
   args       []interface{}
 }
 
-func NewMixtureEstimator(mixture *vectorDistribution.Mixture, estimators []VectorEstimator, epsilon float64, maxSteps int, args... interface{}) (*MixtureEstimator, error) {
+func NewMixtureEstimator(mixture *scalarDistribution.Mixture, estimators []ScalarEstimator, epsilon float64, maxSteps int, args... interface{}) (*MixtureEstimator, error) {
   if len(estimators) != mixture.NComponents() {
     return nil, fmt.Errorf("invalid number of estimators")
   }
@@ -118,10 +118,10 @@ func (obj *MixtureEstimator) Step(gamma DenseBareRealVector, tmp []generic.EmTmp
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *MixtureEstimator) CloneVectorEstimator() VectorEstimator {
-  estimators := make([]VectorEstimator, len(obj.estimators))
+func (obj *MixtureEstimator) CloneScalarEstimator() ScalarEstimator {
+  estimators := make([]ScalarEstimator, len(obj.estimators))
   for i := 0; i < len(obj.estimators); i++ {
-    estimators[i] = obj.estimators[i].CloneVectorEstimator()
+    estimators[i] = obj.estimators[i].CloneScalarEstimator()
   }
   r := MixtureEstimator{}
   r  = *obj
@@ -144,7 +144,7 @@ func (obj *MixtureEstimator) SetParameters(parameters Vector) error {
   return obj.mixture1.SetParameters(parameters)
 }
 
-func (obj *MixtureEstimator) SetData(x []Vector, n int) error {
+func (obj *MixtureEstimator) SetData(x Vector, n int) error {
   if data, err := NewStdMixtureDataSet(obj.ScalarType(), x, obj.mixture1.NComponents()); err != nil {
     return err
   } else {
@@ -166,13 +166,13 @@ func (obj *MixtureEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) e
   return generic.EmAlgorithm(obj, gamma, nData, nMapped, obj.mixture1.NComponents(), obj.epsilon, obj.maxSteps, p, obj.args...)
 }
 
-func (obj *MixtureEstimator) EstimateOnData(x []Vector, gamma DenseBareRealVector, p ThreadPool) error {
-  if err := obj.SetData(x, len(x)); err != nil {
+func (obj *MixtureEstimator) EstimateOnData(x Vector, gamma DenseBareRealVector, p ThreadPool) error {
+  if err := obj.SetData(x, x.Dim()); err != nil {
     return err
   }
   return obj.Estimate(gamma, p)
 }
 
-func (obj *MixtureEstimator) GetEstimate() VectorDistribution {
+func (obj *MixtureEstimator) GetEstimate() ScalarDistribution {
   return obj.mixture1
 }

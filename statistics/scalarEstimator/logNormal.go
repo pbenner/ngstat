@@ -157,15 +157,15 @@ func (obj *LogNormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool)
   // compute sigma
   //////////////////////////////////////////////////////////////////////////////
   if gamma == nil {
-    if err := p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
-      obj.NewObservation(x[i], nil, p)
+    if err := p.AddRangeJob(0, x.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
+      obj.NewObservation(x.At(i), nil, p)
       return nil
     }); err != nil {
       return err
     }
   } else {
-    if err := p.AddRangeJob(0, len(x), g, func(i int, p ThreadPool, erf func() error) error {
-      obj.NewObservation(x[i], gamma.At(i), p)
+    if err := p.AddRangeJob(0, x.Dim(), g, func(i int, p ThreadPool, erf func() error) error {
+      obj.NewObservation(x.At(i), gamma.At(i), p)
       return nil
     }); err != nil {
       return err
@@ -181,8 +181,8 @@ func (obj *LogNormalEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool)
   return nil
 }
 
-func (obj *LogNormalEstimator) EstimateOnData(x []Scalar, gamma DenseBareRealVector, p ThreadPool) error {
-  if err := obj.SetData(x, len(x)); err != nil {
+func (obj *LogNormalEstimator) EstimateOnData(x Vector, gamma DenseBareRealVector, p ThreadPool) error {
+  if err := obj.SetData(x, x.Dim()); err != nil {
     return err
   }
   return obj.Estimate(gamma, p)
