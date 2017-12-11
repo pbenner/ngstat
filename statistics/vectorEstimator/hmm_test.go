@@ -24,10 +24,13 @@ import   "math"
 import   "testing"
 
 import . "github.com/pbenner/ngstat/statistics"
+import   "github.com/pbenner/ngstat/statistics/scalarDistribution"
 import   "github.com/pbenner/ngstat/statistics/vectorDistribution"
 import   "github.com/pbenner/ngstat/statistics/scalarEstimator"
 
 import . "github.com/pbenner/autodiff"
+import . "github.com/pbenner/autodiff/simple"
+import   "github.com/pbenner/autodiff/algorithm/bfgs"
 
 import . "github.com/pbenner/threadpool"
 
@@ -102,4 +105,96 @@ func TestHmm1(t *testing.T) {
       }
     }
   }
+}
+
+func TestHmm2(t *testing.T) {
+  // Hmm definition
+  //////////////////////////////////////////////////////////////////////////////
+  tr := NewMatrix(RealType, 2, 2,
+    []float64{0.7, 0.3, 0.4, 0.6})
+
+  c1, _ := scalarDistribution.NewCategoricalDistribution(
+    NewVector(RealType, []float64{0.1, 0.9}))
+  c2, _ := scalarDistribution.NewCategoricalDistribution(
+    NewVector(RealType, []float64{0.7, 0.3}))
+  edist := []ScalarDistribution{c1, c2}
+
+  pi := NewVector(RealType, []float64{0.6, 0.4})
+
+  x  := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
+  r  := NewReal(0.0)
+
+  hmm, err := vectorDistribution.NewHmm(pi, tr, nil, edist)
+  if err != nil {
+    t.Error(err)
+  }
+  hmm.SetStartStates([]int{0})
+  hmm.SetFinalStates([]int{0})
+
+  penalty := func(p1, p2, c Scalar) Scalar {
+    r := NewReal(0.0)
+    r.Add(p1, p2)
+    r.Sub(r, NewReal(1.0))
+    r.Pow(r, NewReal(2.0))
+    r.Mul(r, c)
+    return r
+  }
+  objective_template := func(variables Vector, c Scalar) (Scalar, error) {
+    // create a new initial normal distribution
+    pi := NullVector(RealType, 2)
+    tr := NullMatrix(RealType, 2, 2)
+    // copy the variables
+    pi.At(0).SetValue(1.0)
+    pi.At(1).SetValue(1.0)
+    tr.At(0, 0).Exp(variables.At(0))
+    tr.At(0, 1).Exp(variables.At(1))
+    tr.At(1, 0).Exp(variables.At(2))
+    tr.At(1, 1).Exp(variables.At(3))
+    // construct new Hmm
+    hmm, _ := vectorDistribution.NewHmm(pi, tr, nil, edist)
+    hmm.SetStartStates([]int{0})
+    hmm.SetFinalStates([]int{0})
+    // compute objective function
+    result := NewScalar(RealType, 0.0)
+    // density function
+    hmm.LogPdf(r, x)
+    result.Add(result, r)
+    result.Neg(result)
+    // penalty function
+    result.Add(result, penalty(pi.At(0),pi.At(1), c))
+    result.Add(result, penalty(tr.At(0, 0),tr.At(0, 1), c))
+    result.Add(result, penalty(tr.At(1, 0),tr.At(1, 1), c))
+    return result, nil
+  }
+  // hook_bfgs := func(variables, gradient Vector, s Scalar) bool {
+  //   fmt.Println("variables:", variables)
+  //   fmt.Println("gradient :", gradient)
+  //   fmt.Println("y        :", s)
+  //   fmt.Println("")
+  //   return false
+  // }
+  // initial value
+  vn := hmm.GetParameters()
+  vn  = vn.Slice(2,vn.Dim())
+  // initial penalty strength
+  c  := NewReal(2.0)
+  // run rprop
+  for i := 0; i < 20; i++ {
+    objective := func(variables Vector) (Scalar, error) {
+      return objective_template(variables, c)
+    }
+    vn, _ = bfgs.Run(objective, vn,
+      //bfgs.Hook{hook_bfgs},
+      bfgs.Epsilon{1e-8})
+    // increase penalty strength
+    c.Mul(c, NewReal(2.0))
+  }
+  // check result
+  if math.Abs(Exp(vn.At(0)).GetValue() - 8.257028e-01) > 1e-3 ||
+     math.Abs(Exp(vn.At(1)).GetValue() - 1.743001e-01) > 1e-3 ||
+     math.Abs(Exp(vn.At(2)).GetValue() - 3.597875e-01) > 1e-3 ||
+     math.Abs(Exp(vn.At(3)).GetValue() - 6.402134e-01) > 1e-3 {
+    t.Error("Hmm test failed!")
+  }
+
 }
