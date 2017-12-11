@@ -78,7 +78,7 @@ func NewHmmStdDataSet(t ScalarType, x []Vector, k int) (*HmmStdDataSet, error) {
   for d := 0; d < len(x); d++ {
     offsets[d] = n
     values     = values.AppendVector(x[d])
-    n         += len(x)
+    n         += x[d].Dim()
   }
   r := HmmStdDataSet{}
   r.values  = values
