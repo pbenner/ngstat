@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package vectorConnector
+package vectorDistribution
 
 /* -------------------------------------------------------------------------- */
 
@@ -22,7 +22,7 @@ package vectorConnector
 import   "testing"
 
 import . "github.com/pbenner/ngstat/statistics"
-import . "github.com/pbenner/ngstat/statistics/scalarDistribution"
+import   "github.com/pbenner/ngstat/statistics/scalarDistribution"
 
 import . "github.com/pbenner/autodiff"
 
@@ -30,8 +30,8 @@ import . "github.com/pbenner/autodiff"
 
 func TestScalarId(t *testing.T) {
 
-  d1, _ := NewGammaDistribution(NewReal(1.0), NewReal(2.0), NewReal(3.0))
-  d2, _ := NewGammaDistribution(NewReal(2.0), NewReal(3.0), NewReal(4.0))
+  d1, _ := scalarDistribution.NewGammaDistribution(NewReal(1.0), NewReal(2.0), NewReal(3.0))
+  d2, _ := scalarDistribution.NewGammaDistribution(NewReal(2.0), NewReal(3.0), NewReal(4.0))
 
   id, _ := NewScalarId(d1, d2)
 
@@ -46,7 +46,7 @@ func TestScalarId(t *testing.T) {
         t.Error("test failed")
       } else {
         switch gamma := id.Distributions[0].(type) {
-        case *GammaDistribution:
+        case *scalarDistribution.GammaDistribution:
           if gamma.Alpha.GetValue() != 1.0 {
             t.Error("test failed")
           }

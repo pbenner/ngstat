@@ -28,4 +28,8 @@ func init() {
   VectorDistributionRegistry["vector hmm distribution"]         = new(Hmm)
   VectorDistributionRegistry["vector mixture distribution"]     = new(Mixture)
   VectorDistributionRegistry["multivariate normal distribtion"] = new(NormalDistribution)
+  VectorDistributionRegistry["scalar id connector"]             = new(ScalarId)
+  VectorDistributionRegistry["scalar iid connector"]            = new(ScalarIid)
+  VectorDistributionRegistry["vector id connector"]             = new(VectorId)
+  VectorDistributionRegistry["vector iid connector"]            = new(VectorIid)
 }
