@@ -147,7 +147,7 @@ func (obj *HmmEstimator) SetParameters(parameters Vector) error {
 }
 
 func (obj *HmmEstimator) SetData(x []Vector, n int) error {
-  if data, err := NewStdHmmDataSet(obj.ScalarType(), x, obj.hmm1.NEDists()); err != nil {
+  if data, err := NewHmmStdDataSet(obj.ScalarType(), x, obj.hmm1.NEDists()); err != nil {
     return err
   } else {
     for _, estimator := range obj.estimators {
