@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package vectorDistribution
+package scalarDistribution
 
 /* -------------------------------------------------------------------------- */
 
@@ -27,8 +27,8 @@ import . "github.com/pbenner/autodiff"
 /* -------------------------------------------------------------------------- */
 
 type MixtureDataRecord struct {
-  Edist []VectorDistribution
-  X       Vector
+  Edist []ScalarDistribution
+  X       Scalar
 }
 
 func (obj MixtureDataRecord) LogPdf(r Scalar, c int) error {
