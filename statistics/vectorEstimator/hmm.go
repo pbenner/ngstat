@@ -146,6 +146,10 @@ func (obj *HmmEstimator) CloneVectorEstimator() VectorEstimator {
   return &r
 }
 
+func (obj *HmmEstimator) Dim() int {
+  return obj.hmm1.Dim()
+}
+
 func (obj *HmmEstimator) ScalarType() ScalarType {
   return obj.hmm1.ScalarType()
 }

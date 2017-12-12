@@ -136,6 +136,10 @@ func (obj *MixtureEstimator) CloneVectorEstimator() VectorEstimator {
   return &r
 }
 
+func (obj *MixtureEstimator) Dim() int {
+  return obj.mixture1.Dim()
+}
+
 func (obj *MixtureEstimator) ScalarType() ScalarType {
   return obj.mixture1.ScalarType()
 }

@@ -136,6 +136,10 @@ func (obj *MixtureEstimator) CloneMatrixEstimator() MatrixEstimator {
   return &r
 }
 
+func (obj *MixtureEstimator) Dims() (int, int) {
+  return obj.mixture1.Dims()
+}
+
 func (obj *MixtureEstimator) ScalarType() ScalarType {
   return obj.mixture1.ScalarType()
 }
