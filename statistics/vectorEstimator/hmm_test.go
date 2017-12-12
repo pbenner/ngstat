@@ -49,21 +49,17 @@ func TestHmm1(t *testing.T) {
   e2, _ := scalarEstimator.NewCategoricalEstimator(
     NewVector(RealType, []float64{0.7, 0.3}))
 
-  hmm, err := vectorDistribution.NewHmm(pi, tr, nil, nil)
-  if err != nil {
-    t.Error(err)
-  }
   // test Baum-Welch algorithm
   //////////////////////////////////////////////////////////////////////////////
-  if estimator, err := NewHmmEstimator(hmm, []ScalarEstimator{e1, e2}, 1e-8, -1); err != nil {
+  if estimator, err := NewHmmEstimator(pi, tr, nil, nil, nil, []ScalarEstimator{e1, e2}, 1e-8, -1); err != nil {
     t.Error(err)
   } else {
-    x := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
+    hmm1 := estimator.GetEstimate()
+    x    := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
 
     if err := estimator.EstimateOnData([]Vector{x}, nil, ThreadPool{}); err != nil {
       t.Error(err)
     } else {
-      hmm1 := hmm
       hmm2 := estimator.GetEstimate()
 
       p1 := NullReal(); hmm1.LogPdf(p1, x)
@@ -79,30 +75,24 @@ func TestHmm1(t *testing.T) {
   }
   // test Baum-Welch algorithm with conditioning
   //////////////////////////////////////////////////////////////////////////////
-  {
-    hmm := hmm.Clone()
-    hmm.SetStartStates([]int{0})
-    hmm.SetFinalStates([]int{0})
+  if estimator, err := NewHmmEstimator(pi, tr, nil, []int{0}, []int{0}, []ScalarEstimator{e1, e2}, 1e-8, -1); err != nil {
+    t.Error(err)
+  } else {
+    hmm1 := estimator.GetEstimate()
+    x    := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
 
-    if estimator, err := NewHmmEstimator(hmm, []ScalarEstimator{e1, e2}, 1e-8, -1); err != nil {
+    if err := estimator.EstimateOnData([]Vector{x}, nil, ThreadPool{}); err != nil {
       t.Error(err)
     } else {
-      x  := NewVector(RealType, []float64{1,1,1,1,1,1,0,0,1,0})
+      hmm2 := estimator.GetEstimate()
 
-      if err := estimator.EstimateOnData([]Vector{x}, nil, ThreadPool{}); err != nil {
-        t.Error(err)
-      } else {
-        hmm1 := hmm
-        hmm2 := estimator.GetEstimate()
-
-        p1 := NullReal(); hmm1.LogPdf(p1, x)
-        p2 := NullReal(); hmm2.LogPdf(p2, x)
-        if p1.Greater(p2) {
-          t.Errorf("Baum-Welch test failed")
-        }
-        if math.Abs(p2.GetValue() - -5.834855e+00) > 1e-4 {
-          t.Errorf("Baum-Welch test failed")
-        }
+      p1 := NullReal(); hmm1.LogPdf(p1, x)
+      p2 := NullReal(); hmm2.LogPdf(p2, x)
+      if p1.Greater(p2) {
+        t.Errorf("Baum-Welch test failed")
+      }
+      if math.Abs(p2.GetValue() - -5.834855e+00) > 1e-4 {
+        t.Errorf("Baum-Welch test failed")
       }
     }
   }
@@ -395,18 +385,14 @@ func TestHmm5(t *testing.T) {
     NewVector(RealType, []float64{0.06229591, 0.06229591, 0.06229591, 4.466460, 4.466460, 4.466460}),
     NewVector(RealType, []float64{0.43543498, 0.43543498, 0.43543498, 6.193897, 6.193897, 6.193897}) }
 
-  hmm, err := vectorDistribution.NewHmm(pi, tr, nil, nil)
-  if err != nil {
-    t.Error(err); return
-  }
-  estimator, err := NewHmmEstimator(hmm, []ScalarEstimator{e1, e2}, 1e-10, -1)
+  estimator, err := NewHmmEstimator(pi, tr, nil, nil, nil, []ScalarEstimator{e1, e2}, 1e-10, -1)
   if err != nil {
     t.Error(err); return
   }
   if err := estimator.EstimateOnData(x, nil, ThreadPool{}); err != nil {
     t.Error(err); return
   }
-  hmm = estimator.GetEstimate().(*vectorDistribution.Hmm)
+  hmm := estimator.GetEstimate().(*vectorDistribution.Hmm)
 
   // correct values
   qi := NewVector(RealType, []float64{7.249908e-01, 2.750092e-01})
@@ -459,11 +445,8 @@ func TestHmm6(t *testing.T) {
   e3.Epsilon = 1e-6
   e4.Epsilon = 1e-6
 
-  d1, _ := scalarDistribution.NewMixture(NewVector(RealType, []float64{0.5, 0.5}), nil)
-  d2, _ := scalarDistribution.NewMixture(NewVector(RealType, []float64{0.3, 0.7}), nil)
-
-  f1, _ := scalarEstimator.NewMixtureEstimator(d1, []ScalarEstimator{e1, e2}, 0, 0)
-  f2, _ := scalarEstimator.NewMixtureEstimator(d2, []ScalarEstimator{e3, e4}, 0, 0)
+  f1, _ := scalarEstimator.NewMixtureEstimator([]float64{0.5, 0.5}, []ScalarEstimator{e1, e2}, 0, 0)
+  f2, _ := scalarEstimator.NewMixtureEstimator([]float64{0.3, 0.7}, []ScalarEstimator{e3, e4}, 0, 0)
 
   x  := []Vector{
     NewVector(RealType, []float64{
@@ -538,11 +521,7 @@ func TestHmm6(t *testing.T) {
   r.Slice( 0, 6).Map(func(x Scalar) { x.Exp(x) })
   r.Slice(12,14).Map(func(x Scalar) { x.Exp(x) })
 
-  hmm, err := vectorDistribution.NewHmm(pi, tr, nil, nil)
-  if err != nil {
-    t.Error(err); return
-  }
-  estimator, err := NewHmmEstimator(hmm, []ScalarEstimator{f1, f2}, 1e-8, -1)
+  estimator, err := NewHmmEstimator(pi, tr, nil, nil, nil, []ScalarEstimator{f1, f2}, 1e-8, -1)
   if err != nil {
     t.Error(err); return
   }

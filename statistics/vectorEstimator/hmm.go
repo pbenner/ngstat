@@ -41,26 +41,36 @@ type HmmEstimator struct {
   args       []interface{}
 }
 
-func NewHmmEstimator(hmm *vectorDistribution.Hmm, estimators []ScalarEstimator, epsilon float64, maxSteps int, args... interface{}) (*HmmEstimator, error) {
-  if hmm.NEDists() > 0 && len(estimators) != hmm.NEDists() {
-    return nil, fmt.Errorf("invalid number of estimators")
-  }
-  for i, estimator := range estimators {
-    // initialize distribution
-    if hmm.Edist[i] == nil {
-      hmm.Edist[i] = estimator.GetEstimate()
+func NewHmmEstimator(pi Vector, tr Matrix, stateMap, startStates, finalStates []int, estimators []ScalarEstimator, epsilon float64, maxSteps int, args... interface{}) (*HmmEstimator, error) {
+  if hmm, err := vectorDistribution.NewHmm(pi, tr, stateMap, nil); err != nil {
+    return nil, err
+  } else {
+    if err := hmm.SetStartStates(startStates); err != nil {
+      return nil, err
     }
+    if err := hmm.SetFinalStates(finalStates); err != nil {
+      return nil, err
+    }
+    if hmm.NEDists() > 0 && len(estimators) != hmm.NEDists() {
+      return nil, fmt.Errorf("invalid number of estimators")
+    }
+    for i, estimator := range estimators {
+      // initialize distribution
+      if hmm.Edist[i] == nil {
+        hmm.Edist[i] = estimator.GetEstimate()
+      }
+    }
+    // initialize estimators with data
+    r := HmmEstimator{}
+    r.hmm1       = hmm.Clone()
+    r.hmm2       = hmm.Clone()
+    r.hmm3       = hmm.Clone()
+    r.estimators = estimators
+    r.epsilon    = epsilon
+    r.maxSteps   = maxSteps
+    r.args       = args
+    return &r, nil
   }
-  // initialize estimators with data
-  r := HmmEstimator{}
-  r.hmm1       = hmm.Clone()
-  r.hmm2       = hmm.Clone()
-  r.hmm3       = hmm.Clone()
-  r.estimators = estimators
-  r.epsilon    = epsilon
-  r.maxSteps   = maxSteps
-  r.args       = args
-  return &r, nil
 }
 
 /* Baum-Welch interface
