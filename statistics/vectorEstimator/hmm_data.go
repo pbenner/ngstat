@@ -60,7 +60,7 @@ func (obj HmmStdDataRecord) LogPdf(r Scalar, c, k int) error {
 /* -------------------------------------------------------------------------- */
 
 type HmmStdDataSet struct {
-  // vector of unique observations
+  // vector of observations
   values     Vector
   offsets  []int
   // matrix with emission probabilities, each row corresponds
