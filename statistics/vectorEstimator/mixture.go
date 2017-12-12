@@ -41,21 +41,25 @@ type MixtureEstimator struct {
   args       []interface{}
 }
 
-func NewMixtureEstimator(mixture *vectorDistribution.Mixture, estimators []VectorEstimator, epsilon float64, maxSteps int, args... interface{}) (*MixtureEstimator, error) {
-  if len(estimators) != mixture.NComponents() {
+func NewMixtureEstimator(weights []float64, estimators []VectorEstimator, epsilon float64, maxSteps int, args... interface{}) (*MixtureEstimator, error) {
+  m, err := vectorDistribution.NewMixture(NewVector(BareRealType, weights), nil)
+  if err != nil {
+    return nil, err
+  }
+  if len(estimators) != m.NComponents() {
     return nil, fmt.Errorf("invalid number of estimators")
   }
   for i, estimator := range estimators {
     // initialize distribution
-    if mixture.Edist[i] == nil {
-      mixture.Edist[i] = estimator.GetEstimate()
+    if m.Edist[i] == nil {
+      m.Edist[i] = estimator.GetEstimate()
     }
   }
   // initialize estimators with data
   r := MixtureEstimator{}
-  r.mixture1   = mixture.Clone()
-  r.mixture2   = mixture.Clone()
-  r.mixture3   = mixture.Clone()
+  r.mixture1   = m.Clone()
+  r.mixture2   = m.Clone()
+  r.mixture3   = m.Clone()
   r.estimators = estimators
   r.epsilon    = epsilon
   r.maxSteps   = maxSteps
