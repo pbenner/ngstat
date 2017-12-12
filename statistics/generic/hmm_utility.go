@@ -38,12 +38,14 @@ type HmmProbabilityVector struct {
   t2 Scalar
 }
 
-func NewHmmProbabilityVector(v Vector) (HmmProbabilityVector, error) {
+func NewHmmProbabilityVector(v Vector, isLog bool) (HmmProbabilityVector, error) {
   t1 := NewScalar(v.ElementType(), 0.0)
   t2 := NewScalar(v.ElementType(), 0.0)
   pi := v.CloneVector()
   // log-transform all probabilities
-  pi.Map(func(x Scalar) { x.Log(x) })
+  if !isLog {
+    pi.Map(func(x Scalar) { x.Log(x) })
+  }
   r := HmmProbabilityVector{pi, t1, t2}
   if err := r.Normalize(); err != nil {
     return HmmProbabilityVector{}, nil
@@ -93,12 +95,14 @@ type HmmTransitionMatrix struct {
   t2 Scalar
 }
 
-func NewHmmTransitionMatrix(tr_ Matrix) (HmmTransitionMatrix, error) {
+func NewHmmTransitionMatrix(tr_ Matrix, isLog bool) (HmmTransitionMatrix, error) {
   t1 := NewScalar(tr_.ElementType(), 0.0)
   t2 := NewScalar(tr_.ElementType(), 0.0)
   tr := tr_.CloneMatrix()
   // log-transform all probabilities
-  tr.Map(func(x Scalar) { x.Log(x) })
+  if !isLog {
+    tr.Map(func(x Scalar) { x.Log(x) })
+  }
   r := HmmTransitionMatrix{tr, t1, t2}
   if err := r.Normalize(); err != nil {
     return HmmTransitionMatrix{}, err

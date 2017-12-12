@@ -165,38 +165,42 @@ func (config ConfigDistribution) GetParametersAsMatrix(t ScalarType, n, m int) (
   }
 }
 
-func (config ConfigDistribution) GetNamedParametersAsFloats(name string) ([]float64, bool) {
+func (config ConfigDistribution) GetNamedParameter(name string) (interface{}, bool) {
   switch reflect.TypeOf(config.Parameters).Kind() {
   case reflect.Map:
     s := reflect.ValueOf(config.Parameters)
     r := s.MapIndex(reflect.ValueOf(name))
     if r.IsValid() {
-      return config.getFloats(r.Interface())
+      return r.Interface(), true
     }
+  }
+  return 0, false
+}
+
+func (config ConfigDistribution) GetNamedParametersAsFloats(name string) ([]float64, bool) {
+  if p, ok := config.GetNamedParameter(name); ok {
+    return config.getFloats(p)
   }
   return nil, false
 }
 
 func (config ConfigDistribution) GetNamedParametersAsInts(name string) ([]int, bool) {
-  switch reflect.TypeOf(config.Parameters).Kind() {
-  case reflect.Map:
-    s := reflect.ValueOf(config.Parameters)
-    r := s.MapIndex(reflect.ValueOf(name))
-    if r.IsValid() {
-      return config.getInts(r.Interface())
-    }
+  if p, ok := config.GetNamedParameter(name); ok {
+    return config.getInts(p)
   }
   return nil, false
 }
 
 func (config ConfigDistribution) GetNamedParameterAsFloat(name string) (float64, bool) {
-  switch reflect.TypeOf(config.Parameters).Kind() {
-  case reflect.Map:
-    s := reflect.ValueOf(config.Parameters)
-    r := s.MapIndex(reflect.ValueOf(name))
-    if r.IsValid() {
-      return config.getFloat(r.Interface())
-    }
+  if p, ok := config.GetNamedParameter(name); ok {
+    return config.getFloat(p)
+  }
+  return 0, false
+}
+
+func (config ConfigDistribution) GetNamedParameterAsInt(name string) (int, bool) {
+  if p, ok := config.GetNamedParameter(name); ok {
+    return config.getInt(p)
   }
   return 0, false
 }
@@ -215,18 +219,6 @@ func (config ConfigDistribution) GetNamedParametersAsMatrix(name string, t Scala
   } else {
     return NewMatrix(t, n, m, v), true
   }
-}
-
-func (config ConfigDistribution) GetNamedParameterAsInt(name string) (int, bool) {
-  switch reflect.TypeOf(config.Parameters).Kind() {
-  case reflect.Map:
-    s := reflect.ValueOf(config.Parameters)
-    r := s.MapIndex(reflect.ValueOf(name))
-    if r.IsValid() {
-      return config.getInt(r.Interface())
-    }
-  }
-  return 0, false
 }
 
 /* -------------------------------------------------------------------------- */

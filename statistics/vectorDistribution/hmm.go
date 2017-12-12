@@ -36,10 +36,10 @@ type Hmm struct {
 /* -------------------------------------------------------------------------- */
 
 func NewHmm(pi Vector, tr Matrix, stateMap []int, edist []ScalarDistribution) (*Hmm, error) {
-  p, err := generic.NewHmmProbabilityVector(pi); if err != nil {
+  p, err := generic.NewHmmProbabilityVector(pi, false); if err != nil {
     return nil, err
   }
-  t, err := generic.NewHmmTransitionMatrix(tr); if err != nil {
+  t, err := generic.NewHmmTransitionMatrix(tr, false); if err != nil {
     return nil, err
   }
   if hmm, err := generic.NewHmm(p, t, stateMap); err != nil {

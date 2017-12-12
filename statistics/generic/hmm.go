@@ -717,10 +717,10 @@ func (obj *Hmm) ImportConfig(config ConfigDistribution, t ScalarType) error {
     return fmt.Errorf("invalid config file")
   }
 
-  Pi, err := NewHmmProbabilityVector(pi); if err != nil {
+  Pi, err := NewHmmProbabilityVector(pi, false); if err != nil {
     return err
   }
-  Tr, err := NewHmmTransitionMatrix(tr); if err != nil {
+  Tr, err := NewHmmTransitionMatrix(tr, false); if err != nil {
     return err
   }
 
@@ -739,34 +739,34 @@ func (obj *Hmm) ExportConfig() ConfigDistribution {
 
   n := obj.Pi.Dim()
 
-  config := struct{
+  parameters := struct{
     Pi          []float64
     Tr          []float64
     StateMap    []int
     N             int
     StartStates []int
     FinalStates []int }{}
-  config.Pi       = obj.Pi.GetValues()
-  config.Tr       = obj.Tr.GetValues()
-  config.StateMap = obj.StateMap
-  config.N        = n
+  parameters.Pi       = obj.Pi.GetValues()
+  parameters.Tr       = obj.Tr.GetValues()
+  parameters.StateMap = obj.StateMap
+  parameters.N        = n
 
   // exponentiate
-  for i := 0; i < len(config.Pi); i++ {
-    config.Pi[i] = math.Exp(config.Pi[i])
+  for i := 0; i < len(parameters.Pi); i++ {
+    parameters.Pi[i] = math.Exp(parameters.Pi[i])
   }
-  for i := 0; i < len(config.Tr); i++ {
-    config.Tr[i] = math.Exp(config.Tr[i])
+  for i := 0; i < len(parameters.Tr); i++ {
+    parameters.Tr[i] = math.Exp(parameters.Tr[i])
   }
   for i, v := range obj.startStates {
     if v {
-      config.StartStates = append(config.StartStates, i)
+      parameters.StartStates = append(parameters.StartStates, i)
     }
   }
   for i, v := range obj.finalStates {
     if v {
-      config.FinalStates = append(config.FinalStates, i)
+      parameters.FinalStates = append(parameters.FinalStates, i)
     }
   }
-  return NewConfigDistribution("generic hmm", config)
+  return NewConfigDistribution("generic hmm", parameters)
 }
