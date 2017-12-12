@@ -107,7 +107,11 @@ func baumWelchAlgorithm(obj baumWelchCore, meta DenseBareRealVector, tmp []BaumW
       hook.Value(obj.GetBasicHmm(), 0, math.NaN(), math.NaN())
     }
   }
-  likelihood_old := math.NaN()
+  // perform a single step if this is a nested Em
+  if meta != nil {
+    maxSteps = 1
+  }
+  likelihood_old := math.Inf(-1)
 
   for k := 0; maxSteps == -1 || k < maxSteps; k++ {
     // swap both distributions

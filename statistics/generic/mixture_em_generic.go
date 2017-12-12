@@ -102,6 +102,10 @@ func emAlgorithm(obj emCore, meta DenseBareRealVector, tmp []EmTmp, epsilon floa
       hook.Value(obj.GetBasicMixture(), 0, math.NaN(), math.NaN())
     }
   }
+  // perform a single step if this is a nested Em
+  if meta != nil {
+    maxSteps = 1
+  }
   likelihood_old := math.Inf(-1)
 
   for k := 0; maxSteps == -1 || k < maxSteps; k++ {

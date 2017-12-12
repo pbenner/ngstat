@@ -454,14 +454,16 @@ func TestHmm6(t *testing.T) {
   c4, _ := scalarDistribution.NewGammaDistribution(NewReal(10.0), NewReal(3.0), NewReal(0))
   e4, _ := scalarEstimator.NewNumericEstimator(c4)
 
+  e1.Epsilon = 1e-6
+  e2.Epsilon = 1e-6
+  e3.Epsilon = 1e-6
+  e4.Epsilon = 1e-6
+
   d1, _ := scalarDistribution.NewMixture(NewVector(RealType, []float64{0.5, 0.5}), nil)
   d2, _ := scalarDistribution.NewMixture(NewVector(RealType, []float64{0.3, 0.7}), nil)
 
-  f1, _ := scalarEstimator.NewMixtureEstimator(d1, []ScalarEstimator{e1, e2}, 1e-7, 1)
-  f2, _ := scalarEstimator.NewMixtureEstimator(d2, []ScalarEstimator{e3, e4}, 1e-7, 1)
-
-  e1.Epsilon = 1e-7
-  e2.Epsilon = 1e-7
+  f1, _ := scalarEstimator.NewMixtureEstimator(d1, []ScalarEstimator{e1, e2}, 0, 0)
+  f2, _ := scalarEstimator.NewMixtureEstimator(d2, []ScalarEstimator{e3, e4}, 0, 0)
 
   x  := []Vector{
     NewVector(RealType, []float64{
@@ -529,16 +531,29 @@ func TestHmm6(t *testing.T) {
       52.53555, 36.78197, 51.54151, 39.34633, 42.58552, 36.37609, 52.56146, 37.34477,
       57.82587, 32.90822, 45.33739, 29.18969, 47.45135, 29.04017, 43.86988, 31.33080 })}
 
+  r := NewVector(RealType, []float64{
+    -9.628283e+04,  0.000000e+00, 0.000000e+00, -2.811200e+03, -5.298317e+00, -5.012542e-03,   // Hmm
+    -2.851585e+02,  0.000000e+00, 4.262817e+01,  4.718743e+01,  2.513352e+01,  5.887617e-01,   // Mixture component 1
+    -6.486053e-01, -7.397659e-01, 9.793777e-01,  1.813242e+00,  1.139991e+01,  1.144401e+01 }) // Mixture component 2
+  r.Slice( 0, 6).Map(func(x Scalar) { x.Exp(x) })
+  r.Slice(12,14).Map(func(x Scalar) { x.Exp(x) })
+
   hmm, err := vectorDistribution.NewHmm(pi, tr, nil, nil)
   if err != nil {
     t.Error(err); return
   }
-  estimator, err := NewHmmEstimator(hmm, []ScalarEstimator{f1, f2}, 1e-10, -1)
+  estimator, err := NewHmmEstimator(hmm, []ScalarEstimator{f1, f2}, 1e-8, -1)
   if err != nil {
     t.Error(err); return
   }
   if err := estimator.EstimateOnData(x, nil, ThreadPool{}); err != nil {
     t.Error(err); return
   }
-  hmm = estimator.GetEstimate().(*vectorDistribution.Hmm)
+  p := estimator.GetEstimate().GetParameters()
+  p.Slice( 0, 6).Map(func(x Scalar) { x.Exp(x) })
+  p.Slice(12,14).Map(func(x Scalar) { x.Exp(x) })
+
+  if Vnorm(VsubV(r, p)).GetValue() > 1e-4 {
+    t.Error("test failed")
+  }
 }
