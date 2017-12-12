@@ -45,6 +45,11 @@ func NewMixture(weights Vector, edist []VectorDistribution) (*Mixture, error) {
       if mixture.NComponents() != len(edist) {
         return nil, fmt.Errorf("invalid number of emission distributions")
       }
+      for i := 1; i < len(edist); i++ {
+        if edist[0].Dim() != edist[i].Dim() {
+          return nil, fmt.Errorf("emission distributions have inconsistent dimensions")
+        }
+      }
     }
     return &Mixture{*mixture, edist}, nil
   }
@@ -67,7 +72,11 @@ func (obj *Mixture) CloneVectorDistribution() VectorDistribution {
 /* -------------------------------------------------------------------------- */
 
 func (obj *Mixture) Dim() int {
-  return -1
+  if len(obj.Edist) == 0 || obj.Edist[0] == nil {
+    return 0
+  } else {
+    return obj.Edist[0].Dim()
+  }
 }
 
 func (obj *Mixture) LogPdf(r Scalar, x Vector) error {
