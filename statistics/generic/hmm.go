@@ -221,13 +221,15 @@ func (obj *Hmm) SetStartStates(states []int) error {
       return fmt.Errorf("invalid start state")
     }
   }
-  obj.startStates = make(map[int]bool)
-  for _, i := range states {
-    obj.startStates[i] = true
+  if len(states) > 0 {
+    obj.startStates = make(map[int]bool)
+    for _, i := range states {
+      obj.startStates[i] = true
+    }
+    t1 := NewReal(math.Inf(-1))
+    t2 := NewReal(math.Inf(-1))
+    obj.normalizePi(t1,t2)
   }
-  t1 := NewReal(math.Inf(-1))
-  t2 := NewReal(math.Inf(-1))
-  obj.normalizePi(t1,t2)
   return nil
 }
 
@@ -237,15 +239,17 @@ func (obj *Hmm) SetFinalStates(states []int) error {
       return fmt.Errorf("invalid final state")
     }
   }
-  obj.finalStates = make(map[int]bool)
-  for _, i := range states {
-    obj.finalStates[i] = true
+  if len(states) > 0 {
+    obj.finalStates = make(map[int]bool)
+    for _, i := range states {
+      obj.finalStates[i] = true
+    }
+    // clone transition matrix and renormalize
+    obj.Tf = obj.Tr.CloneTransitionMatrix()
+    t1 := NewReal(math.Inf(-1))
+    t2 := NewReal(math.Inf(-1))
+    obj.normalizeTf(t1, t2)
   }
-  // clone transition matrix and renormalize
-  obj.Tf = obj.Tr.CloneTransitionMatrix()
-  t1 := NewReal(math.Inf(-1))
-  t2 := NewReal(math.Inf(-1))
-  obj.normalizeTf(t1, t2)
   return nil
 }
 
@@ -706,6 +710,12 @@ func (obj *Hmm) ImportConfig(config ConfigDistribution, t ScalarType) error {
   stateMap, ok := config.GetNamedParametersAsInts("StateMap"); if ! ok {
     return fmt.Errorf("invalid config file")
   }
+  startStates, ok := config.GetNamedParametersAsInts("StartStates"); if ! ok {
+    return fmt.Errorf("invalid config file")
+  }
+  finalStates, ok := config.GetNamedParametersAsInts("FinalStates"); if ! ok {
+    return fmt.Errorf("invalid config file")
+  }
 
   Pi, err := NewHmmProbabilityVector(pi); if err != nil {
     return err
@@ -719,6 +729,8 @@ func (obj *Hmm) ImportConfig(config ConfigDistribution, t ScalarType) error {
   } else {
     *obj = *tmp
   }
+  obj.SetStartStates(startStates)
+  obj.SetFinalStates(finalStates)
 
   return nil
 }
@@ -728,10 +740,12 @@ func (obj *Hmm) ExportConfig() ConfigDistribution {
   n := obj.Pi.Dim()
 
   config := struct{
-    Pi       []float64
-    Tr       []float64
-    StateMap []int
-    N          int }{}
+    Pi          []float64
+    Tr          []float64
+    StateMap    []int
+    N             int
+    StartStates []int
+    FinalStates []int }{}
   config.Pi       = obj.Pi.GetValues()
   config.Tr       = obj.Tr.GetValues()
   config.StateMap = obj.StateMap
@@ -744,6 +758,15 @@ func (obj *Hmm) ExportConfig() ConfigDistribution {
   for i := 0; i < len(config.Tr); i++ {
     config.Tr[i] = math.Exp(config.Tr[i])
   }
-
+  for i, v := range obj.startStates {
+    if v {
+      config.StartStates = append(config.StartStates, i)
+    }
+  }
+  for i, v := range obj.finalStates {
+    if v {
+      config.FinalStates = append(config.FinalStates, i)
+    }
+  }
   return NewConfigDistribution("generic hmm", config)
 }

@@ -106,6 +106,9 @@ func (config ConfigDistribution) getInt(a interface{}) (int, bool) {
 }
 
 func (config ConfigDistribution) getFloats(a interface{}) ([]float64, bool) {
+  if a == nil {
+    return nil, true
+  }
   switch reflect.TypeOf(a).Kind() {
   case reflect.Slice:
     s := reflect.ValueOf(a)
@@ -123,6 +126,9 @@ func (config ConfigDistribution) getFloats(a interface{}) ([]float64, bool) {
 }
 
 func (config ConfigDistribution) getInts(a interface{}) ([]int, bool) {
+  if a == nil {
+    return nil, true
+  }
   switch reflect.TypeOf(a).Kind() {
   case reflect.Slice:
     s := reflect.ValueOf(a)
