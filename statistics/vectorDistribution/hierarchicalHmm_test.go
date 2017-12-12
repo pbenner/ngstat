@@ -62,7 +62,7 @@ func TestHhmm1(t *testing.T) {
 
   tree := generic.NewHmmNode(generic.NewHmmLeaf(0,2), generic.NewHmmLeaf(2,4))
 
-  hmm, err := NewHhmm(pi, tr, nil, edist, tree)
+  hmm, err := NewHierarchicalHmm(pi, tr, nil, edist, tree)
   if err != nil {
     t.Error(err)
   }
@@ -113,7 +113,7 @@ func TestHhmm2(t *testing.T) {
     generic.NewHmmNode(generic.NewHmmLeaf(0,2), generic.NewHmmLeaf(2,4)),
     generic.NewHmmLeaf(4,6))
 
-  hmm, err := NewHhmm(pi, tr, nil, edist, tree)
+  hmm, err := NewHierarchicalHmm(pi, tr, nil, edist, tree)
   if err != nil {
     t.Error(err)
   }
@@ -154,7 +154,7 @@ func TestHhmm3(t *testing.T) {
 
   tree := generic.NewHmmNode(generic.NewHmmLeaf(0,2), generic.NewHmmLeaf(2,4))
 
-  hhmm1, err := NewHhmm(pi, tr, nil, edist, tree)
+  hhmm1, err := NewHierarchicalHmm(pi, tr, nil, edist, tree)
   if err != nil {
     t.Error(err); return
   }

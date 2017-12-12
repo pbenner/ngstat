@@ -33,11 +33,11 @@ type Hhmm struct {
 
 /* -------------------------------------------------------------------------- */
 
-func NewHhmm(pi Vector, tr Matrix, stateMap []int, edist []ScalarDistribution, tree generic.HmmNode) (*Hhmm, error) {
-  return newHhmm(pi, tr, stateMap, edist, tree, false)
+func NewHierarchicalHmm(pi Vector, tr Matrix, stateMap []int, edist []ScalarDistribution, tree generic.HmmNode) (*Hhmm, error) {
+  return newHierarchicalHmm(pi, tr, stateMap, edist, tree, false)
 }
 
-func newHhmm(pi Vector, tr Matrix, stateMap []int, edist []ScalarDistribution, tree generic.HmmNode, isLog bool) (*Hhmm, error) {
+func newHierarchicalHmm(pi Vector, tr Matrix, stateMap []int, edist []ScalarDistribution, tree generic.HmmNode, isLog bool) (*Hhmm, error) {
   if !tree.Check(pi.Dim()) {
     return nil, fmt.Errorf("invalid Hmm tree")
   }
@@ -76,7 +76,7 @@ func (obj *Hhmm) ImportConfig(config ConfigDistribution, t ScalarType) error {
     return fmt.Errorf("invalid config file")
   }
   // get hierarchical transition matrix
-  if r, err := newHhmm(hmm.Pi, hmm.Tr, hmm.StateMap, hmm.Edist, tree, true); err != nil {
+  if r, err := newHierarchicalHmm(hmm.Pi, hmm.Tr, hmm.StateMap, hmm.Edist, tree, true); err != nil {
     return err
   } else {
     *obj = *r

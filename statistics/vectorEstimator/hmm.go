@@ -41,6 +41,8 @@ type HmmEstimator struct {
   args       []interface{}
 }
 
+/* -------------------------------------------------------------------------- */
+
 func NewHmmEstimator(pi Vector, tr Matrix, stateMap, startStates, finalStates []int, estimators []ScalarEstimator, epsilon float64, maxSteps int, args... interface{}) (*HmmEstimator, error) {
   if hmm, err := vectorDistribution.NewHmm(pi, tr, stateMap, nil); err != nil {
     return nil, err
