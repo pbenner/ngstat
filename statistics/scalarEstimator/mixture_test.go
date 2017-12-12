@@ -25,7 +25,6 @@ import   "testing"
 
 import . "github.com/pbenner/ngstat/statistics"
 import   "github.com/pbenner/ngstat/statistics/generic"
-import   "github.com/pbenner/ngstat/statistics/scalarDistribution"
 
 import . "github.com/pbenner/autodiff"
 import . "github.com/pbenner/threadpool"
@@ -33,10 +32,6 @@ import . "github.com/pbenner/threadpool"
 /* -------------------------------------------------------------------------- */
 
 func Test1(t *testing.T) {
-
-  weights := NewVector(BareRealType, []float64{1.0, 2.0})
-
-  mixture, _ := scalarDistribution.NewMixture(weights, nil)
 
   e1, _ := NewNormalEstimator(0, 2, 0)
   e2, _ := NewNormalEstimator(3, 2, 0)
@@ -46,7 +41,7 @@ func Test1(t *testing.T) {
     likelihood = likelihood_
   }
 
-  estimator, err := NewMixtureEstimator(mixture, []ScalarEstimator{e1, e2}, 1e-8, -1, generic.EmHook{hook_f}); if err != nil {
+  estimator, err := NewMixtureEstimator([]float64{1.0, 2.0}, []ScalarEstimator{e1, e2}, 1e-8, -1, generic.EmHook{hook_f}); if err != nil {
     t.Error(err); return
   }
 
