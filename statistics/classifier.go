@@ -26,7 +26,6 @@ import . "github.com/pbenner/autodiff"
 
 type ScalarClassifier interface {
   Eval(r Vector, x Scalar) error
-  Dim() int
   CloneScalarClassifier() ScalarClassifier
 }
 
@@ -47,7 +46,6 @@ type MatrixClassifier interface {
 
 type ScalarBatchClassifier interface {
   Eval(r Scalar, x Scalar) error
-  Dim() int
   CloneScalarBatchClassifier() ScalarBatchClassifier
 }
 
