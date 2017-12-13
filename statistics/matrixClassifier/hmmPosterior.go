@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package classification
+package matrixClassifier
 
 /* -------------------------------------------------------------------------- */
 
@@ -22,11 +22,12 @@ import   "fmt"
 import   "math"
 
 import . "github.com/pbenner/autodiff"
+import . "github.com/pbenner/ngstat/statistics"
 import . "github.com/pbenner/ngstat/statistics/matrixDistribution"
 
 /* -------------------------------------------------------------------------- */
 
-type MultiTrackHmmPosterior struct {
+type HmmPosterior struct {
   *Hmm
   States   []int
   LogScale   bool
@@ -34,17 +35,17 @@ type MultiTrackHmmPosterior struct {
 
 /* -------------------------------------------------------------------------- */
 
-func (obj MultiTrackHmmPosterior) CloneMultiTrackClassifier() MultiTrackClassifier {
-  return MultiTrackHmmPosterior{obj.Clone(), obj.States, obj.LogScale}
+func (obj HmmPosterior) CloneMatrixClassifier() MatrixClassifier {
+  return HmmPosterior{obj.Clone(), obj.States, obj.LogScale}
 }
 
 /* -------------------------------------------------------------------------- */
 
-func (obj MultiTrackHmmPosterior) Dims() (int, int) {
+func (obj HmmPosterior) Dims() (int, int) {
   return obj.Hmm.Dims()
 }
 
-func (obj MultiTrackHmmPosterior) Eval(r Vector, x Matrix) error {
+func (obj HmmPosterior) Eval(r Vector, x Matrix) error {
   m, _ := x.Dims()
   if r.Dim() != m {
     return fmt.Errorf("r has invalid length")
@@ -66,6 +67,6 @@ func (obj MultiTrackHmmPosterior) Eval(r Vector, x Matrix) error {
   return nil
 }
 
-func (obj MultiTrackHmmPosterior) Transposed() bool {
+func (obj HmmPosterior) Transposed() bool {
   return true
 }

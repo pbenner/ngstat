@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package classification
+package matrixClassifier
 
 /* -------------------------------------------------------------------------- */
 
@@ -25,14 +25,16 @@ import . "github.com/pbenner/ngstat/statistics"
 
 /* -------------------------------------------------------------------------- */
 
-type MultiTrackLikelihoodClassifier struct {
+type LikelihoodClassifier struct {
   FgDist     MatrixDistribution
   BgDist     MatrixDistribution
   transposed bool
   r1, r2     Scalar
 }
 
-func NewMultiTrackLikelihoodClassifier(fgDist MatrixDistribution, bgDist MatrixDistribution, transposed bool, args... interface{}) (*MultiTrackLikelihoodClassifier, error) {
+/* -------------------------------------------------------------------------- */
+
+func NewLikelihoodClassifier(fgDist MatrixDistribution, bgDist MatrixDistribution, transposed bool, args... interface{}) (*LikelihoodClassifier, error) {
   // determine scalar type
   t := BareRealType
   for _, arg := range args {
@@ -50,29 +52,33 @@ func NewMultiTrackLikelihoodClassifier(fgDist MatrixDistribution, bgDist MatrixD
     bgDist = bgDist.CloneMatrixDistribution()
   }
   fgDist = fgDist.CloneMatrixDistribution()
-  return &MultiTrackLikelihoodClassifier{fgDist, bgDist, transposed, NewScalar(t, 0.0), NewScalar(t, 0.0)}, nil
+  return &LikelihoodClassifier{fgDist, bgDist, transposed, NewScalar(t, 0.0), NewScalar(t, 0.0)}, nil
 }
 
-func (c *MultiTrackLikelihoodClassifier) Clone() *MultiTrackLikelihoodClassifier {
-  r, err := NewMultiTrackLikelihoodClassifier(c.FgDist, c.BgDist, c.transposed, c.r1.Type()); if err != nil {
+/* -------------------------------------------------------------------------- */
+
+func (c *LikelihoodClassifier) Clone() *LikelihoodClassifier {
+  r, err := NewLikelihoodClassifier(c.FgDist, c.BgDist, c.transposed, c.r1.Type()); if err != nil {
     panic(err)
   }
   return r
 }
 
-func (c *MultiTrackLikelihoodClassifier) CloneMultiTrackBatchClassifier() MultiTrackBatchClassifier {
+func (c *LikelihoodClassifier) CloneMatrixBatchClassifier() MatrixBatchClassifier {
   return c.Clone()
 }
 
-func (c *MultiTrackLikelihoodClassifier) Dims() (int, int) {
+/* -------------------------------------------------------------------------- */
+
+func (c *LikelihoodClassifier) Dims() (int, int) {
   return c.FgDist.Dims()
 }
 
-func (c *MultiTrackLikelihoodClassifier) Transposed() bool {
+func (c *LikelihoodClassifier) Transposed() bool {
   return c.transposed
 }
 
-func (c *MultiTrackLikelihoodClassifier) Eval(r Scalar, x Matrix) error {
+func (c *LikelihoodClassifier) Eval(r Scalar, x Matrix) error {
   if c.BgDist == nil {
     return c.FgDist.LogPdf(r, x)
   }

@@ -22,28 +22,29 @@ import   "fmt"
 import   "math"
 
 import . "github.com/pbenner/autodiff"
+import . "github.com/pbenner/ngstat/statistics"
 import . "github.com/pbenner/ngstat/statistics/vectorDistribution"
 
 /* -------------------------------------------------------------------------- */
 
-type SingleTrackHmmPosterior struct {
+type HmmPosterior struct {
   *Hmm
   States []int
 }
 
 /* -------------------------------------------------------------------------- */
 
-func (obj SingleTrackHmmPosterior) CloneSingleTrackClassifier() SingleTrackClassifier {
-  return SingleTrackHmmPosterior{obj.Clone(), obj.States}
+func (obj HmmPosterior) CloneVectorClassifier() VectorClassifier {
+  return HmmPosterior{obj.Clone(), obj.States}
 }
 
 /* -------------------------------------------------------------------------- */
 
-func (obj SingleTrackHmmPosterior) Dim() int {
+func (obj HmmPosterior) Dim() int {
   return obj.Hmm.Dim()
 }
 
-func (obj SingleTrackHmmPosterior) Eval(r Vector, x Vector) error {
+func (obj HmmPosterior) Eval(r Vector, x Vector) error {
   if r.Dim() != x.Dim() {
     return fmt.Errorf("r has invalid length")
   }

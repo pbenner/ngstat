@@ -21,41 +21,37 @@ package classification
 import   "fmt"
 
 import . "github.com/pbenner/autodiff"
-import . "github.com/pbenner/ngstat/statistics/matrixDistribution"
+import . "github.com/pbenner/ngstat/statistics"
+import . "github.com/pbenner/ngstat/statistics/vectorDistribution"
 
 /* -------------------------------------------------------------------------- */
 
-type MultiTrackHmmClassifier struct {
+type HmmClassifier struct {
   *Hmm
 }
 
 /* -------------------------------------------------------------------------- */
 
-func (obj MultiTrackHmmClassifier) CloneMultiTrackClassifier() MultiTrackClassifier {
-  return MultiTrackHmmClassifier{obj.Clone()}
+func (obj HmmClassifier) CloneVectorClassifier() VectorClassifier {
+  return HmmClassifier{obj.Clone()}
 }
 
 /* -------------------------------------------------------------------------- */
 
-func (obj MultiTrackHmmClassifier) Dims() (int, int) {
-  return obj.Hmm.Dims()
+func (obj HmmClassifier) Dim() int {
+  return obj.Hmm.Dim()
 }
 
-func (obj MultiTrackHmmClassifier) Eval(r Vector, x Matrix) error {
-  m, _ := x.Dims()
-  if r.Dim() != m {
+func (obj HmmClassifier) Eval(r Vector, x Vector) error {
+  if r.Dim() != x.Dim() {
     return fmt.Errorf("r has invalid length")
   }
   if p, err := obj.Viterbi(x); err != nil {
     return err
   } else {
-    for i := 0; i < m; i++ {
+    for i := 0; i < x.Dim(); i++ {
       r.At(i).SetValue(float64(p[i]))
     }
   }
   return nil
-}
-
-func (obj MultiTrackHmmClassifier) Transposed() bool {
-  return true
 }

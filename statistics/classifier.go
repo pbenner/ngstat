@@ -1,4 +1,4 @@
-/* Copyright (C) 2016 Philipp Benner
+/* Copyright (C) 2016-2017 Philipp Benner
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package classification
+package statistics
 
 /* -------------------------------------------------------------------------- */
 
@@ -24,30 +24,42 @@ import . "github.com/pbenner/autodiff"
 
 /* -------------------------------------------------------------------------- */
 
-type SingleTrackBatchClassifier interface {
-  Eval(r Scalar, x Vector) error
+type ScalarClassifier interface {
+  Eval(r Vector, x Scalar) error
   Dim() int
-  CloneSingleTrackBatchClassifier() SingleTrackBatchClassifier
+  CloneScalarClassifier() ScalarClassifier
 }
 
-type MultiTrackBatchClassifier interface {
-  Eval(r Scalar, x Matrix) error
+type VectorClassifier interface {
+  Eval(r Vector, x Vector) error
+  Dim() int
+  CloneVectorClassifier() VectorClassifier
+}
+
+type MatrixClassifier interface {
+  Eval(r Vector, x Matrix) error
   Dims() (int, int)
-  CloneMultiTrackBatchClassifier() MultiTrackBatchClassifier
+  CloneMatrixClassifier() MatrixClassifier
   Transposed() bool
 }
 
 /* -------------------------------------------------------------------------- */
 
-type SingleTrackClassifier interface {
-  Eval(r Vector, x Vector) error
+type ScalarBatchClassifier interface {
+  Eval(r Scalar, x Scalar) error
   Dim() int
-  CloneSingleTrackClassifier() SingleTrackClassifier
+  CloneScalarBatchClassifier() ScalarBatchClassifier
 }
 
-type MultiTrackClassifier interface {
-  Eval(r Vector, x Matrix) error
+type VectorBatchClassifier interface {
+  Eval(r Scalar, x Vector) error
+  Dim() int
+  CloneVectorBatchClassifier() VectorBatchClassifier
+}
+
+type MatrixBatchClassifier interface {
+  Eval(r Scalar, x Matrix) error
   Dims() (int, int)
-  CloneMultiTrackClassifier() MultiTrackClassifier
+  CloneMatrixBatchClassifier() MatrixBatchClassifier
   Transposed() bool
 }

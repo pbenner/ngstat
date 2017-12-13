@@ -14,43 +14,49 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package classification
+package matrixClassifier
 
 /* -------------------------------------------------------------------------- */
 
 import   "fmt"
 
 import . "github.com/pbenner/autodiff"
-import . "github.com/pbenner/ngstat/statistics/vectorDistribution"
+import . "github.com/pbenner/ngstat/statistics"
+import . "github.com/pbenner/ngstat/statistics/matrixDistribution"
 
 /* -------------------------------------------------------------------------- */
 
-type SingleTrackHmmClassifier struct {
+type HmmClassifier struct {
   *Hmm
 }
 
 /* -------------------------------------------------------------------------- */
 
-func (obj SingleTrackHmmClassifier) CloneSingleTrackClassifier() SingleTrackClassifier {
-  return SingleTrackHmmClassifier{obj.Clone()}
+func (obj HmmClassifier) CloneMatrixClassifier() MatrixClassifier {
+  return HmmClassifier{obj.Clone()}
 }
 
 /* -------------------------------------------------------------------------- */
 
-func (obj SingleTrackHmmClassifier) Dim() int {
-  return obj.Hmm.Dim()
+func (obj HmmClassifier) Dims() (int, int) {
+  return obj.Hmm.Dims()
 }
 
-func (obj SingleTrackHmmClassifier) Eval(r Vector, x Vector) error {
-  if r.Dim() != x.Dim() {
+func (obj HmmClassifier) Eval(r Vector, x Matrix) error {
+  m, _ := x.Dims()
+  if r.Dim() != m {
     return fmt.Errorf("r has invalid length")
   }
   if p, err := obj.Viterbi(x); err != nil {
     return err
   } else {
-    for i := 0; i < x.Dim(); i++ {
+    for i := 0; i < m; i++ {
       r.At(i).SetValue(float64(p[i]))
     }
   }
   return nil
+}
+
+func (obj HmmClassifier) Transposed() bool {
+  return true
 }

@@ -33,6 +33,8 @@ type LikelihoodClassifier struct {
   r1, r2 Scalar
 }
 
+/* -------------------------------------------------------------------------- */
+
 func NewLikelihoodClassifier(fgDist VectorDistribution, bgDist VectorDistribution, args... interface{}) (*LikelihoodClassifier, error) {
   // determine scalar type
   t := BareRealType
@@ -52,14 +54,18 @@ func NewLikelihoodClassifier(fgDist VectorDistribution, bgDist VectorDistributio
   return &LikelihoodClassifier{fgDist.CloneVectorDistribution(), bgDist.CloneVectorDistribution(), NewScalar(t, 0.0), NewScalar(t, 0.0)}, nil
 }
 
+/* -------------------------------------------------------------------------- */
+
 func (c *LikelihoodClassifier) Clone() *LikelihoodClassifier {
   r, _ := NewLikelihoodClassifier(c.FgDist, c.BgDist, c.r1.Type())
   return r
 }
 
-func (c *LikelihoodClassifier) CloneSingleTrackBatchClassifier() SingleTrackBatchClassifier {
+func (c *LikelihoodClassifier) CloneVectorBatchClassifier() VectorBatchClassifier {
   return c.Clone()
 }
+
+/* -------------------------------------------------------------------------- */
 
 func (c *LikelihoodClassifier) Dim() int {
   return c.FgDist.Dim()
@@ -136,6 +142,8 @@ type SymmetricClassifier struct {
   z Scalar
 }
 
+/* -------------------------------------------------------------------------- */
+
 func NewSymmetricClassifier(fgDist VectorDistribution, bgDist VectorDistribution, args... interface{}) (*SymmetricClassifier, error) {
   if classifier, err := NewLikelihoodClassifier(fgDist, bgDist, args...); err != nil {
     return nil, err
@@ -147,14 +155,18 @@ func NewSymmetricClassifier(fgDist VectorDistribution, bgDist VectorDistribution
   }
 }
 
+/* -------------------------------------------------------------------------- */
+
 func (c *SymmetricClassifier) Clone() *SymmetricClassifier {
   r, _ := NewSymmetricClassifier(c.FgDist, c.BgDist, c.r1.Type())
   return r
 }
 
-func (c *SymmetricClassifier) CloneSingleTrackBatchClassifier() SingleTrackBatchClassifier {
+func (c *SymmetricClassifier) CloneVectorBatchClassifier() VectorBatchClassifier {
   return c.Clone()
 }
+
+/* -------------------------------------------------------------------------- */
 
 func (c SymmetricClassifier) Eval(r Scalar, x1 Vector) error {
   if x1.Dim() != c.Dim() {
@@ -200,6 +212,8 @@ type PosteriorClassifier struct {
   LogWeights [2]Scalar
 }
 
+/* -------------------------------------------------------------------------- */
+
 func NewPosteriorClassifier(fgDist VectorDistribution, bgDist VectorDistribution, weights [2]float64, args... interface{}) (*PosteriorClassifier, error) {
   if classifier, err := NewLikelihoodClassifier(fgDist, bgDist, args...); err != nil {
     return nil, err
@@ -212,6 +226,8 @@ func NewPosteriorClassifier(fgDist VectorDistribution, bgDist VectorDistribution
   }
 }
 
+/* -------------------------------------------------------------------------- */
+
 func (c *PosteriorClassifier) Clone() *PosteriorClassifier {
   logWeights   := [2]Scalar{}
   logWeights[0] = c.LogWeights[0].CloneScalar()
@@ -219,9 +235,11 @@ func (c *PosteriorClassifier) Clone() *PosteriorClassifier {
   return &PosteriorClassifier{*c.LikelihoodClassifier.Clone(), logWeights}
 }
 
-func (c *PosteriorClassifier) CloneSingleTrackBatchClassifier() SingleTrackBatchClassifier {
+func (c *PosteriorClassifier) CloneVectorBatchClassifier() VectorBatchClassifier {
   return c.Clone()
 }
+
+/* -------------------------------------------------------------------------- */
 
 func (c PosteriorClassifier) Eval(r Scalar, x Vector) error {
   r1 := c.r1
@@ -246,6 +264,8 @@ type PosteriorOddsClassifier struct {
   LogWeights [2]Scalar
 }
 
+/* -------------------------------------------------------------------------- */
+
 func NewPosteriorOddsClassifier(fgDist VectorDistribution, bgDist VectorDistribution, weights [2]float64, args... interface{}) (*PosteriorOddsClassifier, error) {
   if classifier, err := NewLikelihoodClassifier(fgDist, bgDist); err != nil {
     return nil, err
@@ -258,6 +278,8 @@ func NewPosteriorOddsClassifier(fgDist VectorDistribution, bgDist VectorDistribu
   }
 }
 
+/* -------------------------------------------------------------------------- */
+
 func (c *PosteriorOddsClassifier) Clone() *PosteriorOddsClassifier {
   logWeights   := [2]Scalar{}
   logWeights[0] = c.LogWeights[0].CloneScalar()
@@ -265,9 +287,11 @@ func (c *PosteriorOddsClassifier) Clone() *PosteriorOddsClassifier {
   return &PosteriorOddsClassifier{*c.LikelihoodClassifier.Clone(), logWeights}
 }
 
-func (c *PosteriorOddsClassifier) CloneSingleTrackBatchClassifier() SingleTrackBatchClassifier {
+func (c *PosteriorOddsClassifier) CloneVectorBatchClassifier() VectorBatchClassifier {
   return c.Clone()
 }
+
+/* -------------------------------------------------------------------------- */
 
 func (c PosteriorOddsClassifier) Eval(r Scalar, x Vector) error {
   r1 := c.r1
