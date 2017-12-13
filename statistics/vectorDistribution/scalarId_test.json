@@ -1,0 +1,24 @@
+{
+  "Name": "scalar id connector",
+  "Parameters": null,
+  "Distributions": [
+    {
+      "Name": "gamma distribution",
+      "Parameters": [
+        1,
+        2,
+        3
+      ],
+      "Distributions": null
+    },
+    {
+      "Name": "gamma distribution",
+      "Parameters": [
+        2,
+        3,
+        4
+      ],
+      "Distributions": null
+    }
+  ]
+}
