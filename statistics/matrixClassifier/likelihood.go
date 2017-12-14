@@ -74,10 +74,6 @@ func (c *LikelihoodClassifier) Dims() (int, int) {
   return c.FgDist.Dims()
 }
 
-func (c *LikelihoodClassifier) Transposed() bool {
-  return c.transposed
-}
-
 func (c *LikelihoodClassifier) Eval(r Scalar, x Matrix) error {
   if c.BgDist == nil {
     return c.FgDist.LogPdf(r, x)

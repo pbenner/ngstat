@@ -33,7 +33,7 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-func ClassifyMultiTrackData(config SessionConfig, classifier MatrixBatchClassifier, data []Matrix, args ...interface{}) ([]float64, error) {
+func ClassifyMultiTrackData(config SessionConfig, classifier MatrixBatchClassifier, data []Matrix, transposed bool, args ...interface{}) ([]float64, error) {
 
   var f MultiTrackBatchDataTransform
 
@@ -92,7 +92,7 @@ func ClassifyMultiTrackData(config SessionConfig, classifier MatrixBatchClassifi
         return nil
       }
       x := data[d]
-      if c.Transposed() {
+      if transposed {
         x.Tip()
       }
       if f != nil {
@@ -116,7 +116,7 @@ func ClassifyMultiTrackData(config SessionConfig, classifier MatrixBatchClassifi
   return result, nil
 }
 
-func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassifier, tracks []Track, args ...interface{}) (MutableTrack, error) {
+func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassifier, tracks []Track, transposed bool, args ...interface{}) (MutableTrack, error) {
 
   if len(tracks) == 0 {
     return nil, nil
@@ -208,7 +208,7 @@ func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassif
       sequences[k] = seq
     }
     g := pool.NewJobGroup()
-    x := SequencesToMatrix(BareRealType, sequences, classifier.Transposed())
+    x := SequencesToMatrix(BareRealType, sequences, transposed)
 
     // clear non-accessible regions
     for i := 0; i < offset1; i++ {
@@ -226,7 +226,7 @@ func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassif
       c := c   [pool.GetThreadId()]
       y := y   [pool.GetThreadId()]
       r := r.At(pool.GetThreadId())
-      if c.Transposed() {
+      if transposed {
         x := x.Slice(i-offset1, i+offset2+1, 0, ncols)
         if f != nil {
           if err := f.Eval(y, x); err != nil {
@@ -267,7 +267,7 @@ func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassif
   return result, nil
 }
 
-func ClassifyMultiTrack(config SessionConfig, classifier MatrixClassifier, tracks []Track, args ...interface{}) (MutableTrack, error) {
+func ClassifyMultiTrack(config SessionConfig, classifier MatrixClassifier, tracks []Track, transposed bool, args ...interface{}) (MutableTrack, error) {
 
   if _, n := classifier.Dims(); n != -1 {
     return nil, fmt.Errorf("classifier must have variable column dimension")
@@ -316,7 +316,7 @@ func ClassifyMultiTrack(config SessionConfig, classifier MatrixClassifier, track
       sequences[k] = seq
     }
     r := NullVector(BareRealType, nbins)
-    x := SequencesToMatrix(BareRealType, sequences, classifier.Transposed())
+    x := SequencesToMatrix(BareRealType, sequences, transposed)
     if f != nil {
       x = f.Eval(x)
     }
@@ -344,7 +344,7 @@ func ClassifyMultiTrack(config SessionConfig, classifier MatrixClassifier, track
 
 /* -------------------------------------------------------------------------- */
 
-func ImportAndBatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassifier, trackFiles []string, args ...interface{}) (MutableTrack, error) {
+func ImportAndBatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassifier, trackFiles []string, transposed bool, args ...interface{}) (MutableTrack, error) {
   tracks := make([]Track, len(trackFiles))
   for i := 0; i < len(trackFiles); i++ {
     track, err := ImportLazyTrack(config, trackFiles[i]); if err != nil {
@@ -352,10 +352,10 @@ func ImportAndBatchClassifyMultiTrack(config SessionConfig, classifier MatrixBat
     }
     tracks[i] = track
   }
-  return BatchClassifyMultiTrack(config, classifier, tracks, args...)
+  return BatchClassifyMultiTrack(config, classifier, tracks, transposed, args...)
 }
 
-func ImportAndClassifyMultiTrack(config SessionConfig, classifier MatrixClassifier, trackFiles []string, args ...interface{}) (MutableTrack, error) {
+func ImportAndClassifyMultiTrack(config SessionConfig, classifier MatrixClassifier, trackFiles []string, transposed bool, args ...interface{}) (MutableTrack, error) {
   tracks := make([]Track, len(trackFiles))
   for i := 0; i < len(trackFiles); i++ {
     track, err := ImportLazyTrack(config, trackFiles[i]); if err != nil {
@@ -363,5 +363,5 @@ func ImportAndClassifyMultiTrack(config SessionConfig, classifier MatrixClassifi
     }
     tracks[i] = track
   }
-  return ClassifyMultiTrack(config, classifier, tracks, args...)
+  return ClassifyMultiTrack(config, classifier, tracks, transposed, args...)
 }

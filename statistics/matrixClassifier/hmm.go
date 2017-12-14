@@ -56,7 +56,3 @@ func (obj HmmClassifier) Eval(r Vector, x Matrix) error {
   }
   return nil
 }
-
-func (obj HmmClassifier) Transposed() bool {
-  return true
-}

@@ -66,7 +66,3 @@ func (obj HmmPosterior) Eval(r Vector, x Matrix) error {
   }
   return nil
 }
-
-func (obj HmmPosterior) Transposed() bool {
-  return true
-}

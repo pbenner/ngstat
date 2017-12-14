@@ -39,7 +39,6 @@ type MatrixClassifier interface {
   Eval(r Vector, x Matrix) error
   Dims() (int, int)
   CloneMatrixClassifier() MatrixClassifier
-  Transposed() bool
 }
 
 /* -------------------------------------------------------------------------- */
@@ -59,5 +58,4 @@ type MatrixBatchClassifier interface {
   Eval(r Scalar, x Matrix) error
   Dims() (int, int)
   CloneMatrixBatchClassifier() MatrixBatchClassifier
-  Transposed() bool
 }
