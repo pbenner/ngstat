@@ -71,5 +71,5 @@ func (dist *PoissonDistribution) ImportConfig(config ConfigDistribution, t Scala
 
 func (dist *PoissonDistribution) ExportConfig() ConfigDistribution {
 
-  return NewConfigDistribution("poisson distribution", dist.GetParameters())
+  return NewConfigDistribution("scalar:poisson distribution", dist.GetParameters())
 }

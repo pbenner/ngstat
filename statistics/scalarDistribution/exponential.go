@@ -71,5 +71,5 @@ func (dist *ExponentialDistribution) ImportConfig(config ConfigDistribution, t S
 
 func (dist *ExponentialDistribution) ExportConfig() ConfigDistribution {
 
-  return NewConfigDistribution("exponential distribution", dist.GetParameters())
+  return NewConfigDistribution("scalar:exponential distribution", dist.GetParameters())
 }

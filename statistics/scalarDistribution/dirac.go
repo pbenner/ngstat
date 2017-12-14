@@ -107,5 +107,5 @@ func (dist *DiracDistribution) ImportConfig(config ConfigDistribution, t ScalarT
 
 func (dist *DiracDistribution) ExportConfig() ConfigDistribution {
 
-  return NewConfigDistribution("dirac distribution", dist.GetParameters())
+  return NewConfigDistribution("scalar:dirac distribution", dist.GetParameters())
 }

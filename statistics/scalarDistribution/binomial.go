@@ -72,5 +72,5 @@ func (dist *BinomialDistribution) ImportConfig(config ConfigDistribution, t Scal
 
 func (dist *BinomialDistribution) ExportConfig() ConfigDistribution {
 
-  return NewConfigDistribution("binomial distribution", dist.GetParameters())
+  return NewConfigDistribution("scalar:binomial distribution", dist.GetParameters())
 }

@@ -73,5 +73,5 @@ func (dist *ParetoDistribution) ImportConfig(config ConfigDistribution, t Scalar
 
 func (dist *ParetoDistribution) ExportConfig() ConfigDistribution {
 
-  return NewConfigDistribution("pareto distribution", dist.GetParameters())
+  return NewConfigDistribution("scalar:pareto distribution", dist.GetParameters())
 }

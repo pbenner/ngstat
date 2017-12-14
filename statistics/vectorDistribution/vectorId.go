@@ -142,5 +142,5 @@ func (obj *VectorId) ExportConfig() (config ConfigDistribution) {
     distributions[i] = obj.Distributions[i].ExportConfig()
   }
 
-  return NewConfigDistribution("vector id connector", nil, distributions...)
+  return NewConfigDistribution("vector:vector id connector", nil, distributions...)
 }

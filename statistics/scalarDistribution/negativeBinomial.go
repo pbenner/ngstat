@@ -89,5 +89,5 @@ func (dist *NegativeBinomialDistribution) ExportConfig() ConfigDistribution {
   parameters := dist.GetParameters()
   parameters  = parameters.AppendScalar(dist.Pseudocount)
 
-  return NewConfigDistribution("negative binomial distribution", parameters)
+  return NewConfigDistribution("scalar:negative binomial distribution", parameters)
 }

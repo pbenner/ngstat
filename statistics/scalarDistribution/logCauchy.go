@@ -93,5 +93,5 @@ func (dist *LogCauchyDistribution) ExportConfig() ConfigDistribution {
   parameters := dist.GetParameters()
   parameters  = parameters.AppendScalar(dist.Pseudocount)
 
-  return NewConfigDistribution("log cauchy distribution", parameters)
+  return NewConfigDistribution("scalar:log cauchy distribution", parameters)
 }

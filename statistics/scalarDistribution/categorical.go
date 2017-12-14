@@ -74,5 +74,5 @@ func (dist *CategoricalDistribution) ExportConfig() ConfigDistribution {
   parameters := dist.GetParameters()
   parameters.Map(func(x Scalar) { x.Exp(x) })
 
-  return NewConfigDistribution("categorical distribution", parameters)
+  return NewConfigDistribution("scalar:categorical distribution", parameters)
 }

@@ -1,9 +1,9 @@
 {
-  "Name": "scalar id connector",
+  "Name": "vector:scalar id connector",
   "Parameters": null,
   "Distributions": [
     {
-      "Name": "gamma distribution",
+      "Name": "scalar:gamma distribution",
       "Parameters": [
         1,
         2,
@@ -12,7 +12,7 @@
       "Distributions": null
     },
     {
-      "Name": "gamma distribution",
+      "Name": "scalar:gamma distribution",
       "Parameters": [
         2,
         3,

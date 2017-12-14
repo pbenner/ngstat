@@ -126,5 +126,5 @@ func (obj *NormalDistribution) ImportConfig(config ConfigDistribution, t ScalarT
 
 func (obj *NormalDistribution) ExportConfig() ConfigDistribution {
 
-  return NewConfigDistribution("normal distribution", obj.GetParameters())
+  return NewConfigDistribution("scalar:normal distribution", obj.GetParameters())
 }

@@ -73,5 +73,5 @@ func (dist *PowerLawDistribution) ImportConfig(config ConfigDistribution, t Scal
 
 func (dist *PowerLawDistribution) ExportConfig() ConfigDistribution {
 
-  return NewConfigDistribution("power law distribution", dist.GetParameters())
+  return NewConfigDistribution("scalar:power law distribution", dist.GetParameters())
 }

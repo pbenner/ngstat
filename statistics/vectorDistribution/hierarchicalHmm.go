@@ -111,5 +111,5 @@ func (obj *Hhmm) ExportConfig() ConfigDistribution {
   parameters.FinalStates = parametersHmm.FinalStates
   parameters.Tree        = obj.Tr.(generic.HhmmTransitionMatrix).Tree.ExportConfig()
 
-  return NewConfigDistribution("vector hierarchical hmm distribution", parameters, configHmm.Distributions...)
+  return NewConfigDistribution("vector:hierarchical hmm distribution", parameters, configHmm.Distributions...)
 }

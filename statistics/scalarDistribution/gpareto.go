@@ -73,5 +73,5 @@ func (dist *GParetoDistribution) ImportConfig(config ConfigDistribution, t Scala
 
 func (dist *GParetoDistribution) ExportConfig() ConfigDistribution {
 
-  return NewConfigDistribution("generalized pareto distribution", dist.GetParameters())
+  return NewConfigDistribution("scalar:generalized pareto distribution", dist.GetParameters())
 }

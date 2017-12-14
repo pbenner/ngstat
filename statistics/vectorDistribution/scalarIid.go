@@ -119,5 +119,5 @@ func (obj *ScalarIid) ExportConfig() (config ConfigDistribution) {
 
   parameters := NewVector(BareRealType, []float64{float64(obj.n)})
 
-  return NewConfigDistribution("scalar iid connector", parameters, obj.Distribution.ExportConfig())
+  return NewConfigDistribution("vector:scalar iid connector", parameters, obj.Distribution.ExportConfig())
 }

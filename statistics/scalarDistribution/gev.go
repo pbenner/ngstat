@@ -73,5 +73,5 @@ func (dist *GevDistribution) ImportConfig(config ConfigDistribution, t ScalarTyp
 
 func (dist *GevDistribution) ExportConfig() ConfigDistribution {
 
-  return NewConfigDistribution("gev distribution", dist.GetParameters())
+  return NewConfigDistribution("scalar:gev distribution", dist.GetParameters())
 }

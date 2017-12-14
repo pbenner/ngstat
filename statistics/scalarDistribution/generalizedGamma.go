@@ -86,5 +86,5 @@ func (dist *GeneralizedGammaDistribution) ExportConfig() ConfigDistribution {
   parameters := dist.GetParameters()
   parameters  = parameters.AppendScalar(dist.Pseudocount)
 
-  return NewConfigDistribution("generalized gamma distribution", parameters)
+  return NewConfigDistribution("scalar:generalized gamma distribution", parameters)
 }

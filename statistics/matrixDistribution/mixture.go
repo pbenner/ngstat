@@ -153,7 +153,7 @@ func (obj *Mixture) ExportConfig() ConfigDistribution {
     distributions[i] = obj.Edist[i].ExportConfig()
   }
   config := obj.Mixture.ExportConfig()
-  config.Name = "matrix mixture distribution"
+  config.Name = "matrix:mixture distribution"
   config.Distributions = distributions
 
   return config

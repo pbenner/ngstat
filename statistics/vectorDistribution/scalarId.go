@@ -137,5 +137,5 @@ func (obj *ScalarId) ExportConfig() (config ConfigDistribution) {
     distributions[i] = obj.Distributions[i].ExportConfig()
   }
 
-  return NewConfigDistribution("scalar id connector", nil, distributions...)
+  return NewConfigDistribution("vector:scalar id connector", nil, distributions...)
 }

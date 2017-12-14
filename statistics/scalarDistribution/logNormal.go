@@ -143,5 +143,5 @@ func (obj *LogNormalDistribution) ImportConfig(config ConfigDistribution, t Scal
 
 func (obj *LogNormalDistribution) ExportConfig() ConfigDistribution {
 
-  return NewConfigDistribution("log-normal distribution", obj.GetParameters())
+  return NewConfigDistribution("scalar:log-normal distribution", obj.GetParameters())
 }

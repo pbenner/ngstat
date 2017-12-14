@@ -73,5 +73,5 @@ func (dist *BetaDistribution) ImportConfig(config ConfigDistribution, t ScalarTy
 
 func (dist *BetaDistribution) ExportConfig() (config ConfigDistribution) {
 
-  return NewConfigDistribution("beta distribution", dist.GetParameters())
+  return NewConfigDistribution("scalar:beta distribution", dist.GetParameters())
 }

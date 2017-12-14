@@ -170,7 +170,7 @@ func (obj *Hmm) ExportConfig() ConfigDistribution {
     distributions[i] = obj.Edist[i].ExportConfig()
   }
   config := obj.Hmm.ExportConfig()
-  config.Name = "matrix hmm distribution"
+  config.Name = "matrix:hmm distribution"
   config.Distributions = distributions
 
   return config

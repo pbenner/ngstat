@@ -197,5 +197,5 @@ func (dist *NonparametricDistribution) ExportConfig() ConfigDistribution {
   parameters := NewVector(BareRealType, dist.X)
   parameters  = parameters.AppendVector(dist.MargDensity)
 
-  return NewConfigDistribution("nonparametric distribution", parameters)
+  return NewConfigDistribution("scalar:nonparametric distribution", parameters)
 }

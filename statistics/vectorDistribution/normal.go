@@ -85,5 +85,5 @@ func (obj *NormalDistribution) ExportConfig() ConfigDistribution {
   config.Sigma = obj.Sigma.GetValues()
   config.N     = n
 
-  return NewConfigDistribution("multivariate normal distribtion", config)
+  return NewConfigDistribution("vector:normal distribtion", config)
 }

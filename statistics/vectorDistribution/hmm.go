@@ -161,7 +161,7 @@ func (obj *Hmm) ExportConfig() ConfigDistribution {
     distributions[i] = obj.Edist[i].ExportConfig()
   }
   config := obj.Hmm.ExportConfig()
-  config.Name = "vector hmm distribution"
+  config.Name = "vector:hmm distribution"
   config.Distributions = distributions
 
   return config
