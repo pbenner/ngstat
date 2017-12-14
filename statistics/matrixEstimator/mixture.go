@@ -42,6 +42,12 @@ type MixtureEstimator struct {
 }
 
 func NewMixtureEstimator(weights []float64, estimators []MatrixEstimator, epsilon float64, maxSteps int, args... interface{}) (*MixtureEstimator, error) {
+  if weights == nil {
+    weights = make([]float64, len(estimators))
+    for i := 0; i < len(estimators); i++ {
+      weights[i] = 1.0
+    }
+  }
   m, err := matrixDistribution.NewMixture(NewVector(BareRealType, weights), nil)
   if err != nil {
     return nil, err

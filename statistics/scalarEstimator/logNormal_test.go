@@ -23,7 +23,6 @@ package scalarEstimator
 import   "testing"
 
 import . "github.com/pbenner/ngstat/statistics"
-import   "github.com/pbenner/ngstat/statistics/vectorDistribution"
 import   "github.com/pbenner/ngstat/statistics/vectorEstimator"
 
 import . "github.com/pbenner/autodiff"
@@ -41,11 +40,6 @@ func Test2(t *testing.T) {
 
   e1, _ := NewLogNormalEstimator(1.0, 2.0, 0.0, 1e-6)
   e2, _ := NewLogNormalEstimator(1.0, 3.0, 0.0, 1e-6)
-
-  hmm, err := vectorDistribution.NewHmm(pi, tr, nil, nil)
-  if err != nil {
-    t.Error(err)
-  }
 
   // observations
   //////////////////////////////////////////////////////////////////////////////
@@ -68,7 +62,7 @@ func Test2(t *testing.T) {
 
   // Baum-Welch
   //////////////////////////////////////////////////////////////////////////////
-  if estimator, err := vectorEstimator.NewHmmEstimator(hmm, []ScalarEstimator{e1, e2}, 1e-8, -1); err != nil {
+  if estimator, err := vectorEstimator.NewHmmEstimator(pi, tr, nil, nil, nil, []ScalarEstimator{e1, e2}, 1e-8, -1); err != nil {
     t.Error(err)
   } else {
     if err = estimator.EstimateOnData([]Vector{x}, nil, NewThreadPool(2, 100)); err != nil {
