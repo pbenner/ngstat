@@ -27,6 +27,6 @@ import . "github.com/pbenner/ngstat/statistics"
 func init() {
   MatrixDistributionRegistry["matrix:hmm distribution"]     = new(Hmm)
   MatrixDistributionRegistry["matrix:mixture distribution"] = new(Mixture)
-  MatrixDistributionRegistry["matrix:scalar id connector"]  = new(VectorId)
-  MatrixDistributionRegistry["matrix:scalar iid connector"] = new(VectorIid)
+  MatrixDistributionRegistry["matrix:vector id"]            = new(VectorId)
+  MatrixDistributionRegistry["matrix:vector iid"]           = new(VectorIid)
 }

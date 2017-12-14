@@ -29,8 +29,8 @@ func init() {
   VectorDistributionRegistry["vector:hmm distribution"]              = new(Hmm)
   VectorDistributionRegistry["vector:mixture distribution"]          = new(Mixture)
   VectorDistributionRegistry["vector:normal distribtion"]            = new(NormalDistribution)
-  VectorDistributionRegistry["vector:scalar id connector"]           = new(ScalarId)
-  VectorDistributionRegistry["vector:scalar iid connector"]          = new(ScalarIid)
-  VectorDistributionRegistry["vector:vector id connector"]           = new(VectorId)
-  VectorDistributionRegistry["vector:vector iid connector"]          = new(VectorIid)
+  VectorDistributionRegistry["vector:scalar id"]                     = new(ScalarId)
+  VectorDistributionRegistry["vector:scalar iid"]                    = new(ScalarIid)
+  VectorDistributionRegistry["vector:vector id"]                     = new(VectorId)
+  VectorDistributionRegistry["vector:vector iid"]                    = new(VectorIid)
 }

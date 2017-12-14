@@ -121,5 +121,5 @@ func (obj *VectorIid) ExportConfig() (config ConfigDistribution) {
 
   parameters := NewVector(BareRealType, []float64{float64(obj.n)})
 
-  return NewConfigDistribution("matrix:vector iid connector", parameters, obj.Distribution.ExportConfig())
+  return NewConfigDistribution("matrix:vector iid", parameters, obj.Distribution.ExportConfig())
 }
