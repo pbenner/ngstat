@@ -23,6 +23,7 @@ import   "math"
 import   "os"
 
 import . "github.com/pbenner/ngstat/config"
+import . "github.com/pbenner/ngstat/statistics"
 import . "github.com/pbenner/ngstat/track"
 import . "github.com/pbenner/ngstat/trackDataTransform"
 import . "github.com/pbenner/ngstat/utility"
@@ -33,7 +34,7 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-func ClassifySingleTrackData(config SessionConfig, classifier SingleTrackBatchClassifier, data []Vector, args ...interface{}) ([]float64, error) {
+func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassifier, data []Vector, args ...interface{}) ([]float64, error) {
   if len(data) == 0 {
     return nil, nil
   }
@@ -71,11 +72,11 @@ func ClassifySingleTrackData(config SessionConfig, classifier SingleTrackBatchCl
   r := NullVector(BareRealType, config.Threads)
   // each thread gets its own classifier, since
   // the given classifier may not be thread-safe
-  c := make([]SingleTrackBatchClassifier, config.Threads)
+  c := make([]VectorBatchClassifier, config.Threads)
   x := make([]Vector, config.Threads)
   y := make([]Vector, config.Threads)
   for i := 0; i < config.Threads; i++ {
-    c[i] = classifier.CloneSingleTrackBatchClassifier()
+    c[i] = classifier.CloneVectorBatchClassifier()
     x[i] = NullVector(BareRealType, n)
     y[i] = x[i]
     if f != nil {
@@ -121,7 +122,7 @@ func ClassifySingleTrackData(config SessionConfig, classifier SingleTrackBatchCl
 }
 
 // Run classifier sequentially on a single track
-func BatchClassifySingleTrack(config SessionConfig, classifier SingleTrackBatchClassifier, track Track, args ...interface{}) (MutableTrack, error) {
+func BatchClassifySingleTrack(config SessionConfig, classifier VectorBatchClassifier, track Track, args ...interface{}) (MutableTrack, error) {
 
   var f SingleTrackBatchDataTransform
 
@@ -154,10 +155,10 @@ func BatchClassifySingleTrack(config SessionConfig, classifier SingleTrackBatchC
   r := NullVector(BareRealType, config.Threads)
   // each thread gets its own classifier, since
   // the given classifier may not be thread-safe
-  c := make([]SingleTrackBatchClassifier, config.Threads)
+  c := make([]VectorBatchClassifier, config.Threads)
   y := make([]Vector, config.Threads)
   for i := 0; i < config.Threads; i++ {
-    c[i] = classifier.CloneSingleTrackBatchClassifier()
+    c[i] = classifier.CloneVectorBatchClassifier()
     if f != nil {
       y[i] = NullVector(BareRealType, m)
     }
@@ -249,7 +250,7 @@ func BatchClassifySingleTrack(config SessionConfig, classifier SingleTrackBatchC
 }
 
 // Run several independent classifiers and combine results
-func BatchClassifySingleTracks(config SessionConfig, classifiers []SingleTrackBatchClassifier, tracks []Track, args ...interface{}) (MutableTrack, error) {
+func BatchClassifySingleTracks(config SessionConfig, classifiers []VectorBatchClassifier, tracks []Track, args ...interface{}) (MutableTrack, error) {
 
   result, err := BatchClassifySingleTrack(config, classifiers[0], tracks[0], args...); if err != nil {
     return nil, err
@@ -264,7 +265,7 @@ func BatchClassifySingleTracks(config SessionConfig, classifiers []SingleTrackBa
   return result, nil
 }
 
-func ClassifySingleTrack(config SessionConfig, classifier SingleTrackClassifier, track Track, args ...interface{}) (MutableTrack, error) {
+func ClassifySingleTrack(config SessionConfig, classifier VectorClassifier, track Track, args ...interface{}) (MutableTrack, error) {
 
   if n := classifier.Dim(); n != -1 {
     return nil, fmt.Errorf("classifier must have variable dimension")
@@ -283,9 +284,9 @@ func ClassifySingleTrack(config SessionConfig, classifier SingleTrackClassifier,
 
   // each thread gets its own classifier, since
   // the given classifier may not be thread-safe
-  c := make([]SingleTrackClassifier, config.Threads)
+  c := make([]VectorClassifier, config.Threads)
   for i := 0; i < config.Threads; i++ {
-    c[i] = classifier.CloneSingleTrackClassifier()
+    c[i] = classifier.CloneVectorClassifier()
   }
   g := pool.NewJobGroup()
 
@@ -330,14 +331,14 @@ func ClassifySingleTrack(config SessionConfig, classifier SingleTrackClassifier,
 
 /* -------------------------------------------------------------------------- */
 
-func ImportAndBatchClassifySingleTrack(config SessionConfig, classifier SingleTrackBatchClassifier, trackFile string, args ...interface{}) (MutableTrack, error) {
+func ImportAndBatchClassifySingleTrack(config SessionConfig, classifier VectorBatchClassifier, trackFile string, args ...interface{}) (MutableTrack, error) {
   track, err := ImportTrack(config, trackFile); if err != nil {
     return nil, err
   }
   return BatchClassifySingleTrack(config, classifier, track, args...)
 }
 
-func ImportAndBatchClassifySingleTracks(config SessionConfig, classifiers []SingleTrackBatchClassifier, trackFiles []string, args ...interface{}) (MutableTrack, error) {
+func ImportAndBatchClassifySingleTracks(config SessionConfig, classifiers []VectorBatchClassifier, trackFiles []string, args ...interface{}) (MutableTrack, error) {
   var result MutableTrack
   var err    error
   // check in advance if all tracks are available
