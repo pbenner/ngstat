@@ -28,13 +28,12 @@ import . "github.com/pbenner/ngstat/statistics"
 type LikelihoodClassifier struct {
   FgDist     MatrixDistribution
   BgDist     MatrixDistribution
-  transposed bool
   r1, r2     Scalar
 }
 
 /* -------------------------------------------------------------------------- */
 
-func NewLikelihoodClassifier(fgDist MatrixDistribution, bgDist MatrixDistribution, transposed bool, args... interface{}) (*LikelihoodClassifier, error) {
+func NewLikelihoodClassifier(fgDist MatrixDistribution, bgDist MatrixDistribution, args... interface{}) (*LikelihoodClassifier, error) {
   // determine scalar type
   t := BareRealType
   for _, arg := range args {
@@ -52,13 +51,13 @@ func NewLikelihoodClassifier(fgDist MatrixDistribution, bgDist MatrixDistributio
     bgDist = bgDist.CloneMatrixDistribution()
   }
   fgDist = fgDist.CloneMatrixDistribution()
-  return &LikelihoodClassifier{fgDist, bgDist, transposed, NewScalar(t, 0.0), NewScalar(t, 0.0)}, nil
+  return &LikelihoodClassifier{fgDist, bgDist, NewScalar(t, 0.0), NewScalar(t, 0.0)}, nil
 }
 
 /* -------------------------------------------------------------------------- */
 
 func (c *LikelihoodClassifier) Clone() *LikelihoodClassifier {
-  r, err := NewLikelihoodClassifier(c.FgDist, c.BgDist, c.transposed, c.r1.Type()); if err != nil {
+  r, err := NewLikelihoodClassifier(c.FgDist, c.BgDist, c.r1.Type()); if err != nil {
     panic(err)
   }
   return r
