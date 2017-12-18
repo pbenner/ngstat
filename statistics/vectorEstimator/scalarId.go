@@ -35,7 +35,7 @@ type ScalarId struct {
 
 /* -------------------------------------------------------------------------- */
 
-func NewScalarId(estimators []ScalarEstimator) (*ScalarId, error) {
+func NewScalarId(estimators ...ScalarEstimator) (*ScalarId, error) {
   for i := 0; i < len(estimators); i++ {
     if estimators[i] == nil {
       return nil, fmt.Errorf("estimator must not be nil")

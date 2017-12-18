@@ -35,7 +35,7 @@ type ScalarBatchId struct {
 
 /* -------------------------------------------------------------------------- */
 
-func NewScalarBatchId(estimators []ScalarBatchEstimator) (*ScalarBatchId, error) {
+func NewScalarBatchId(estimators ...ScalarBatchEstimator) (*ScalarBatchId, error) {
   for i := 0; i < len(estimators); i++ {
     if estimators[i] == nil {
       return nil, fmt.Errorf("estimator must not be nil")
