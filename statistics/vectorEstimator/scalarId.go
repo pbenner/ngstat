@@ -28,20 +28,20 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-type ScalarIdEstimator struct {
+type ScalarId struct {
   Estimators []ScalarEstimator
   estimate     VectorDistribution
 }
 
 /* -------------------------------------------------------------------------- */
 
-func NewScalarIdEstimator(estimators []ScalarEstimator) (*ScalarIdEstimator, error) {
+func NewScalarId(estimators []ScalarEstimator) (*ScalarId, error) {
   for i := 0; i < len(estimators); i++ {
     if estimators[i] == nil {
       return nil, fmt.Errorf("estimator must not be nil")
     }
   }
-  r := ScalarIdEstimator{}
+  r := ScalarId{}
   r.Estimators = estimators
   if err := r.updateEstimate(); err != nil {
     return nil, err
@@ -51,8 +51,8 @@ func NewScalarIdEstimator(estimators []ScalarEstimator) (*ScalarIdEstimator, err
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *ScalarIdEstimator) Clone() *ScalarIdEstimator {
-  r := ScalarIdEstimator{}
+func (obj *ScalarId) Clone() *ScalarId {
+  r := ScalarId{}
   r.Estimators = make([]ScalarEstimator, len(obj.Estimators))
   for i, estimator := range obj.Estimators {
     r.Estimators[i] = estimator.CloneScalarEstimator()
@@ -61,13 +61,13 @@ func (obj *ScalarIdEstimator) Clone() *ScalarIdEstimator {
   return &r
 }
 
-func (obj *ScalarIdEstimator) CloneVectorEstimator() VectorEstimator {
+func (obj *ScalarId) CloneVectorEstimator() VectorEstimator {
   return obj.Clone()
 }
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *ScalarIdEstimator) ScalarType() ScalarType {
+func (obj *ScalarId) ScalarType() ScalarType {
   if len(obj.Estimators) == 0 {
     return nil
   } else {
@@ -75,11 +75,11 @@ func (obj *ScalarIdEstimator) ScalarType() ScalarType {
   }
 }
 
-func (obj *ScalarIdEstimator) Dim() int {
+func (obj *ScalarId) Dim() int {
   return len(obj.Estimators)
 }
 
-func (obj *ScalarIdEstimator) GetParameters() Vector {
+func (obj *ScalarId) GetParameters() Vector {
   if len(obj.Estimators) == 0 {
     return nil
   }
@@ -90,7 +90,7 @@ func (obj *ScalarIdEstimator) GetParameters() Vector {
   return p
 }
 
-func (obj *ScalarIdEstimator) SetParameters(parameters Vector) error {
+func (obj *ScalarId) SetParameters(parameters Vector) error {
   for i := 0; i < len(obj.Estimators); i++ {
     n := obj.Estimators[i].GetParameters().Dim()
     if parameters.Dim() < n {
@@ -109,7 +109,7 @@ func (obj *ScalarIdEstimator) SetParameters(parameters Vector) error {
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *ScalarIdEstimator) SetData(x []Vector, n int) error {
+func (obj *ScalarId) SetData(x []Vector, n int) error {
   if x == nil {
     for _, estimator := range obj.Estimators {
       if err := estimator.SetData(nil, n); err != nil {
@@ -140,7 +140,7 @@ func (obj *ScalarIdEstimator) SetData(x []Vector, n int) error {
 /* estimator interface
  * -------------------------------------------------------------------------- */
 
-func (obj *ScalarIdEstimator) updateEstimate() error {
+func (obj *ScalarId) updateEstimate() error {
   r := make([]ScalarDistribution, len(obj.Estimators))
   for i, estimator := range obj.Estimators {
     r[i] = estimator.GetEstimate()
@@ -153,7 +153,7 @@ func (obj *ScalarIdEstimator) updateEstimate() error {
   return nil
 }
 
-func (obj *ScalarIdEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
+func (obj *ScalarId) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
   for _, estimator := range obj.Estimators {
     if err := estimator.Estimate(gamma, p); err != nil {
       return err
@@ -165,13 +165,13 @@ func (obj *ScalarIdEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) 
   return nil
 }
 
-func (obj *ScalarIdEstimator) EstimateOnData(x []Vector, gamma DenseBareRealVector, p ThreadPool) error {
+func (obj *ScalarId) EstimateOnData(x []Vector, gamma DenseBareRealVector, p ThreadPool) error {
   if err := obj.SetData(x, len(x)); err != nil {
     return err
   }
   return obj.Estimate(gamma, p)
 }
 
-func (obj *ScalarIdEstimator) GetEstimate() VectorDistribution {
+func (obj *ScalarId) GetEstimate() VectorDistribution {
   return obj.estimate
 }

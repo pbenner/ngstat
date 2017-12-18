@@ -28,20 +28,20 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-type ScalarBatchIdEstimator struct {
+type ScalarBatchId struct {
   Estimators []ScalarBatchEstimator
   estimate     VectorDistribution
 }
 
 /* -------------------------------------------------------------------------- */
 
-func NewScalarBatchIdEstimator(estimators []ScalarBatchEstimator) (*ScalarBatchIdEstimator, error) {
+func NewScalarBatchId(estimators []ScalarBatchEstimator) (*ScalarBatchId, error) {
   for i := 0; i < len(estimators); i++ {
     if estimators[i] == nil {
       return nil, fmt.Errorf("estimator must not be nil")
     }
   }
-  r := ScalarBatchIdEstimator{}
+  r := ScalarBatchId{}
   r.Estimators = estimators
   if err := r.updateEstimate(); err != nil {
     return nil, err
@@ -51,8 +51,8 @@ func NewScalarBatchIdEstimator(estimators []ScalarBatchEstimator) (*ScalarBatchI
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *ScalarBatchIdEstimator) Clone() *ScalarBatchIdEstimator {
-  r := ScalarBatchIdEstimator{}
+func (obj *ScalarBatchId) Clone() *ScalarBatchId {
+  r := ScalarBatchId{}
   r.Estimators = make([]ScalarBatchEstimator, len(obj.Estimators))
   for i, estimator := range obj.Estimators {
     r.Estimators[i] = estimator.CloneScalarBatchEstimator()
@@ -61,13 +61,13 @@ func (obj *ScalarBatchIdEstimator) Clone() *ScalarBatchIdEstimator {
   return &r
 }
 
-func (obj *ScalarBatchIdEstimator) CloneVectorBatchEstimator() VectorBatchEstimator {
+func (obj *ScalarBatchId) CloneVectorBatchEstimator() VectorBatchEstimator {
   return obj.Clone()
 }
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *ScalarBatchIdEstimator) ScalarType() ScalarType {
+func (obj *ScalarBatchId) ScalarType() ScalarType {
   if len(obj.Estimators) == 0 {
     return nil
   } else {
@@ -75,11 +75,11 @@ func (obj *ScalarBatchIdEstimator) ScalarType() ScalarType {
   }
 }
 
-func (obj *ScalarBatchIdEstimator) Dim() int {
+func (obj *ScalarBatchId) Dim() int {
   return len(obj.Estimators)
 }
 
-func (obj *ScalarBatchIdEstimator) GetParameters() Vector {
+func (obj *ScalarBatchId) GetParameters() Vector {
   if len(obj.Estimators) == 0 {
     return nil
   }
@@ -90,7 +90,7 @@ func (obj *ScalarBatchIdEstimator) GetParameters() Vector {
   return p
 }
 
-func (obj *ScalarBatchIdEstimator) SetParameters(parameters Vector) error {
+func (obj *ScalarBatchId) SetParameters(parameters Vector) error {
   for i := 0; i < len(obj.Estimators); i++ {
     n := obj.Estimators[i].GetParameters().Dim()
     if parameters.Dim() < n {
@@ -110,7 +110,7 @@ func (obj *ScalarBatchIdEstimator) SetParameters(parameters Vector) error {
 /* batch estimator interface
  * -------------------------------------------------------------------------- */
 
-func (obj *ScalarBatchIdEstimator) Initialize(p ThreadPool) error {
+func (obj *ScalarBatchId) Initialize(p ThreadPool) error {
   for _, estimator := range obj.Estimators {
     if err := estimator.Initialize(p); err != nil {
       return err
@@ -119,7 +119,7 @@ func (obj *ScalarBatchIdEstimator) Initialize(p ThreadPool) error {
   return nil
 }
 
-func (obj *ScalarBatchIdEstimator) NewObservation(x Vector, gamma Scalar, p ThreadPool) error {
+func (obj *ScalarBatchId) NewObservation(x Vector, gamma Scalar, p ThreadPool) error {
   if x.Dim() != len(obj.Estimators) {
     return fmt.Errorf("data has invalid dimension")
   }
@@ -134,7 +134,7 @@ func (obj *ScalarBatchIdEstimator) NewObservation(x Vector, gamma Scalar, p Thre
 /* estimator interface
  * -------------------------------------------------------------------------- */
 
-func (obj *ScalarBatchIdEstimator) updateEstimate() error {
+func (obj *ScalarBatchId) updateEstimate() error {
   r := make([]ScalarDistribution, len(obj.Estimators))
   for i, estimator := range obj.Estimators {
     r[i] = estimator.GetEstimate()
@@ -147,6 +147,6 @@ func (obj *ScalarBatchIdEstimator) updateEstimate() error {
   return nil
 }
 
-func (obj *ScalarBatchIdEstimator) GetEstimate() VectorDistribution {
+func (obj *ScalarBatchId) GetEstimate() VectorDistribution {
   return obj.estimate
 }
