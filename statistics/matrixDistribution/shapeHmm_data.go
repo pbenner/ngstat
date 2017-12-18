@@ -43,11 +43,11 @@ func (obj ShapeHmmDataRecord) GetN() int {
 func (obj ShapeHmmDataRecord) LogPdf(r Scalar, c, k int) error {
   n, m := obj.Edist[c].Dims()
 
-  i := k - m/2
-  j := k - m/2 + m
+  i := k - n/2
+  j := k - n/2 + n
 
-  if _, l := obj.X.Dims(); i > 0 && j < l {
-    return obj.Edist[c].LogPdf(r, obj.X.Slice(0, n, i, j))
+  if l, _ := obj.X.Dims(); i > 0 && j < l {
+    return obj.Edist[c].LogPdf(r, obj.X.Slice(i, j, 0, m))
   } else {
     r.SetValue(0.0)
     return nil
