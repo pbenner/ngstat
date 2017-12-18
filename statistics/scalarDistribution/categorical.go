@@ -72,6 +72,7 @@ func (dist *CategoricalDistribution) ImportConfig(config ConfigDistribution, t S
 func (dist *CategoricalDistribution) ExportConfig() ConfigDistribution {
 
   parameters := dist.GetParameters()
+  parameters  = parameters.CloneVector()
   parameters.Map(func(x Scalar) { x.Exp(x) })
 
   return NewConfigDistribution("scalar:categorical distribution", parameters)
