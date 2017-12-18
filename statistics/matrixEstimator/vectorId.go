@@ -28,20 +28,20 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-type VectorIdEstimator struct {
+type VectorId struct {
   Estimators []VectorEstimator
   estimate     MatrixDistribution
 }
 
 /* -------------------------------------------------------------------------- */
 
-func NewVectorIdEstimator(estimators []VectorEstimator) (*VectorIdEstimator, error) {
+func NewVectorId(estimators ...VectorEstimator) (*VectorId, error) {
   for i := 0; i < len(estimators); i++ {
     if estimators[i] == nil {
       return nil, fmt.Errorf("estimator must not be nil")
     }
   }
-  r := VectorIdEstimator{}
+  r := VectorId{}
   r.Estimators = estimators
   if err := r.updateEstimate(); err != nil {
     return nil, err
@@ -51,8 +51,8 @@ func NewVectorIdEstimator(estimators []VectorEstimator) (*VectorIdEstimator, err
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *VectorIdEstimator) Clone() *VectorIdEstimator {
-  r := VectorIdEstimator{}
+func (obj *VectorId) Clone() *VectorId {
+  r := VectorId{}
   r.Estimators = make([]VectorEstimator, len(obj.Estimators))
   for i, estimator := range obj.Estimators {
     r.Estimators[i] = estimator.CloneVectorEstimator()
@@ -61,13 +61,13 @@ func (obj *VectorIdEstimator) Clone() *VectorIdEstimator {
   return &r
 }
 
-func (obj *VectorIdEstimator) CloneMatrixEstimator() MatrixEstimator {
+func (obj *VectorId) CloneMatrixEstimator() MatrixEstimator {
   return obj.Clone()
 }
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *VectorIdEstimator) ScalarType() ScalarType {
+func (obj *VectorId) ScalarType() ScalarType {
   if len(obj.Estimators) == 0 {
     return nil
   } else {
@@ -75,7 +75,7 @@ func (obj *VectorIdEstimator) ScalarType() ScalarType {
   }
 }
 
-func (obj *VectorIdEstimator) Dims() (int, int) {
+func (obj *VectorId) Dims() (int, int) {
   if len(obj.Estimators) == 0 {
     return 0, 0
   } else {
@@ -83,7 +83,7 @@ func (obj *VectorIdEstimator) Dims() (int, int) {
   }
 }
 
-func (obj *VectorIdEstimator) GetParameters() Vector {
+func (obj *VectorId) GetParameters() Vector {
   if len(obj.Estimators) == 0 {
     return nil
   }
@@ -94,7 +94,7 @@ func (obj *VectorIdEstimator) GetParameters() Vector {
   return p
 }
 
-func (obj *VectorIdEstimator) SetParameters(parameters Vector) error {
+func (obj *VectorId) SetParameters(parameters Vector) error {
   for i := 0; i < len(obj.Estimators); i++ {
     n := obj.Estimators[i].GetParameters().Dim()
     if parameters.Dim() < n {
@@ -113,7 +113,7 @@ func (obj *VectorIdEstimator) SetParameters(parameters Vector) error {
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *VectorIdEstimator) SetData(x []Matrix, n int) error {
+func (obj *VectorId) SetData(x []Matrix, n int) error {
   if x == nil {
     for _, estimator := range obj.Estimators {
       if err := estimator.SetData(nil, n); err != nil {
@@ -146,7 +146,7 @@ func (obj *VectorIdEstimator) SetData(x []Matrix, n int) error {
 /* estimator interface
  * -------------------------------------------------------------------------- */
 
-func (obj *VectorIdEstimator) updateEstimate() error {
+func (obj *VectorId) updateEstimate() error {
   r := make([]VectorDistribution, len(obj.Estimators))
   for i, estimator := range obj.Estimators {
     r[i] = estimator.GetEstimate()
@@ -159,7 +159,7 @@ func (obj *VectorIdEstimator) updateEstimate() error {
   return nil
 }
 
-func (obj *VectorIdEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
+func (obj *VectorId) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
   for _, estimator := range obj.Estimators {
     if err := estimator.Estimate(gamma, p); err != nil {
       return err
@@ -171,13 +171,13 @@ func (obj *VectorIdEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) 
   return nil
 }
 
-func (obj *VectorIdEstimator) EstimateOnData(x []Matrix, gamma DenseBareRealVector, p ThreadPool) error {
+func (obj *VectorId) EstimateOnData(x []Matrix, gamma DenseBareRealVector, p ThreadPool) error {
   if err := obj.SetData(x, len(x)); err != nil {
     return err
   }
   return obj.Estimate(gamma, p)
 }
 
-func (obj *VectorIdEstimator) GetEstimate() MatrixDistribution {
+func (obj *VectorId) GetEstimate() MatrixDistribution {
   return obj.estimate
 }

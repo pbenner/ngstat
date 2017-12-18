@@ -28,20 +28,20 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-type VectorBatchIdEstimator struct {
+type VectorBatchId struct {
   Estimators []VectorBatchEstimator
   estimate     MatrixDistribution
 }
 
 /* -------------------------------------------------------------------------- */
 
-func NewVectorBatchIdEstimator(estimators []VectorBatchEstimator) (*VectorBatchIdEstimator, error) {
+func NewVectorBatchId(estimators ...VectorBatchEstimator) (*VectorBatchId, error) {
   for i := 0; i < len(estimators); i++ {
     if estimators[i] == nil {
       return nil, fmt.Errorf("estimator must not be nil")
     }
   }
-  r := VectorBatchIdEstimator{}
+  r := VectorBatchId{}
   r.Estimators = estimators
   if err := r.updateEstimate(); err != nil {
     return nil, err
@@ -51,8 +51,8 @@ func NewVectorBatchIdEstimator(estimators []VectorBatchEstimator) (*VectorBatchI
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *VectorBatchIdEstimator) Clone() *VectorBatchIdEstimator {
-  r := VectorBatchIdEstimator{}
+func (obj *VectorBatchId) Clone() *VectorBatchId {
+  r := VectorBatchId{}
   r.Estimators = make([]VectorBatchEstimator, len(obj.Estimators))
   for i, estimator := range obj.Estimators {
     r.Estimators[i] = estimator.CloneVectorBatchEstimator()
@@ -61,13 +61,13 @@ func (obj *VectorBatchIdEstimator) Clone() *VectorBatchIdEstimator {
   return &r
 }
 
-func (obj *VectorBatchIdEstimator) CloneMatrixBatchEstimator() MatrixBatchEstimator {
+func (obj *VectorBatchId) CloneMatrixBatchEstimator() MatrixBatchEstimator {
   return obj.Clone()
 }
 
 /* -------------------------------------------------------------------------- */
 
-func (obj *VectorBatchIdEstimator) ScalarType() ScalarType {
+func (obj *VectorBatchId) ScalarType() ScalarType {
   if len(obj.Estimators) == 0 {
     return nil
   } else {
@@ -75,7 +75,7 @@ func (obj *VectorBatchIdEstimator) ScalarType() ScalarType {
   }
 }
 
-func (obj *VectorBatchIdEstimator) Dims() (int, int) {
+func (obj *VectorBatchId) Dims() (int, int) {
   if len(obj.Estimators) == 0 {
     return 0, 0
   } else {
@@ -83,7 +83,7 @@ func (obj *VectorBatchIdEstimator) Dims() (int, int) {
   }
 }
 
-func (obj *VectorBatchIdEstimator) GetParameters() Vector {
+func (obj *VectorBatchId) GetParameters() Vector {
   if len(obj.Estimators) == 0 {
     return nil
   }
@@ -94,7 +94,7 @@ func (obj *VectorBatchIdEstimator) GetParameters() Vector {
   return p
 }
 
-func (obj *VectorBatchIdEstimator) SetParameters(parameters Vector) error {
+func (obj *VectorBatchId) SetParameters(parameters Vector) error {
   for i := 0; i < len(obj.Estimators); i++ {
     n := obj.Estimators[i].GetParameters().Dim()
     if parameters.Dim() < n {
@@ -114,7 +114,7 @@ func (obj *VectorBatchIdEstimator) SetParameters(parameters Vector) error {
 /* batch estimator interface
  * -------------------------------------------------------------------------- */
 
-func (obj *VectorBatchIdEstimator) Initialize(p ThreadPool) error {
+func (obj *VectorBatchId) Initialize(p ThreadPool) error {
   for _, estimator := range obj.Estimators {
     if err := estimator.Initialize(p); err != nil {
       return err
@@ -123,7 +123,7 @@ func (obj *VectorBatchIdEstimator) Initialize(p ThreadPool) error {
   return nil
 }
 
-func (obj *VectorBatchIdEstimator) NewObservation(x Matrix, gamma Scalar, p ThreadPool) error {
+func (obj *VectorBatchId) NewObservation(x Matrix, gamma Scalar, p ThreadPool) error {
   n1, m1 :=   x.Dims()
   n2, m2 := obj.Dims()
   if n1 != n2 || m1 != m2 {
@@ -140,7 +140,7 @@ func (obj *VectorBatchIdEstimator) NewObservation(x Matrix, gamma Scalar, p Thre
 /* estimator interface
  * -------------------------------------------------------------------------- */
 
-func (obj *VectorBatchIdEstimator) updateEstimate() error {
+func (obj *VectorBatchId) updateEstimate() error {
   r := make([]VectorDistribution, len(obj.Estimators))
   for i, estimator := range obj.Estimators {
     r[i] = estimator.GetEstimate()
@@ -153,6 +153,6 @@ func (obj *VectorBatchIdEstimator) updateEstimate() error {
   return nil
 }
 
-func (obj *VectorBatchIdEstimator) GetEstimate() MatrixDistribution {
+func (obj *VectorBatchId) GetEstimate() MatrixDistribution {
   return obj.estimate
 }
