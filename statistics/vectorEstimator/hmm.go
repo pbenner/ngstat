@@ -249,7 +249,7 @@ func (obj *HmmEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error
   args  = append(args, hook_verbose)
   args  = append(args, generic.BaumWelchOptimizeEmissions  {obj.OptimizeEmissions})
   args  = append(args, generic.BaumWelchOptimizeTransitions{obj.OptimizeTransitions})
-  return generic.BaumWelchAlgorithm(obj, gamma, nRecords, nData, nMapped, obj.hmm1.NStates(), obj.hmm1.NEDists(), obj.epsilon, obj.maxSteps, p, obj.args...)
+  return generic.BaumWelchAlgorithm(obj, gamma, nRecords, nData, nMapped, obj.hmm1.NStates(), obj.hmm1.NEDists(), obj.epsilon, obj.maxSteps, p, args...)
 }
 
 func (obj *HmmEstimator) EstimateOnData(x []Vector, gamma DenseBareRealVector, p ThreadPool) error {
