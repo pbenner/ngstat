@@ -94,7 +94,7 @@ func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassif
     }
     // thread safe copy of i
     j := i
-    pool.AddJob(g, func(pool ThreadPool, erf func() error) error {
+    if err := pool.AddJob(g, func(pool ThreadPool, erf func() error) error {
       if erf() != nil {
         return nil
       }
@@ -112,7 +112,9 @@ func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassif
       }
       result[j] = r.GetValue()
       return nil
-    })
+    }); err != nil {
+      return nil, err
+    }
   }
   // wait for threads
   if err := pool.Wait(g); err != nil {
@@ -215,7 +217,7 @@ func BatchClassifySingleTrack(config SessionConfig, classifier VectorBatchClassi
       seq2.SetBin(i, nan)
     }
     // launch jobs
-    pool.AddRangeJob(offset1, nbins-offset2, g, func(i int, pool ThreadPool, erf func() error) error {
+    if err := pool.AddRangeJob(offset1, nbins-offset2, g, func(i int, pool ThreadPool, erf func() error) error {
       if erf() != nil {
         return nil
       }
@@ -235,7 +237,9 @@ func BatchClassifySingleTrack(config SessionConfig, classifier VectorBatchClassi
       }
       seq2.SetBin(i, r.GetValue())
       return nil
-    })
+    }); err != nil {
+      return nil, err
+    }
     // wait for threads
     if err := pool.Wait(g); err != nil {
       return nil, err
@@ -307,7 +311,7 @@ func ClassifySingleTrack(config SessionConfig, classifier VectorClassifier, trac
       x = f.Eval(x)
     }
 
-    pool.AddJob(g, func(pool ThreadPool, erf func() error) error {
+    if err := pool.AddJob(g, func(pool ThreadPool, erf func() error) error {
       if erf() != nil {
         return nil
       }
@@ -320,7 +324,9 @@ func ClassifySingleTrack(config SessionConfig, classifier VectorClassifier, trac
         seq2.SetBin(i, r.At(i).GetValue())
       }
       return nil
-    })
+    }); err != nil {
+      return nil, err
+    }
   }
   // wait for threads
   if err := pool.Wait(g); err != nil {

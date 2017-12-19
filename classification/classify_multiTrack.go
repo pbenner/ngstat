@@ -84,7 +84,7 @@ func ClassifyMultiTrackData(config SessionConfig, classifier MatrixBatchClassifi
   for d := 0; d < len(data); d++ {
     // thread safe copy of d
     d := d
-    pool.AddJob(g, func(pool ThreadPool, erf func() error) error {
+    if err := pool.AddJob(g, func(pool ThreadPool, erf func() error) error {
       c := c   [pool.GetThreadId()]
       y := y   [pool.GetThreadId()]
       r := r.At(pool.GetThreadId())
@@ -107,7 +107,9 @@ func ClassifyMultiTrackData(config SessionConfig, classifier MatrixBatchClassifi
       }
       result[d] = r.GetValue()
       return nil
-    })
+    }); err != nil {
+      return nil, err
+    }
   }
   // wait for threads
   if err := pool.Wait(g); err != nil {
@@ -219,7 +221,7 @@ func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassif
     }
     nrows, ncols := x.Dims()
     // launch jobs
-    pool.AddRangeJob(offset1, nbins-offset2, g, func(i int, pool ThreadPool, erf func() error) error {
+    if err := pool.AddRangeJob(offset1, nbins-offset2, g, func(i int, pool ThreadPool, erf func() error) error {
       if erf() != nil {
         return nil
       }
@@ -253,7 +255,9 @@ func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassif
       }
       dst.SetBin(i, r.GetValue())
       return nil
-    })
+    }); err != nil {
+      return nil, err
+    }
     // wait for threads
     if err := pool.Wait(g); err != nil {
       return nil, err
@@ -321,7 +325,7 @@ func ClassifyMultiTrack(config SessionConfig, classifier MatrixClassifier, track
       x = f.Eval(x)
     }
 
-    pool.AddJob(g, func(pool ThreadPool, erf func() error) error {
+    if err := pool.AddJob(g, func(pool ThreadPool, erf func() error) error {
       c := c[pool.GetThreadId()]
       if erf() != nil {
         return nil
@@ -333,7 +337,9 @@ func ClassifyMultiTrack(config SessionConfig, classifier MatrixClassifier, track
         dst.SetBin(i, r.At(i).GetValue())
       }
       return nil
-    })
+    }); err != nil {
+      return nil, err
+    }
   }
   // wait for threads
   if err := pool.Wait(g); err != nil {
