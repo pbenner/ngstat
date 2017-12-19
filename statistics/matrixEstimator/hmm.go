@@ -245,6 +245,7 @@ func (obj *HmmEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error
     }
   }
   args := obj.args
+  args  = append(args, hook_save)
   args  = append(args, hook_trace)
   args  = append(args, hook_verbose)
   args  = append(args, generic.BaumWelchOptimizeEmissions  {obj.OptimizeEmissions})
