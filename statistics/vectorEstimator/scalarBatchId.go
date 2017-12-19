@@ -150,5 +150,8 @@ func (obj *ScalarBatchId) updateEstimate() error {
 }
 
 func (obj *ScalarBatchId) GetEstimate() VectorDistribution {
+  if err := obj.updateEstimate(); err != nil {
+    panic(err)
+  }
   return obj.estimate
 }

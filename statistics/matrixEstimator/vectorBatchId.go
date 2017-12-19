@@ -156,5 +156,8 @@ func (obj *VectorBatchId) updateEstimate() error {
 }
 
 func (obj *VectorBatchId) GetEstimate() MatrixDistribution {
+  if err := obj.updateEstimate(); err != nil {
+    panic(err)
+  }
   return obj.estimate
 }
