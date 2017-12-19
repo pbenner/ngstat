@@ -27,7 +27,6 @@ import   "github.com/pbenner/ngstat/statistics/scalarEstimator"
 import   "github.com/pbenner/ngstat/statistics/vectorEstimator"
 
 import . "github.com/pbenner/autodiff"
-//import . "github.com/pbenner/autodiff/simple"
 import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
@@ -67,7 +66,7 @@ func TestShapeHmm1(t *testing.T) {
     if err := d.LogPdf(r, x); err != nil {
       t.Error(err); return
     }
-    if math.Abs(r.GetValue() - -0.52680257) > 1e-4 {
+    if math.Abs(r.GetValue() - -1.550184e+01) > 1e-4 {
       t.Errorf("test failed")
     }
   }
