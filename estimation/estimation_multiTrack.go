@@ -106,6 +106,9 @@ func BatchEstimateOnMultiTrackData(config SessionConfig, estimator MatrixBatchEs
   if f != nil {
     y = NullMatrix(estimator.ScalarType(), m1, m2)
   }
+  if err := estimator.Initialize(ThreadPool{}); err != nil {
+    return err
+  }
 
   PrintStderr(config, 1, "Estimating model... ")
   for d := 0; d < len(data); d++ {
@@ -164,6 +167,9 @@ func BatchEstimateOnMultiTrack(config SessionConfig, estimator MatrixBatchEstima
   y := Matrix(nil)
   if f != nil {
     y = NullMatrix(estimator.ScalarType(), m1, m2)
+  }
+  if err := estimator.Initialize(ThreadPool{}); err != nil {
+    return err
   }
 
   offset1 := DivIntUp  (n2-1, 2)

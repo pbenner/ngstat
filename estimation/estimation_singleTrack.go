@@ -102,6 +102,9 @@ func BatchEstimateOnSingleTrackData(config SessionConfig, estimator VectorBatchE
   if f != nil {
     y = NullVector(estimator.ScalarType(), m)
   }
+  if err := estimator.Initialize(ThreadPool{}); err != nil {
+    return err
+  }
 
   PrintStderr(config, 1, "Estimating model... ")
   for d := 0; d < len(data); d++ {
@@ -170,6 +173,9 @@ func BatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstim
   y := x
   if f != nil {
     y = NullVector(estimator.ScalarType(), m)
+  }
+  if err := estimator.Initialize(ThreadPool{}); err != nil {
+    return err
   }
   // counter
   l := 0
