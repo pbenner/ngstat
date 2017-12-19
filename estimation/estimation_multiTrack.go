@@ -250,6 +250,7 @@ func EstimateOnMultiTrack(config SessionConfig, estimator MatrixEstimator, track
       f = a
     }
   }
+  pool := NewThreadPool(config.Threads, config.Threads*1000)
 
   x := []Matrix{}
   // collect sequences
@@ -286,7 +287,7 @@ LOOP1:
     x = append(x, r)
   }
   PrintStderr(config, 1, "Estimating model... ")
-  if err := estimator.EstimateOnData(x, nil, ThreadPool{}); err != nil {
+  if err := estimator.EstimateOnData(x, nil, pool); err != nil {
     PrintStderr(config, 1, "failed\n")
     return err
   } else {
