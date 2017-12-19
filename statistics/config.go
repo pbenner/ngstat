@@ -227,71 +227,65 @@ func ExportDistribution(filename string, distribution BasicDistribution) error {
   return distribution.ExportConfig().ExportJson(filename)
 }
 
+func ImportDistribution(filename string, distribution BasicDistribution, t ScalarType) error {
+  config := ConfigDistribution{}
+
+  if err := config.ImportJson(filename); err != nil {
+    return err
+  }
+  if err := distribution.ImportConfig(config, t); err != nil {
+    return err
+  }
+  return nil
+}
+
 /* -------------------------------------------------------------------------- */
 
-func ImportScalarDistributionConfig(config ConfigDistribution, t ScalarType) (ScalarDistribution, error) {
+func ImportScalarDistribution(filename string, t ScalarType) (ScalarDistribution, error) {
+  config := ConfigDistribution{}
+  if err := config.ImportJson(filename); err != nil {
+    return nil, err
+  }
   if distribution := NewScalarDistribution(config.Name); distribution == nil {
     return nil, fmt.Errorf("unknown distribution: %s", config.Name)
   } else {
     if err := distribution.ImportConfig(config, t); err != nil {
       return nil, err
-    } else {
-      return distribution, err
     }
+    return distribution, nil
   }
-}
-
-func ImportScalarDistribution(filename string, t ScalarType) (ScalarDistribution, error) {
-  config := ConfigDistribution{}
-
-  if err := config.ImportJson(filename); err != nil {
-    return nil, err
-  }
-  return ImportScalarDistributionConfig(config, t)
 }
 
 /* -------------------------------------------------------------------------- */
 
-func ImportVectorDistributionConfig(config ConfigDistribution, t ScalarType) (VectorDistribution, error) {
+func ImportVectorDistribution(filename string, t ScalarType) (VectorDistribution, error) {
+  config := ConfigDistribution{}
+  if err := config.ImportJson(filename); err != nil {
+    return nil, err
+  }
   if distribution := NewVectorDistribution(config.Name); distribution == nil {
     return nil, fmt.Errorf("unknown distribution: %s", config.Name)
   } else {
     if err := distribution.ImportConfig(config, t); err != nil {
       return nil, err
-    } else {
-      return distribution, err
     }
+    return distribution, nil
   }
-}
-
-func ImportVectorDistribution(filename string, t ScalarType) (VectorDistribution, error) {
-  config := ConfigDistribution{}
-
-  if err := config.ImportJson(filename); err != nil {
-    return nil, err
-  }
-  return ImportVectorDistributionConfig(config, t)
 }
 
 /* -------------------------------------------------------------------------- */
 
-func ImportMatrixDistributionConfig(config ConfigDistribution, t ScalarType) (MatrixDistribution, error) {
+func ImportMatrixDistribution(filename string, t ScalarType) (MatrixDistribution, error) {
+  config := ConfigDistribution{}
+  if err := config.ImportJson(filename); err != nil {
+    return nil, err
+  }
   if distribution := NewMatrixDistribution(config.Name); distribution == nil {
     return nil, fmt.Errorf("unknown distribution: %s", config.Name)
   } else {
     if err := distribution.ImportConfig(config, t); err != nil {
       return nil, err
-    } else {
-      return distribution, err
     }
+    return distribution, nil
   }
-}
-
-func ImportMatrixDistribution(filename string, t ScalarType) (MatrixDistribution, error) {
-  config := ConfigDistribution{}
-
-  if err := config.ImportJson(filename); err != nil {
-    return nil, err
-  }
-  return ImportMatrixDistributionConfig(config, t)
 }
