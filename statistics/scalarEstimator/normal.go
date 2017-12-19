@@ -49,6 +49,7 @@ func NewNormalEstimator(mu, sigma, sigmaMin float64) (*NormalEstimator, error) {
   } else {
     r := NormalEstimator{}
     r.NormalDistribution = dist
+    r.SigmaMin           = sigmaMin
     return &r, nil
   }
 }

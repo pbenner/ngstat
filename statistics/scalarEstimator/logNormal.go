@@ -49,6 +49,7 @@ func NewLogNormalEstimator(mu, sigma, pseudocount, sigmaMin float64) (*LogNormal
   } else {
     r := LogNormalEstimator{}
     r.LogNormalDistribution = dist
+    r.SigmaMin              = sigmaMin
     return &r, nil
   }
 }
