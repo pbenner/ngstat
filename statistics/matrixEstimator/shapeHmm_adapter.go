@@ -93,7 +93,7 @@ func (obj *ShapeHmmAdapter) SetData(x []Matrix, n int) error {
     _, m1 := x[d].Dims()
     _, m2 :=  obj.Dims()
     if m1 != m2 {
-      return fmt.Errorf("data has invalid dimension")
+      return fmt.Errorf("data has invalid dimension, expected dimension `%d' but data has dimension `%d'", m2, m1)
     }
   }
   obj.x = x

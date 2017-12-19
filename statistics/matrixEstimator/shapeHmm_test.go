@@ -19,12 +19,10 @@ package matrixEstimator
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
-//import   "math"
-import   "os"
+import   "math"
 import   "testing"
 
 import . "github.com/pbenner/ngstat/statistics"
-import   "github.com/pbenner/ngstat/statistics/generic"
 import   "github.com/pbenner/ngstat/statistics/scalarEstimator"
 import   "github.com/pbenner/ngstat/statistics/vectorEstimator"
 
@@ -53,20 +51,24 @@ func TestShapeHmm1(t *testing.T) {
   e1, _ := NewVectorBatchId(d1)
   e2, _ := NewVectorBatchId(d2)
 
-  if estimator, err := NewShapeHmmEstimator(pi, tr, nil, []MatrixBatchEstimator{e1, e2}, 1e-8, -1, generic.DefaultBaumWelchHook(os.Stdout)); err != nil {
+  if estimator, err := NewShapeHmmEstimator(pi, tr, nil, []MatrixBatchEstimator{e1, e2}, 1e-8, -1); err != nil {
     t.Error(err)
   } else {
-    x := NewMatrix(RealType, 10, 1, []float64{
+    x := NewMatrix(RealType, 2, 5, []float64{
       1,1,1,1,1,
       0,0,0,0,0})
 
     if err := estimator.EstimateOnData([]Matrix{x}, nil, ThreadPool{}); err != nil {
-      t.Error(err)
+      t.Error(err); return
     }
-    // r := NewReal(0.0)
+    d := estimator.GetEstimate()
+    r := NewReal(0.0)
 
-    // if math.Abs(r.GetValue() - -20.1032236) > 1e-4 {
-    //   t.Errorf("test failed")
-    // }
+    if err := d.LogPdf(r, x); err != nil {
+      t.Error(err); return
+    }
+    if math.Abs(r.GetValue() - -0.52680257) > 1e-4 {
+      t.Errorf("test failed")
+    }
   }
 }
