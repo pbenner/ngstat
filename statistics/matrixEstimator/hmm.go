@@ -19,6 +19,7 @@ package matrixEstimator
 /* -------------------------------------------------------------------------- */
 
 import   "fmt"
+import   "os"
 
 import . "github.com/pbenner/ngstat/statistics"
 import   "github.com/pbenner/ngstat/statistics/generic"
@@ -39,6 +40,17 @@ type HmmEstimator struct {
   epsilon      float64
   maxSteps     int
   args       []interface{}
+  // split data into smaller pieces
+  // (disabled if set to 0)
+  ChunkSize    int
+  // hook options
+  SaveFile     string
+  SaveInterval int
+  Trace        string
+  Verbose      int
+  // estimator options
+  OptimizeEmissions   bool
+  OptimizeTransitions bool
 }
 
 /* -------------------------------------------------------------------------- */
@@ -71,6 +83,8 @@ func NewHmmEstimator(pi Vector, tr Matrix, stateMap, startStates, finalStates []
     r.epsilon    = epsilon
     r.maxSteps   = maxSteps
     r.args       = args
+    r.OptimizeEmissions   = true
+    r.OptimizeTransitions = true
     return &r, nil
   }
 }
@@ -163,6 +177,23 @@ func (obj *HmmEstimator) SetParameters(parameters Vector) error {
 }
 
 func (obj *HmmEstimator) SetData(x []Matrix, n int) error {
+  // split data into chunks
+  //////////////////////////////////////////////////////////////////////////////
+  if obj.ChunkSize > 0 {
+    var x_ []Matrix
+    for i := 0; i < len(x); i++ {
+      m, n := x[i].Dims()
+      for j := 0; j < m; j += obj.ChunkSize {
+        jFrom := j
+        jTo   := j+obj.ChunkSize
+        if jTo > m {
+          jTo = m
+        }
+        x_ = append(x_, x[i].Slice(jFrom, jTo, 0, n))
+      }
+    }
+    x = x_
+  }
   if data, err := NewHmmStdDataSet(obj.ScalarType(), x, obj.hmm1.NEDists()); err != nil {
     return err
   } else {
@@ -178,6 +209,30 @@ func (obj *HmmEstimator) SetData(x []Matrix, n int) error {
 }
 
 func (obj *HmmEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
+  hook_save    := generic.BaumWelchHook{}
+  hook_trace   := generic.BaumWelchHook{}
+  hook_verbose := generic.BaumWelchHook{}
+  trace := NullVector(obj.ScalarType(), 0)
+  if obj.SaveFile != "" && obj.SaveInterval > 0 {
+    hook_save.Value = func(hmm generic.BasicHmm, i int, likelihood, epsilon float64) {
+      if i % obj.SaveInterval == 0 {
+        ExportDistribution(obj.SaveFile, obj.GetEstimate())
+      }
+    }
+  }
+  // add hooks
+  //////////////////////////////////////////////////////////////////////////////
+  if obj.Trace != "" {
+    hook_trace.Value = func(hmm generic.BasicHmm, i int, likelihood, epsilon float64) {
+      trace = trace.AppendVector(hmm.GetParameters())
+    }
+  }
+  if obj.Verbose > 1 {
+    hook_verbose = generic.DefaultBaumWelchHook(os.Stderr)
+  } else
+  if obj.Verbose > 0 {
+    hook_verbose = generic.PlainBaumWelchHook(os.Stderr)
+  }
   data     := obj.data
   nRecords := data.GetNRecords()
   nMapped  := data.GetNMapped()
@@ -189,6 +244,11 @@ func (obj *HmmEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error
       nData = r.GetN()
     }
   }
+  args := obj.args
+  args  = append(args, hook_trace)
+  args  = append(args, hook_verbose)
+  args  = append(args, generic.BaumWelchOptimizeEmissions  {obj.OptimizeEmissions})
+  args  = append(args, generic.BaumWelchOptimizeTransitions{obj.OptimizeTransitions})
   return generic.BaumWelchAlgorithm(obj, gamma, nRecords, nData, nMapped, obj.hmm1.NStates(), obj.hmm1.NEDists(), obj.epsilon, obj.maxSteps, p, obj.args...)
 }
 
