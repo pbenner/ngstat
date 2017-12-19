@@ -36,13 +36,15 @@ type ScalarId struct {
 /* -------------------------------------------------------------------------- */
 
 func NewScalarId(estimators ...ScalarEstimator) (*ScalarId, error) {
+  e := make([]ScalarEstimator, len(estimators))
   for i := 0; i < len(estimators); i++ {
     if estimators[i] == nil {
       return nil, fmt.Errorf("estimator must not be nil")
     }
+    e[i] = estimators[i].CloneScalarEstimator()
   }
   r := ScalarId{}
-  r.Estimators = estimators
+  r.Estimators = e
   if err := r.updateEstimate(); err != nil {
     return nil, err
   }

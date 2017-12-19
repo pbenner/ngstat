@@ -36,13 +36,15 @@ type VectorBatchId struct {
 /* -------------------------------------------------------------------------- */
 
 func NewVectorBatchId(estimators ...VectorBatchEstimator) (*VectorBatchId, error) {
+  e := make([]VectorBatchEstimator, len(estimators))
   for i := 0; i < len(estimators); i++ {
     if estimators[i] == nil {
       return nil, fmt.Errorf("estimator must not be nil")
     }
+    e[i] = estimators[i].CloneVectorBatchEstimator()
   }
   r := VectorBatchId{}
-  r.Estimators = estimators
+  r.Estimators = e
   if err := r.updateEstimate(); err != nil {
     return nil, err
   }

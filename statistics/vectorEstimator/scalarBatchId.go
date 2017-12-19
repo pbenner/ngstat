@@ -36,13 +36,15 @@ type ScalarBatchId struct {
 /* -------------------------------------------------------------------------- */
 
 func NewScalarBatchId(estimators ...ScalarBatchEstimator) (*ScalarBatchId, error) {
+  e := make([]ScalarBatchEstimator, len(estimators))
   for i := 0; i < len(estimators); i++ {
     if estimators[i] == nil {
       return nil, fmt.Errorf("estimator must not be nil")
     }
+    e[i] = estimators[i].CloneScalarBatchEstimator()
   }
   r := ScalarBatchId{}
-  r.Estimators = estimators
+  r.Estimators = e
   if err := r.updateEstimate(); err != nil {
     return nil, err
   }

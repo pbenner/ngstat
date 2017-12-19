@@ -45,16 +45,16 @@ func TestShapeHmm1(t *testing.T) {
   c2, _ := scalarEstimator.NewCategoricalEstimator(
     NewVector(RealType, []float64{0.7, 0.3}))
 
-  d1, _ := vectorEstimator.NewScalarBatchId(c1, c1, c1, c1, c1)
-  d2, _ := vectorEstimator.NewScalarBatchId(c2, c2, c2, c2, c2)
+  d1, _ := vectorEstimator.NewScalarBatchId(c1)
+  d2, _ := vectorEstimator.NewScalarBatchId(c2)
 
-  e1, _ := NewVectorBatchId(d1)
-  e2, _ := NewVectorBatchId(d2)
+  e1, _ := NewVectorBatchId(d1, d1, d1, d1, d1)
+  e2, _ := NewVectorBatchId(d2, d2, d2, d2, d2)
 
   if estimator, err := NewShapeHmmEstimator(pi, tr, nil, []MatrixBatchEstimator{e1, e2}, 1e-8, -1); err != nil {
     t.Error(err)
   } else {
-    x := NewMatrix(RealType, 2, 5, []float64{
+    x := NewMatrix(RealType, 10, 1, []float64{
       1,1,1,1,1,
       0,0,0,0,0})
 

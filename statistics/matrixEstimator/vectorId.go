@@ -36,13 +36,15 @@ type VectorId struct {
 /* -------------------------------------------------------------------------- */
 
 func NewVectorId(estimators ...VectorEstimator) (*VectorId, error) {
+  e := make([]VectorEstimator, len(estimators))
   for i := 0; i < len(estimators); i++ {
     if estimators[i] == nil {
       return nil, fmt.Errorf("estimator must not be nil")
     }
+    e[i] = estimators[i].CloneVectorEstimator()
   }
   r := VectorId{}
-  r.Estimators = estimators
+  r.Estimators = e
   if err := r.updateEstimate(); err != nil {
     return nil, err
   }
