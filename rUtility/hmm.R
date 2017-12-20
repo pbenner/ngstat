@@ -14,8 +14,8 @@ normalize.matrix <- function(x, bycol=FALSE) {
     }
 }
 
-parse.matrix <- function(json) {
-    matrix(json$Values, json$Rows, json$Cols, byrow=TRUE)
+parse.matrix <- function(json, n, m) {
+    matrix(json, n, m, byrow=TRUE)
 }
 
 ## -----------------------------------------------------------------------------
@@ -49,8 +49,8 @@ parse.hmm.tree <- function(json) {
 parse.hmm <- function(json, summarize.edist=TRUE) {
     edist <- NULL
     if (summarize.edist) {
-        for (estr in json$Edist) {
-            r <- parse.distribution.summarized(fromJSON(estr))
+        for (distribution in json$Distributions) {
+            r <- parse.distribution.summarized(distribution)
             if (class(r) == "matrix") {
                 edist[[length(edist)+1]] <- r
             } else {
@@ -59,8 +59,8 @@ parse.hmm <- function(json, summarize.edist=TRUE) {
         }
     }
     else {
-        for (estr in json$Edist) {
-            r <- parse.edist(fromJSON(estr))
+        for (distribution in json$Distributions) {
+            r <- parse.distribution(distribution)
             if (class(r) == "matrix") {
                 edist[[length(edist)+1]] <- r
             } else {
@@ -69,11 +69,11 @@ parse.hmm <- function(json, summarize.edist=TRUE) {
         }
     }
     list(
-        Pi = json$P0,
-        Tr = parse.matrix(json$Transition),
+        Pi = json$Parameters$Pi,
+        Tr = parse.matrix(json$Parameters$Tr, json$Parameters$N, json$Parameters$N),
         EDist = edist,
         Tree  = parse.hmm.tree(json),
-        StateMap = json$StateMap)
+        StateMap = json$Parameters$StateMap)
 }
 
 ## -----------------------------------------------------------------------------
