@@ -123,7 +123,7 @@ func (obj *LogNormalEstimator) updateEstimate() error {
   mu    := NewScalar(obj.ScalarType(), s1)
   sigma := NewScalar(obj.ScalarType(), math.Sqrt(s2 - s1*s1))
 
-  if sigma.GetValue() < obj.SigmaMin {
+  if math.IsNaN(sigma.GetValue()) || sigma.GetValue() < obj.SigmaMin {
     sigma.SetValue(obj.SigmaMin)
   }
 
