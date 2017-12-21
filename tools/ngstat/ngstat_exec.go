@@ -65,6 +65,8 @@ func ngstat_exec_generic_main(config SessionConfig, args []string, plugin *plugi
   if err != nil {
     log.Fatal(err)
   }
+  fmt.Fprintf(os.Stderr, "%s", config.String())
+
   switch f := g.(type) {
   case func(config SessionConfig, args []string):
     f(config, args)

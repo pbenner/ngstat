@@ -19,6 +19,7 @@ package config
 /* -------------------------------------------------------------------------- */
 
 import   "fmt"
+import   "bytes"
 import   "io"
 
 import . "github.com/pbenner/autodiff"
@@ -81,4 +82,22 @@ func (config *SessionConfig) GetBinSummaryStatistics() (BinSummaryStatistics, er
     return BinMax, nil
   }
   return nil, fmt.Errorf("invalid bin summary statistics")
+}
+
+/* -------------------------------------------------------------------------- */
+
+func (config *SessionConfig) String() string {
+  var buffer bytes.Buffer
+
+  fmt.Fprintf(&buffer, "Session Config:\n")
+  fmt.Fprintf(&buffer, " -> BinOverlap           : %v\n", config.BinOverlap)
+  fmt.Fprintf(&buffer, " -> BinSummaryStatistics : %v\n", config.BinSummaryStatistics)
+  fmt.Fprintf(&buffer, " -> BinSize              : %v\n", config.BinSize)
+  fmt.Fprintf(&buffer, " -> BWZoomLevels         : %v\n", config.BWZoomLevels)
+  fmt.Fprintf(&buffer, " -> TrackInit            : %v\n", config.TrackInit)
+  fmt.Fprintf(&buffer, " -> Threads              : %v\n", config.Threads)
+  fmt.Fprintf(&buffer, " -> Verbose              : %v\n", config.Verbose)
+  fmt.Fprintf(&buffer, " -> WindowSize           : %v\n", config.WindowSize)
+
+  return buffer.String()
 }
