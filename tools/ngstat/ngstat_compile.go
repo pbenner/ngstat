@@ -52,7 +52,7 @@ func ngstat_compile_main(config SessionConfig, args []string) {
 
   filename := options.Args()[0]
 
-  cmd := exec.Command("go", "build", "-buildmode=plugin", "-i", filename)
+  cmd := exec.Command("go", "build", "-buildmode=plugin", "-i", "-v", filename)
   cmd.Stdout = os.Stdout
   cmd.Stderr = os.Stderr
 
