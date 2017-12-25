@@ -18,38 +18,86 @@ package config
 
 /* -------------------------------------------------------------------------- */
 
-//import   "fmt"
-import   "encoding/json"
+import   "fmt"
+import   "bytes"
 import   "io"
-import   "io/ioutil"
+
+import . "github.com/pbenner/autodiff"
+import . "github.com/pbenner/gonetics"
 
 /* -------------------------------------------------------------------------- */
 
-type Config interface {
-  Serializable
+type SessionConfig struct {
+  Threads                int
+  Verbose                int
+  BinSummaryStatistics   string  `json:"Bin Summary Statistics"`
+  BWZoomLevels         []int     `json:"BigWig Zoom Levels"`
+  WindowSize             int     `json:"Window Size"`
+  BinSize                int     `json:"Bin Size"`
+  BinOverlap             int     `json:"Bin Overlap"`
+  TrackInit              float64 `json:"Track Initial Value"`
 }
 
-/* -------------------------------------------------------------------------- */
-
-func JsonImport(reader io.Reader, object interface{}) error {
-
-  b, err := ioutil.ReadAll(reader)
-  if err != nil {
-    return err
-  }
-
-  return json.Unmarshal(b, object)
+func (config *SessionConfig) Import(reader io.Reader, args... interface{}) error {
+  return JsonImport(reader, config)
 }
 
-func JsonExport(writer io.Writer, object interface{}) error {
+func (config *SessionConfig) Export(writer io.Writer) error {
+  return JsonExport(writer, config)
+}
 
-  b, err := json.MarshalIndent(object, "", "  ")
-  if err != nil {
+func (config *SessionConfig) ImportFile(filename string) error {
+  if err := ImportFile(config, filename, BareRealType); err != nil {
     return err
   }
-  if _, err := writer.Write(b); err != nil {
-    return err
-  }
-
   return nil
+}
+
+/* -------------------------------------------------------------------------- */
+
+func DefaultSessionConfig() SessionConfig {
+  config := SessionConfig{}
+  // set default values
+  config.BinSummaryStatistics = "mean"
+  config.BWZoomLevels         = nil   // zoom levels are determined automatically
+  config.WindowSize           = 100
+  config.BinSize              = 10
+  config.BinOverlap           = 0
+  config.TrackInit            = 0
+  config.Threads              = 1
+  return config
+}
+
+/* -------------------------------------------------------------------------- */
+
+func (config *SessionConfig) GetBinSummaryStatistics() (BinSummaryStatistics, error) {
+  switch config.BinSummaryStatistics {
+  case "mean":
+    return BinMean, nil
+  case "discrete mean":
+    return BinDiscreteMean, nil
+  case "min":
+    return BinMin, nil
+  case "max":
+    return BinMax, nil
+  }
+  return nil, fmt.Errorf("invalid bin summary statistics")
+}
+
+/* -------------------------------------------------------------------------- */
+
+func (config *SessionConfig) String() string {
+  var buffer bytes.Buffer
+
+  fmt.Fprintf(&buffer, "Session Config:\n")
+  fmt.Fprintf(&buffer, " -> BinOverlap           : %v\n", config.BinOverlap)
+  fmt.Fprintf(&buffer, " -> BinSummaryStatistics : %v\n", config.BinSummaryStatistics)
+  fmt.Fprintf(&buffer, " -> BinSize              : %v\n", config.BinSize)
+  fmt.Fprintf(&buffer, " -> BWZoomLevels         : %v\n", config.BWZoomLevels)
+  fmt.Fprintf(&buffer, " -> TrackInit            : %v\n", config.TrackInit)
+  fmt.Fprintf(&buffer, " -> Threads              : %v\n", config.Threads)
+  fmt.Fprintf(&buffer, " -> Verbose              : %v\n", config.Verbose)
+  fmt.Fprintf(&buffer, " -> WindowSize           : %v\n", config.WindowSize)
+
+  return buffer.String()
 }
