@@ -20,25 +20,11 @@ package scalarDistribution
 
 //import   "fmt"
 
-import . "github.com/pbenner/ngstat/statistics"
+import . "github.com/pbenner/autodiff/statistics"
 
 /* -------------------------------------------------------------------------- */
 
 func init() {
-  ScalarDistributionRegistry["scalar:beta distribution"]               = new(BetaDistribution)
-  ScalarDistributionRegistry["scalar:binomial distribution"]           = new(BinomialDistribution)
-  ScalarDistributionRegistry["scalar:negative binomial distribution"]  = new(NegativeBinomialDistribution)
-  ScalarDistributionRegistry["scalar:categorical distribution"]        = new(CategoricalDistribution)
-  ScalarDistributionRegistry["scalar:gamma distribution"]              = new(GammaDistribution)
-  ScalarDistributionRegistry["scalar:generalized gamma distribution"]  = new(GeneralizedGammaDistribution)
-  ScalarDistributionRegistry["scalar:nonparametric distribution"]      = new(NonparametricDistribution)
-  ScalarDistributionRegistry["scalar:normal distribution"]             = new(NormalDistribution)
-  ScalarDistributionRegistry["scalar:log-normal distribution"]         = new(LogNormalDistribution)
-  ScalarDistributionRegistry["scalar:gev distribution"]                = new(GevDistribution)
-  ScalarDistributionRegistry["scalar:exponential distribution"]        = new(ExponentialDistribution)
-  ScalarDistributionRegistry["scalar:pareto distribution"]             = new(ParetoDistribution)
-  ScalarDistributionRegistry["scalar:generalized pareto distribution"] = new(GParetoDistribution)
-  ScalarDistributionRegistry["scalar:power law distribution"]          = new(PowerLawDistribution)
-  ScalarDistributionRegistry["scalar:log-cauchy distribution"]         = new(LogCauchyDistribution)
-  ScalarDistributionRegistry["scalar:dirac distribution"]              = new(DiracDistribution)
+  ScalarPdfRegistry["scalar:nonparametric distribution"] = new(NonparametricDistribution)
+  ScalarPdfRegistry["scalar:dirac distribution"]         = new(DiracDistribution)
 }

@@ -22,7 +22,7 @@ import   "fmt"
 import   "math"
 import   "sort"
 
-import . "github.com/pbenner/ngstat/statistics"
+import . "github.com/pbenner/autodiff/statistics"
 
 import . "github.com/pbenner/autodiff"
 
@@ -91,7 +91,7 @@ func (dist *NonparametricDistribution) Clone() *NonparametricDistribution {
     Xmap       : xmap }
 }
 
-func (dist *NonparametricDistribution) CloneScalarDistribution() ScalarDistribution {
+func (dist *NonparametricDistribution) CloneScalarPdf() ScalarPdf {
   return dist.Clone()
 }
 

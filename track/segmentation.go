@@ -29,10 +29,10 @@ import   "os"
 import   "strconv"
 
 import . "github.com/pbenner/ngstat/config"
-import   "github.com/pbenner/ngstat/statistics/generic"
 import . "github.com/pbenner/ngstat/utility"
 
 import . "github.com/pbenner/gonetics"
+import   "github.com/pbenner/autodiff/statistics/generic"
 
 /* -------------------------------------------------------------------------- */
 

@@ -21,7 +21,7 @@ package scalarDistribution
 import   "fmt"
 import   "math"
 
-import . "github.com/pbenner/ngstat/statistics"
+import . "github.com/pbenner/autodiff/statistics"
 
 import . "github.com/pbenner/autodiff"
 
@@ -43,7 +43,7 @@ func (dist *DiracDistribution) Clone() *DiracDistribution {
   return &DiracDistribution{dist.X.CloneScalar()}
 }
 
-func (dist *DiracDistribution) CloneScalarDistribution() ScalarDistribution {
+func (dist *DiracDistribution) CloneScalarPdf() ScalarPdf {
   return dist.Clone()
 }
 

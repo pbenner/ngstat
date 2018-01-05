@@ -22,7 +22,7 @@ import   "fmt"
 import   "math"
 
 import . "github.com/pbenner/ngstat/config"
-import . "github.com/pbenner/ngstat/statistics"
+import . "github.com/pbenner/autodiff/statistics"
 import . "github.com/pbenner/ngstat/track"
 import . "github.com/pbenner/ngstat/trackDataTransform"
 import . "github.com/pbenner/ngstat/utility"

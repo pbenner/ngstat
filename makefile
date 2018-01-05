@@ -3,22 +3,13 @@ SUBDIRS = \
 	classification \
 	config \
 	io \
-	statistics \
-	statistics/generic \
-	statistics/matrixDistribution \
-	statistics/matrixEstimator \
 	statistics/scalarDistribution \
 	statistics/scalarEstimator \
-	statistics/vectorDistribution \
-	statistics/vectorEstimator \
-	statistics/matrixClassifier \
-	statistics/vectorClassifier \
-	statistics/scalarClassifier \
 	track \
 	trackDataTransform \
 	utility \
 	estimation \
-	tools/ngstat \
+	tools/ngstat
 
 all:
 
