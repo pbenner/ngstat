@@ -32,11 +32,14 @@ parse.distribution.summarized <- function(json) {
         }
         return(s)
     }
+    if (json$Name == "scalar:beta distribution") {
+        return(json$Parameters[1]/(json$Parameters[1] + json$Parameters[2]))
+    }
     if (json$Name == "scalar:categorical distribution") {
         return(json$Parameters[1])
     }
-    if (json$Name == "scalar:beta distribution") {
-        return(json$Parameters[1]/(json$Parameters[1] + json$Parameters[2]))
+    if (json$Name == "scalar:exponential distribution") {
+        return(json$Parameters[1])
     }
     if (json$Name == "scalar:gamma distribution") {
         return(json$Parameters[1]/json$Parameters[2])
@@ -68,11 +71,14 @@ parse.distribution <- function(json) {
         }
         return(s)
     }
+    if (json$Name == "scalar:beta distribution") {
+        return(function(x) dbeta(x, json$Parameters[1], json$Parameters[2]))
+    }
     if (json$Name == "scalar:categorical distribution") {
         return(function(x) json$Parameters[x])
     }
-    if (json$Name == "scalar:beta distribution") {
-        return(function(x) dbeta(x, json$Parameters[1], json$Parameters[2]))
+    if (json$Name == "scalar:exponential distribution") {
+        return(function(x) dexp(x, rate=json$Parameters[x]))
     }
     if (json$Name == "scalar:normal distribution") {
         return(function(x) dnorm(x, json$Parameters[1], json$Parameters[2]))
