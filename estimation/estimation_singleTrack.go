@@ -149,15 +149,8 @@ func BatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstim
   n := estimator.Dim()
   m := n
 
-  if f == nil {
-    if n != config.WindowSize/config.BinSize {
-      return fmt.Errorf("estimator has wrong dimension (expected dimension `%d', but estimator has dimension `%d'", m, estimator.Dim())
-    }
-  } else {
+  if f != nil {
     n1, n2 := f.Dims()
-    if n1 != config.WindowSize/config.BinSize {
-      return fmt.Errorf("data transform has wrong input dimension (expected dimension `%d', but transform has dimension `%d'", config.WindowSize/config.BinSize, n1)
-    }
     if n2 != m {
       return fmt.Errorf("data transform output dimension (%d) does not match estimator dimension (%d)", n2, m)
     }

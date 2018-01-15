@@ -2,14 +2,14 @@
 SUBDIRS = \
 	classification \
 	config \
+	estimation \
 	io \
 	statistics/scalarDistribution \
 	statistics/scalarEstimator \
 	track \
 	trackDataTransform \
-	utility \
-	estimation \
-	tools/ngstat
+	tools/ngstat \
+	utility
 
 all:
 
