@@ -44,11 +44,11 @@ parse.distribution.summarized <- function(json) {
     if (json$Name == "scalar:negative binomial distribution") {
         return(json$Parameters[1])
     }
-    if (json$Name == "scalar:log-normal distribution") {
-        return(json$Parameters[1])
-    }
     if (json$Name == "scalar:normal distribution") {
         return(json$Parameters[1])
+    }
+    if (json$Name == "scalar:pdf log transform") {
+        return(parse.distribution.summarized(json$Distributions[[1]]))
     }
     stop(sprintf("could not parse: %s", json$Name))
 }
@@ -74,13 +74,18 @@ parse.distribution <- function(json) {
     if (json$Name == "scalar:beta distribution") {
         return(function(x) dbeta(x, json$Parameters[1], json$Parameters[2]))
     }
+    if (json$Name == "scalar:normal distribution") {
+        return(function(x) dnorm(x, json$Parameters[1], json$Parameters[2]))
+    }
     if (json$Name == "scalar:negative binomial r distribution") {
         return(function(x) dnbinom(round(x[1] + json$Parameters[2]), x[2], 1.0-json$Parameters[1]))
     }
     if (json$Name == "scalar:negative binomial distribution") {
         return(function(x) dnbinom(round(x), json$Parameters[1], 1.0-json$Parameters[2]))
     }
-    if (json$Name == "scalar:log normal distribution") {
-        return(function(x) dlnorm(x, json$Parameters[1], json$Parameters[2]))
+    if (json$Name == "scalar:pdf log transform") {
+        f <- parse.distribution(json$Distributions[[1]])
+        return(function(x) 1/(x+json$Parameters[1])*f(log(x+json$Parameters[1])))
     }
+    stop(sprintf("could not parse: %s", json$Name))
 }
