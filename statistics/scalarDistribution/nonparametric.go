@@ -69,8 +69,10 @@ func NullNonparametricDistribution(x []float64) (*NonparametricDistribution, err
     // set last delta equal to the second last
     r.Delta[n-1] = r.Delta[n-2]
   } else {
-    // only one value present, choose an arbitrary delta of one
-    r.Delta[0] = 1
+    if n > 0 {
+      // only one value present, choose an arbitrary delta of one
+      r.Delta[0] = 1
+    }
   }
   return r, nil
 }
