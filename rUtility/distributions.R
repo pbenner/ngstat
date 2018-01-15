@@ -78,7 +78,7 @@ parse.distribution <- function(json) {
         return(function(x, ...) json$Parameters[x])
     }
     if (json$Name == "scalar:exponential distribution") {
-        return(function(x, ...) dexp(x, rate=json$Parameters[x], ...))
+        return(function(x, ...) dexp(x, rate=json$Parameters[1], ...))
     }
     if (json$Name == "scalar:normal distribution") {
         return(function(x, ...) dnorm(x, json$Parameters[1], json$Parameters[2], ...))
