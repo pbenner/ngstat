@@ -69,8 +69,10 @@ func NullNonparametricDistribution(x []float64) (*NonparametricDistribution, err
     // set last delta equal to the second last
     r.Delta[n-1] = r.Delta[n-2]
   } else {
-    // only one value present, choose an arbitrary delta of one
-    r.Delta[0] = 1
+    if n > 0 {
+      // only one value present, choose an arbitrary delta of one
+      r.Delta[0] = 1
+    }
   }
   return r, nil
 }
@@ -171,31 +173,29 @@ func (dist *NonparametricDistribution) SetParameters(parameters Vector) error {
 
 func (dist *NonparametricDistribution) ImportConfig(config ConfigDistribution, t ScalarType) error {
 
-  if parameters, ok := config.GetParametersAsFloats(); !ok {
+  x, ok := config.GetNamedParametersAsFloats("X"); if !ok {
     return fmt.Errorf("invalid config file")
-  } else {
-    n := len(parameters)/2
-    x := make([]float64, n)
-    y := make([]float64, n)
-
-    for i := 0; i < n; i++ {
-      x[i] = parameters[0+i]
-      y[i] = parameters[n+i]
-    }
-
-    if tmp, err := NewNonparametricDistribution(x, y); err != nil {
-      return err
-    } else {
-      *dist = *tmp
-    }
-    return nil
   }
+  y, ok := config.GetNamedParametersAsFloats("Y"); if !ok {
+    return fmt.Errorf("invalid config file")
+  }
+
+  if tmp, err := NewNonparametricDistribution(x, y); err != nil {
+    return err
+  } else {
+    *dist = *tmp
+  }
+  return nil
 }
 
 func (dist *NonparametricDistribution) ExportConfig() ConfigDistribution {
 
-  parameters := NewVector(BareRealType, dist.X)
-  parameters  = parameters.AppendVector(dist.MargDensity)
+  config := struct{
+    X []float64
+    Y []float64 }{}
 
-  return NewConfigDistribution("scalar:nonparametric distribution", parameters)
+  config.X = dist.X
+  config.Y = dist.MargDensity.GetValues()
+
+  return NewConfigDistribution("scalar:nonparametric distribution", config)
 }

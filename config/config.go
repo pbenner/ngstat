@@ -32,7 +32,6 @@ type SessionConfig struct {
   Verbose                int
   BinSummaryStatistics   string  `json:"Bin Summary Statistics"`
   BWZoomLevels         []int     `json:"BigWig Zoom Levels"`
-  WindowSize             int     `json:"Window Size"`
   BinSize                int     `json:"Bin Size"`
   BinOverlap             int     `json:"Bin Overlap"`
   TrackInit              float64 `json:"Track Initial Value"`
@@ -60,7 +59,6 @@ func DefaultSessionConfig() SessionConfig {
   // set default values
   config.BinSummaryStatistics = "mean"
   config.BWZoomLevels         = nil   // zoom levels are determined automatically
-  config.WindowSize           = 100
   config.BinSize              = 10
   config.BinOverlap           = 0
   config.TrackInit            = 0
@@ -97,7 +95,6 @@ func (config *SessionConfig) String() string {
   fmt.Fprintf(&buffer, " -> TrackInit            : %v\n", config.TrackInit)
   fmt.Fprintf(&buffer, " -> Threads              : %v\n", config.Threads)
   fmt.Fprintf(&buffer, " -> Verbose              : %v\n", config.Verbose)
-  fmt.Fprintf(&buffer, " -> WindowSize           : %v\n", config.WindowSize)
 
   return buffer.String()
 }

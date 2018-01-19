@@ -113,5 +113,5 @@ func ngstat_exec_main(config SessionConfig, args []string) {
   }
 
   ngstat_exec_load_config(&config, p)
-  ngstat_exec_generic_main(config, options.Args(), p, command)
+  ngstat_exec_generic_main(config, options.Args()[2:len(options.Args())], p, command)
 }

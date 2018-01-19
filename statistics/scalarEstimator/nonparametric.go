@@ -47,6 +47,7 @@ type NonparametricEstimator struct {
 
 func NewNonparametricEstimator(nbins int, pseudocounts float64) (*NonparametricEstimator, error) {
   r := NonparametricEstimator{}
+  r.NonparametricDistribution, _ = NullNonparametricDistribution([]float64{})
   r.Pseudocounts  = pseudocounts
   r.NBins         = nbins
   // restrict maximum number of bins for improving performance
@@ -62,6 +63,7 @@ func NewNonparametricEstimator(nbins int, pseudocounts float64) (*NonparametricE
 
 func (obj *NonparametricEstimator) Clone() *NonparametricEstimator {
   r, _ := NewNonparametricEstimator(obj.NBins, obj.Pseudocounts)
+  r.NonparametricDistribution = obj.NonparametricDistribution.Clone()
   r.MaxBins = obj.MaxBins
   r.Verbose = obj.Verbose
   if obj.MargCounts != nil {

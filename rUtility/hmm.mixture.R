@@ -2,11 +2,8 @@ library(rjson)
 
 ## -----------------------------------------------------------------------------
 
-hmm.reduce.to.mixture <- function(filename) {
-    json <- fromJSON(file=filename)
-    tr   <- parse.matrix(json$Transition)
-
-    eigensystem <- eigen(t(tr))
+hmm.reduce.to.mixture <- function(hmm) {
+    eigensystem <- eigen(t(hmm$Tr))
 
     eigenvalues <- eigensystem$values
     eigenvector <- NULL
@@ -23,12 +20,10 @@ hmm.reduce.to.mixture <- function(filename) {
     eigenvector <- eigenvector/sum(eigenvector)
 
     ## update P0
-    json$P0 <- eigenvector
+    hmm$Pi <- eigenvector
     ## update transition matrix
-    for (i in 1:length(json$Transition$Values)) {
-        json$Transition$Values[i] <- eigenvector[((i-1) %% length(eigenvector)) + 1]
+    for (i in 1:length(hmm$Tr)) {
+        hmm$Tr[i] <- eigenvector[((i-1) %% length(eigenvector)) + 1]
     }
-    json
+    hmm
 }
-## json <- reduce.to.mixture("input.json")
-## write(toJSON(json), file="output.json")
