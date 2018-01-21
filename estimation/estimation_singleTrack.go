@@ -146,6 +146,14 @@ func BatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstim
       f = a
     }
   }
+  binSize := config.BinSize
+  if binSize == 0 {
+    binSize = track.GetBinSize()
+  }
+  if binSize == 0 {
+    return fmt.Errorf("could not determine track bin size")
+  }
+
   n := estimator.Dim()
   m := n
 
@@ -175,7 +183,7 @@ func BatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstim
   // total track length
   L := 0
   for _, length := range track.GetGenome().Lengths {
-    L += length/config.BinSize
+    L += length/binSize
   }
   PrintStderr(config, 1, "Estimating model... \n")
   if config.Verbose >= 1 {

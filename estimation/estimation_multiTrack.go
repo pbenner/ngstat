@@ -147,6 +147,14 @@ func BatchEstimateOnMultiTrack(config SessionConfig, estimator MatrixBatchEstima
       f = a
     }
   }
+  binSize := config.BinSize
+  if binSize == 0 {
+    binSize = tracks[0].GetBinSize()
+  }
+  if binSize == 0 {
+    return fmt.Errorf("could not determine track bin size")
+  }
+
   n1, n2 := estimator.Dims()
   m1, m2 := n1, n2
 
@@ -180,7 +188,7 @@ func BatchEstimateOnMultiTrack(config SessionConfig, estimator MatrixBatchEstima
   // total track length
   L := 0
   for _, length := range tracks[0].GetGenome().Lengths {
-    L += length/config.BinSize
+    L += length/binSize
   }
   if config.Verbose > 0 {
     NewProgress(L, L).PrintStderr(l)
