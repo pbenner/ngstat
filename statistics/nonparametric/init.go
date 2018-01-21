@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package scalarDistribution
+package nonparametric
 
 /* -------------------------------------------------------------------------- */
 
@@ -26,5 +26,4 @@ import . "github.com/pbenner/autodiff/statistics"
 
 func init() {
   ScalarPdfRegistry["scalar:nonparametric distribution"] = new(NonparametricDistribution)
-  ScalarPdfRegistry["scalar:dirac distribution"]         = new(DiracDistribution)
 }

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package scalarDistribution
+package nonparametric
 
 /* -------------------------------------------------------------------------- */
 
@@ -37,11 +37,11 @@ type NonparametricDistribution struct {
 
 /* -------------------------------------------------------------------------- */
 
-func NewNonparametricDistribution(x, y []float64) (*NonparametricDistribution, error) {
+func NewDistribution(x, y []float64) (*NonparametricDistribution, error) {
   if len(x) != len(y) {
     return nil, fmt.Errorf("dimensions do not match")
   }
-  if r, err := NullNonparametricDistribution(x); err != nil {
+  if r, err := NullDistribution(x); err != nil {
     return nil, err
   } else {
     for i := 0; i < len(y); i++ {
@@ -51,7 +51,7 @@ func NewNonparametricDistribution(x, y []float64) (*NonparametricDistribution, e
   }
 }
 
-func NullNonparametricDistribution(x []float64) (*NonparametricDistribution, error) {
+func NullDistribution(x []float64) (*NonparametricDistribution, error) {
   r := &NonparametricDistribution{}
   r.MargDensity = NullVector(BareRealType, len(x))
   r.Delta = make([]float64, len(x))
@@ -180,7 +180,7 @@ func (dist *NonparametricDistribution) ImportConfig(config ConfigDistribution, t
     return fmt.Errorf("invalid config file")
   }
 
-  if tmp, err := NewNonparametricDistribution(x, y); err != nil {
+  if tmp, err := NewDistribution(x, y); err != nil {
     return err
   } else {
     *dist = *tmp

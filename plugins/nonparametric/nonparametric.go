@@ -23,7 +23,7 @@ import   "strconv"
 
 import . "github.com/pbenner/ngstat/config"
 import . "github.com/pbenner/ngstat/estimation"
-import   "github.com/pbenner/ngstat/statistics/scalarEstimator"
+import   "github.com/pbenner/ngstat/statistics/nonparametric"
 import . "github.com/pbenner/ngstat/track"
 
 import . "github.com/pbenner/autodiff/statistics"
@@ -42,7 +42,7 @@ func Estimate(config SessionConfig, args []string) {
   filenameIn  := args[1]
   filenameOut := args[2]
 
-  estimator0, _ := scalarEstimator.NewNonparametricEstimator(int(bins), 0.0)
+  estimator0, _ :=   nonparametric.NewEstimator(int(bins), 0.0)
   estimator , _ := vectorEstimator.NewScalarBatchId(estimator0)
 
   track, err := ImportTrack(config, filenameIn); if err != nil {

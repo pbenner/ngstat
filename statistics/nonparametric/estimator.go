@@ -14,14 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package scalarEstimator
+package nonparametric
 
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
 import   "math"
-
-import . "github.com/pbenner/ngstat/statistics/scalarDistribution"
 
 import . "github.com/pbenner/autodiff"
 import . "github.com/pbenner/autodiff/statistics"
@@ -45,9 +43,9 @@ type NonparametricEstimator struct {
 
 /* -------------------------------------------------------------------------- */
 
-func NewNonparametricEstimator(nbins int, pseudocounts float64) (*NonparametricEstimator, error) {
+func NewEstimator(nbins int, pseudocounts float64) (*NonparametricEstimator, error) {
   r := NonparametricEstimator{}
-  r.NonparametricDistribution, _ = NullNonparametricDistribution([]float64{})
+  r.NonparametricDistribution, _ = NullDistribution([]float64{})
   r.Pseudocounts  = pseudocounts
   r.NBins         = nbins
   // restrict maximum number of bins for improving performance
@@ -62,7 +60,7 @@ func NewNonparametricEstimator(nbins int, pseudocounts float64) (*NonparametricE
 /* -------------------------------------------------------------------------- */
 
 func (obj *NonparametricEstimator) Clone() *NonparametricEstimator {
-  r, _ := NewNonparametricEstimator(obj.NBins, obj.Pseudocounts)
+  r, _ := NewEstimator(obj.NBins, obj.Pseudocounts)
   r.NonparametricDistribution = obj.NonparametricDistribution.Clone()
   r.MaxBins = obj.MaxBins
   r.Verbose = obj.Verbose
@@ -172,7 +170,7 @@ func (obj *NonparametricEstimator) updateEstimate() error {
   // recomute bins to match the requested number of bins
   values, counts := obj.computeBins()
   // create new density
-  if dist, err := NullNonparametricDistribution(values); err != nil {
+  if dist, err := NullDistribution(values); err != nil {
     return err
   } else {
     obj.NonparametricDistribution = dist
