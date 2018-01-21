@@ -21,6 +21,7 @@ package main
 //import   "fmt"
 import   "log"
 import   "os"
+import   "strconv"
 
 import . "github.com/pbenner/ngstat/config"
 import . "github.com/pbenner/ngstat/io"
@@ -33,10 +34,14 @@ func main() {
 
   options := getopt.New()
 
-  optConfig  := options. StringLong("config",  'c', "", "configuration file")
-  optThreads := options.    IntLong("threads", 't',  1, "number of threads")
-  optHelp    := options.   BoolLong("help",    'h',     "print help")
-  optVerbose := options.CounterLong("verbose", 'v',     "verbose level [-v or -vv]")
+  optConfig    := options. StringLong("config",        'c',     "", "configuration file")
+  optBinSize   := options.    IntLong("bin-size",       0 ,      0, "bin size")
+  optBinStat   := options. StringLong("bin-summary",    0 , "mean", "bin summary statistic [mean (default), max, min, discrete mean]")
+  optBinOver   := options.    IntLong("bin-overlap",    0 ,      0, "number of overlapping bins when computing the summary")
+  optTrackInit := options. StringLong("initial-value",  0 ,     "", "track initial value [default: 0]")
+  optThreads   := options.    IntLong("threads",        0 ,      0, "number of threads")
+  optHelp      := options.   BoolLong("help",          'h',         "print help")
+  optVerbose   := options.CounterLong("verbose",       'v',         "verbose level [-v or -vv]")
 
   options.SetParameters("<COMMAND>\n\n" +
     " Commands:\n" +
@@ -63,10 +68,29 @@ func main() {
     }
     PrintStderr(current_config, 1, "done\n")
   }
-  if *optThreads < 1 {
-    log.Fatalf("invalid number of threads `%d'", *optThreads)
+  if options.Lookup("bin-size").Seen() {
+    if *optBinSize < 0 {
+      log.Fatalf("invalid bin-size `%d'", *optBinSize)
+    }
+    config.BinSize = *optBinSize
   }
-  if options.Lookup('t').Seen() {
+  if options.Lookup("bin-summary").Seen() {
+    config.BinSummaryStatistics = *optBinStat
+  }
+  if options.Lookup("bin-overlap").Seen() {
+    config.BinOverlap = *optBinOver
+  }
+  if options.Lookup("initial-value").Seen() {
+    v, err := strconv.ParseFloat(*optTrackInit, 64)
+    if err != nil {
+      log.Fatalf("parsing initial value failed: %v", err)
+    }
+    config.TrackInit = v
+  }
+  if options.Lookup("threads").Seen() {
+    if *optThreads < 1 {
+      log.Fatalf("invalid number of threads `%d'", *optThreads)
+    }
     config.Threads = *optThreads
   }
   // command arguments
