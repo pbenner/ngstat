@@ -59,7 +59,7 @@ func DefaultSessionConfig() SessionConfig {
   // set default values
   config.BinSummaryStatistics = "mean"
   config.BWZoomLevels         = nil   // zoom levels are determined automatically
-  config.BinSize              = 10
+  config.BinSize              = 0
   config.BinOverlap           = 0
   config.TrackInit            = 0
   config.Threads              = 1
