@@ -4,8 +4,7 @@ SUBDIRS = \
 	config \
 	estimation \
 	io \
-	statistics/scalarDistribution \
-	statistics/scalarEstimator \
+	statistics/nonparametric \
 	track \
 	trackDataTransform \
 	tools/ngstat \
