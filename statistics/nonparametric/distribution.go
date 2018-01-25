@@ -165,7 +165,7 @@ func (dist *NonparametricDistribution) LogEntropy() Scalar {
 
 /* -------------------------------------------------------------------------- */
 
-func (dist NonparametricDistribution) GetParameters() Vector {
+func (dist *NonparametricDistribution) GetParameters() Vector {
   return dist.MargDensity
 }
 
