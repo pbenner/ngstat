@@ -180,7 +180,7 @@ func (obj *NonparametricEstimator) updateEstimate() error {
   w := t
   // compute total counts
   for _, c := range counts {
-    t.SetValue(float64(c) + obj.Pseudocounts)
+    t.SetValue(c + obj.Pseudocounts)
     n.Add(n, t)
   }
   for i := 0; i < obj.MargDensity.Dim(); i++ {
