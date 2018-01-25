@@ -119,12 +119,10 @@ func (dist *NonparametricDistribution) Index(x_ Scalar) (int, error) {
 }
 
 func (dist *NonparametricDistribution) LogPdf(r Scalar, y Scalar) error {
-  r.SetValue(0.0)
-  // add p(x_0)
   if i1, err := dist.Index(y); err != nil {
     r.SetValue(math.Inf(-1))
   } else {
-    r.Add(r, dist.MargDensity.At(i1))
+    r.Set(dist.MargDensity.At(i1))
   }
   return nil
 }

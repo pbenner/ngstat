@@ -33,7 +33,7 @@ import   "github.com/pbenner/autodiff/statistics/vectorEstimator"
 /* -------------------------------------------------------------------------- */
 
 func Estimate(config SessionConfig, args []string) {
-  if len(args) != 3 {
+  if len(args) < 3 {
     log.Println("Usage: Estimate <NBINS> <INPUT.bw> <OUTPUT.json> [<chrom1> <chrom2>...] ")
     log.Fatal("invalid number of arguments")
   }
