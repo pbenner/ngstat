@@ -59,7 +59,7 @@ func NullDistribution(x []float64) (*NonparametricDistribution, error) {
   // map values to indices
   r.Xmap  = make(map[float64]int)
   for i, v := range x {
-    r.X[i]    = v
+    r.X   [i] = v
     r.Xmap[v] = i
   }
   for i := 0; i < len(r.X)-1; i++ {
@@ -109,7 +109,7 @@ func (dist *NonparametricDistribution) Index(x_ Scalar) (int, error) {
   if idx, ok := dist.Xmap[x]; ok {
     return idx, nil
   } else {
-    if x < dist.X[0] || x > dist.X[len(dist.X)-1]+dist.Delta[len(dist.Delta)-1] {
+    if x < dist.X[0] || x >= dist.X[len(dist.X)-1]+dist.Delta[len(dist.Delta)-1] {
       return -1, fmt.Errorf("value `%v' is out of range", x)
     } else {
       idx = sort.SearchFloat64s(dist.X, x)
