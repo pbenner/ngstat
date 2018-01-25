@@ -185,7 +185,7 @@ func (obj *NonparametricEstimator) updateEstimate() error {
   }
   for i := 0; i < obj.MargDensity.Dim(); i++ {
     // weight of this position
-    w.SetValue(float64(counts[i]) + obj.Pseudocounts)
+    w.SetValue(counts[i] + obj.Pseudocounts)
     w.Div(w, n)
     w.Div(w, ConstReal(obj.Delta[i]))
     w.Log(w)
