@@ -113,14 +113,7 @@ func (dist *NonparametricDistribution) Index(x_ Scalar) (int, error) {
       return -1, fmt.Errorf("value `%v' is out of range", x)
     } else {
       idx = sort.SearchFloat64s(dist.X, x)
-      if idx == len(dist.X) {
-        return idx-1, nil
-      } else {
-        if dist.X[idx] == x {
-          return idx, nil
-        }
-        return idx-1, nil
-      }
+      return idx-1, nil
     }
   }
 }
