@@ -34,7 +34,7 @@ import   "github.com/pbenner/autodiff/statistics/vectorEstimator"
 
 func Estimate(config SessionConfig, args []string) {
   if len(args) != 3 {
-    log.Println("Usage: Estimate <NBINS> <INPUT.bw> <OUTPUT.json>")
+    log.Println("Usage: Estimate <NBINS> <INPUT.bw> <OUTPUT.json> [<chrom1> <chrom2>...] ")
     log.Fatal("invalid number of arguments")
   }
   bins, err := strconv.ParseInt(args[0], 10, 64); if err != nil {
@@ -42,6 +42,7 @@ func Estimate(config SessionConfig, args []string) {
   }
   filenameIn  := args[1]
   filenameOut := args[2]
+  chromosomes := args[3:]
 
   estimator0, _ :=   nonparametric.NewEstimator(int(bins), 0.0)
   estimator , _ := vectorEstimator.NewScalarBatchId(estimator0)
@@ -49,7 +50,7 @@ func Estimate(config SessionConfig, args []string) {
   track, err := ImportTrack(config, filenameIn); if err != nil {
     panic(err)
   }
-  if err := BatchEstimateOnSingleTrack(config, estimator, track, -1); err != nil {
+  if err := BatchEstimateOnSingleTrack(config, estimator, track, -1, chromosomes); err != nil {
     panic(err)
   }
   estimate := estimator.GetEstimate().(*vectorDistribution.ScalarId)
