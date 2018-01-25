@@ -27,6 +27,7 @@ import   "github.com/pbenner/ngstat/statistics/nonparametric"
 import . "github.com/pbenner/ngstat/track"
 
 import . "github.com/pbenner/autodiff/statistics"
+import   "github.com/pbenner/autodiff/statistics/vectorDistribution"
 import   "github.com/pbenner/autodiff/statistics/vectorEstimator"
 
 /* -------------------------------------------------------------------------- */
@@ -51,7 +52,9 @@ func Estimate(config SessionConfig, args []string) {
   if err := BatchEstimateOnSingleTrack(config, estimator, track, -1); err != nil {
     panic(err)
   }
-  if err := ExportDistribution(filenameOut, estimator.GetEstimate()); err != nil {
+  estimate := estimator.GetEstimate().(*vectorDistribution.ScalarId)
+
+  if err := ExportDistribution(filenameOut, estimate.Distributions[0]); err != nil {
     panic(err)
   }
 }

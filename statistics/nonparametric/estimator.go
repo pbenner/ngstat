@@ -196,6 +196,9 @@ func (obj *NonparametricEstimator) updateEstimate() error {
 
 func (obj *NonparametricEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
   x, _ := obj.GetData()
+  if err := obj.Initialize(p); err != nil {
+    return err
+  }
   // update counts
   for i := 0; i < x.Dim(); i++ {
     if err := obj.NewObservation(x.At(i), gamma.At(i), p); err != nil {
