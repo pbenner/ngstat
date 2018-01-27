@@ -34,7 +34,6 @@ type NonparametricEstimator struct {
   *NonparametricDistribution
   scalarEstimator.StdEstimator
   MargCounts      map[float64]float64
-  Pseudocounts    float64
   Dimension       int
   NBins           int
   MaxBins         int
@@ -43,10 +42,9 @@ type NonparametricEstimator struct {
 
 /* -------------------------------------------------------------------------- */
 
-func NewEstimator(nbins int, pseudocounts float64) (*NonparametricEstimator, error) {
+func NewEstimator(nbins int) (*NonparametricEstimator, error) {
   r := NonparametricEstimator{}
   r.NonparametricDistribution, _ = NullDistribution([]float64{})
-  r.Pseudocounts  = pseudocounts
   r.NBins         = nbins
   // restrict maximum number of bins for improving performance
   r.MaxBins       = 1000000
@@ -60,7 +58,7 @@ func NewEstimator(nbins int, pseudocounts float64) (*NonparametricEstimator, err
 /* -------------------------------------------------------------------------- */
 
 func (obj *NonparametricEstimator) Clone() *NonparametricEstimator {
-  r, _ := NewEstimator(obj.NBins, obj.Pseudocounts)
+  r, _ := NewEstimator(obj.NBins)
   r.NonparametricDistribution = obj.NonparametricDistribution.Clone()
   r.MaxBins = obj.MaxBins
   r.Verbose = obj.Verbose
@@ -180,12 +178,12 @@ func (obj *NonparametricEstimator) updateEstimate() error {
   w := t
   // compute total counts
   for _, c := range counts {
-    t.SetValue(c + obj.Pseudocounts)
+    t.SetValue(c)
     n.Add(n, t)
   }
   for i := 0; i < obj.MargDensity.Dim(); i++ {
     // weight of this position
-    w.SetValue(counts[i] + obj.Pseudocounts)
+    w.SetValue(counts[i])
     w.Div(w, n)
     w.Div(w, ConstReal(obj.Delta[i]))
     w.Log(w)
