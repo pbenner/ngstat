@@ -194,22 +194,41 @@ func (obj *NonparametricEstimator) updateEstimate() error {
   return nil
 }
 
+func (obj *NonparametricEstimator) SetData(x Vector, n int) error {
+  if err := obj.StdEstimator.SetData(x, n); err != nil {
+    return err
+  }
+  // compute initial histogram
+  return obj.Estimate(nil, ThreadPool{})
+}
+
 func (obj *NonparametricEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
   x, _ := obj.GetData()
   if err := obj.Initialize(p); err != nil {
     return err
   }
   // update counts
-  for i := 0; i < x.Dim(); i++ {
-    if err := obj.NewObservation(x.At(i), gamma.At(i), p); err != nil {
-      return err
+  if gamma == nil {
+    for i := 0; i < x.Dim(); i++ {
+      if err := obj.NewObservation(x.At(i), nil, p); err != nil {
+        return err
+      }
     }
+  } else {
+    for i := 0; i < x.Dim(); i++ {
+      if err := obj.NewObservation(x.At(i), gamma.At(i), p); err != nil {
+        return err
+      }
+    }
+  }
+  if err := obj.updateEstimate(); err != nil {
+    return err
   }
   return nil
 }
 
 func (obj *NonparametricEstimator) EstimateOnData(x Vector, gamma DenseBareRealVector, p ThreadPool) error {
-  if err := obj.SetData(x, x.Dim()); err != nil {
+  if err := obj.StdEstimator.SetData(x, x.Dim()); err != nil {
     return err
   }
   return obj.Estimate(gamma, p)
