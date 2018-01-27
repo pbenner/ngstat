@@ -44,7 +44,7 @@ func Estimate(config SessionConfig, args []string) {
   filenameOut := args[2]
   chromosomes := args[3:]
 
-  estimator0, _ :=   nonparametric.NewEstimator(int(bins), 0.0)
+  estimator0, _ :=   nonparametric.NewEstimator(int(bins))
   estimator , _ := vectorEstimator.NewScalarBatchId(estimator0)
 
   track, err := ImportTrack(config, filenameIn); if err != nil {

@@ -22,6 +22,7 @@ package nonparametric
 import   "math"
 
 import . "github.com/pbenner/autodiff"
+import . "github.com/pbenner/autodiff/logarithmetic"
 import . "github.com/pbenner/autodiff/statistics"
 import   "github.com/pbenner/autodiff/statistics/scalarEstimator"
 
@@ -132,7 +133,7 @@ func (obj *NonparametricEstimator) computeBins() ([]float64, []float64) {
     counts = append(counts, c)
   }
   values = append(values, obj.histogramMax(values))
-  histogram, _ := smartBinning.New(values, counts, smartBinning.BinSum, smartBinning.BinLessSize)
+  histogram, _ := smartBinning.New(values, counts, smartBinning.BinLogSum, smartBinning.BinLessSize)
   histogram.Verbose = obj.Verbose
   histogram.FilterBins(obj.NBins)
   values = []float64{}
@@ -155,9 +156,17 @@ func (obj *NonparametricEstimator) Initialize(p ThreadPool) error {
 
 func (obj *NonparametricEstimator) NewObservation(x, gamma Scalar, p ThreadPool) error {
   if gamma != nil {
-    obj.MargCounts[x.GetValue()] += math.Exp(gamma.GetValue())
+    if r, ok := obj.MargCounts[x.GetValue()]; ok {
+      obj.MargCounts[x.GetValue()] = LogAdd(r, gamma.GetValue())
+    } else {
+      obj.MargCounts[x.GetValue()] = gamma.GetValue()
+    }
   } else {
-    obj.MargCounts[x.GetValue()] += 1.0
+    if r, ok := obj.MargCounts[x.GetValue()]; ok {
+      obj.MargCounts[x.GetValue()] = LogAdd(r, 0.0)
+    } else {
+      obj.MargCounts[x.GetValue()] = 0.0
+    }
   }
   return nil
 }
@@ -175,19 +184,16 @@ func (obj *NonparametricEstimator) updateEstimate() error {
   }
   n := NewBareReal(0.0)
   t := NewBareReal(0.0)
-  w := t
   // compute total counts
   for _, c := range counts {
-    t.SetValue(c)
-    n.Add(n, t)
+    n.LogAdd(n, ConstReal(c), t)
   }
   for i := 0; i < obj.MargDensity.Dim(); i++ {
-    // weight of this position
+    // weight at this position
+    w := obj.MargDensity.At(i)
     w.SetValue(counts[i])
-    w.Div(w, n)
-    w.Div(w, ConstReal(obj.Delta[i]))
-    w.Log(w)
-    obj.MargDensity.At(i).Set(w)
+    w.Sub(w, n)
+    w.Sub(w, ConstReal(math.Log(obj.Delta[i])))
   }
   return nil
 }
