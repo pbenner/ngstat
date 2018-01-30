@@ -60,7 +60,7 @@ parse.distribution <- function(json) {
     if (json$Name == "matrix:vector id") {
         s <- NULL
         for (dist in json$Distributions) {
-            s <- rbind(s, parse.distribution(dst))
+            s <- rbind(s, parse.distribution(dist))
         }
         return(s)
     }
