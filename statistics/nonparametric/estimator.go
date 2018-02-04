@@ -38,6 +38,7 @@ type NonparametricEstimator struct {
   Dimension       int
   NBins           int
   MaxBins         int
+  BySize          bool
   Verbose         bool
 }
 
@@ -49,6 +50,7 @@ func NewEstimator(nbins int) (*NonparametricEstimator, error) {
   r.NBins         = nbins
   // restrict maximum number of bins for improving performance
   r.MaxBins       = 1000000
+  r.BySize        = true
   r.Verbose       = false
   if r.NBins > r.MaxBins {
     r.NBins = r.MaxBins
@@ -62,6 +64,7 @@ func (obj *NonparametricEstimator) Clone() *NonparametricEstimator {
   r, _ := NewEstimator(obj.NBins)
   r.NonparametricDistribution = obj.NonparametricDistribution.Clone()
   r.MaxBins = obj.MaxBins
+  r.BySize  = obj.BySize
   r.Verbose = obj.Verbose
   if obj.MargCounts != nil {
     r.Initialize(ThreadPool{})
@@ -121,6 +124,7 @@ func (obj *NonparametricEstimator) filterBinsMax() {
 }
 
 func (obj *NonparametricEstimator) computeBins() ([]float64, []float64) {
+  var histogram *smartBinning.Binning
   // for improving performance, first bin data into MaxBins bins
   if len(obj.MargCounts) > obj.MaxBins {
     obj.filterBinsMax()
@@ -133,7 +137,11 @@ func (obj *NonparametricEstimator) computeBins() ([]float64, []float64) {
     counts = append(counts, c)
   }
   values = append(values, obj.histogramMax(values))
-  histogram, _ := smartBinning.New(values, counts, smartBinning.BinLogSum, smartBinning.BinLessSize)
+  if obj.BySize {
+    histogram, _ = smartBinning.New(values, counts, smartBinning.BinLogSum, smartBinning.BinLessSize)
+  } else {
+    histogram, _ = smartBinning.New(values, counts, smartBinning.BinLogSum, smartBinning.BinLessY)
+  }
   histogram.Verbose = obj.Verbose
   histogram.FilterBins(obj.NBins)
   values = []float64{}
