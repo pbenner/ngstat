@@ -102,12 +102,10 @@ func (obj *NonparametricEstimator) histogramMax(values []float64) float64 {
 }
 
 func (obj *NonparametricEstimator) filterBinsMax() {
-  counts := obj.MargCounts
-  obj.MargCounts = make(map[float64]float64)
   // find miminum and maximum value
   minimum := math.Inf( 1)
   maximum := math.Inf(-1)
-  for k, _ := range counts {
+  for k, _ := range obj.MargCounts {
     if k < minimum {
       minimum = k
     }
@@ -115,7 +113,15 @@ func (obj *NonparametricEstimator) filterBinsMax() {
       maximum = k
     }
   }
-  delta := (maximum - minimum)/float64(obj.MaxBins)
+  if math.IsInf(minimum, 0) || math.IsNaN(minimum) {
+    return
+  }
+  if math.IsInf(maximum, 0) || math.IsNaN(maximum) {
+    return
+  }
+  delta  := (maximum - minimum)/float64(obj.MaxBins)
+  counts := obj.MargCounts
+  obj.MargCounts = make(map[float64]float64)
   // round all values
   for k1, v := range counts {
     k2 := math.Floor(k1/delta)*delta
@@ -163,6 +169,9 @@ func (obj *NonparametricEstimator) Initialize(p ThreadPool) error {
 }
 
 func (obj *NonparametricEstimator) NewObservation(x, gamma Scalar, p ThreadPool) error {
+  if math.IsNaN(x.GetValue()) {
+    return nil
+  }
   if gamma != nil {
     if r, ok := obj.MargCounts[x.GetValue()]; ok {
       obj.MargCounts[x.GetValue()] = LogAdd(r, gamma.GetValue())
