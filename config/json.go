@@ -25,12 +25,6 @@ import   "io/ioutil"
 
 /* -------------------------------------------------------------------------- */
 
-type Config interface {
-  Serializable
-}
-
-/* -------------------------------------------------------------------------- */
-
 func JsonImport(reader io.Reader, object interface{}) error {
 
   b, err := ioutil.ReadAll(reader)
