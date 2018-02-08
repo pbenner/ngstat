@@ -35,6 +35,9 @@ parse.distribution.summarized <- function(json) {
     if (json$Name == "scalar:beta distribution") {
         return(json$Parameters[1]/(json$Parameters[1] + json$Parameters[2]))
     }
+    if (json$Name == "scalar:poisson distribution") {
+        return(json$Parameters[1])
+    }
     if (json$Name == "scalar:categorical distribution") {
         return(json$Parameters[1])
     }
@@ -73,6 +76,9 @@ parse.distribution <- function(json) {
     }
     if (json$Name == "scalar:beta distribution") {
         return(function(x, ...) dbeta(x, json$Parameters[1], json$Parameters[2], ...))
+    }
+    if (json$Name == "scalar:poisson distribution") {
+        return(function(x, ...) dpois(x, json$Parameters[1], ...))
     }
     if (json$Name == "scalar:categorical distribution") {
         return(function(x, ...) json$Parameters[x])
