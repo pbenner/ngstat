@@ -36,6 +36,7 @@ import . "github.com/pbenner/threadpool"
 func EstimateOnMultiTrackData(config SessionConfig, estimator MatrixEstimator, data []Matrix, transposed bool, args ...interface{}) error {
   var f MultiTrackDataTransform
   var x []Matrix
+  var y []ConstMatrix
 
   for _, arg := range args {
     switch a := arg.(type) {
@@ -62,9 +63,13 @@ func EstimateOnMultiTrackData(config SessionConfig, estimator MatrixEstimator, d
       x[i] = f.Eval(x[i])
     }
   }
+  y = make([]ConstMatrix, len(x))
+  for i := 0; i < len(x); i++ {
+    y[i] = x[i]
+  }
 
   PrintStderr(config, 1, "Estimating model... ")
-  if err := estimator.EstimateOnData(x, nil, ThreadPool{}); err != nil {
+  if err := estimator.EstimateOnData(y, nil, ThreadPool{}); err != nil {
     PrintStderr(config, 1, "failed\n")
     return err
   }
@@ -266,7 +271,7 @@ func EstimateOnMultiTrack(config SessionConfig, estimator MatrixEstimator, track
   }
   pool := NewThreadPool(config.Threads, config.Threads*1000)
 
-  x := []Matrix{}
+  x := []ConstMatrix{}
   // collect sequences
 LOOP1:
   for _, name := range tracks[0].GetSeqNames() {

@@ -103,7 +103,7 @@ func (dist *NonparametricDistribution) ScalarType() ScalarType {
   return dist.MargDensity.ElementType()
 }
 
-func (dist *NonparametricDistribution) Index(x_ Scalar) (int, error) {
+func (dist *NonparametricDistribution) Index(x_ ConstScalar) (int, error) {
   x := x_.GetValue()
 
   if idx, ok := dist.Xmap[x]; ok {
@@ -118,7 +118,7 @@ func (dist *NonparametricDistribution) Index(x_ Scalar) (int, error) {
   }
 }
 
-func (dist *NonparametricDistribution) LogPdf(r Scalar, y Scalar) error {
+func (dist *NonparametricDistribution) LogPdf(r Scalar, y ConstScalar) error {
   if i1, err := dist.Index(y); err != nil {
     r.SetValue(math.Inf(-1))
   } else {
@@ -127,7 +127,7 @@ func (dist *NonparametricDistribution) LogPdf(r Scalar, y Scalar) error {
   return nil
 }
 
-func (dist *NonparametricDistribution) Pdf(r Scalar, y Scalar) error {
+func (dist *NonparametricDistribution) Pdf(r Scalar, y ConstScalar) error {
   if err := dist.LogPdf(r, y); err != nil {
     return err
   }

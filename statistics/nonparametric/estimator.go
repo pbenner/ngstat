@@ -168,7 +168,7 @@ func (obj *NonparametricEstimator) Initialize(p ThreadPool) error {
   return nil
 }
 
-func (obj *NonparametricEstimator) NewObservation(x, gamma Scalar, p ThreadPool) error {
+func (obj *NonparametricEstimator) NewObservation(x, gamma ConstScalar, p ThreadPool) error {
   if math.IsNaN(x.GetValue()) {
     return nil
   }
@@ -215,7 +215,7 @@ func (obj *NonparametricEstimator) updateEstimate() error {
   return nil
 }
 
-func (obj *NonparametricEstimator) SetData(x Vector, n int) error {
+func (obj *NonparametricEstimator) SetData(x ConstVector, n int) error {
   if err := obj.StdEstimator.SetData(x, n); err != nil {
     return err
   }
@@ -223,7 +223,7 @@ func (obj *NonparametricEstimator) SetData(x Vector, n int) error {
   return obj.Estimate(nil, ThreadPool{})
 }
 
-func (obj *NonparametricEstimator) Estimate(gamma DenseBareRealVector, p ThreadPool) error {
+func (obj *NonparametricEstimator) Estimate(gamma ConstVector, p ThreadPool) error {
   x, _ := obj.GetData()
   if err := obj.Initialize(p); err != nil {
     return err
@@ -231,13 +231,13 @@ func (obj *NonparametricEstimator) Estimate(gamma DenseBareRealVector, p ThreadP
   // update counts
   if gamma == nil {
     for i := 0; i < x.Dim(); i++ {
-      if err := obj.NewObservation(x.At(i), nil, p); err != nil {
+      if err := obj.NewObservation(x.ConstAt(i), nil, p); err != nil {
         return err
       }
     }
   } else {
     for i := 0; i < x.Dim(); i++ {
-      if err := obj.NewObservation(x.At(i), gamma.At(i), p); err != nil {
+      if err := obj.NewObservation(x.ConstAt(i), gamma.ConstAt(i), p); err != nil {
         return err
       }
     }
@@ -248,7 +248,7 @@ func (obj *NonparametricEstimator) Estimate(gamma DenseBareRealVector, p ThreadP
   return nil
 }
 
-func (obj *NonparametricEstimator) EstimateOnData(x Vector, gamma DenseBareRealVector, p ThreadPool) error {
+func (obj *NonparametricEstimator) EstimateOnData(x, gamma ConstVector, p ThreadPool) error {
   if err := obj.StdEstimator.SetData(x, x.Dim()); err != nil {
     return err
   }

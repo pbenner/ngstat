@@ -40,6 +40,7 @@ func EstimateOnSingleTrackData(config SessionConfig, estimator VectorEstimator, 
 
   var f SingleTrackDataTransform
   var x []Vector
+  var y []ConstVector
 
   for _, arg := range args {
     switch a := arg.(type) {
@@ -57,8 +58,13 @@ func EstimateOnSingleTrackData(config SessionConfig, estimator VectorEstimator, 
     x = data
   }
 
+  y = make([]ConstVector, len(x))
+  for i := 0; i < len(x); i++ {
+    y[i] = x[i]
+  }
+
   PrintStderr(config, 1, "Estimating model... ")
-  if err := estimator.EstimateOnData(x, nil, ThreadPool{}); err != nil {
+  if err := estimator.EstimateOnData(y, nil, ThreadPool{}); err != nil {
     PrintStderr(config, 1, "failed\n")
     return err
   }
@@ -234,7 +240,7 @@ func EstimateOnSingleTrack(config SessionConfig, estimator VectorEstimator, trac
     }
   }
 
-  x := []Vector{}
+  x := []ConstVector{}
   // collect sequences
   for _, name := range track.GetSeqNames() {
     seq, err := track.GetSequence(name); if err != nil {
