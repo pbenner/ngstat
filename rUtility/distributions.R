@@ -47,6 +47,9 @@ parse.distribution.summarized <- function(json) {
     if (json$Name == "scalar:gamma distribution") {
         return(json$Parameters[1]/json$Parameters[2])
     }
+    if (json$Name == "scalar:geometric distribution") {
+        return((1-json$Parameters[1])/json$Parameters[1])
+    }
     if (json$Name == "scalar:negative binomial distribution") {
         return(json$Parameters[1])
     }
@@ -88,6 +91,12 @@ parse.distribution <- function(json) {
     }
     if (json$Name == "scalar:exponential distribution") {
         return(function(x, ...) dexp(x, rate=json$Parameters[1], ...))
+    }
+    if (json$Name == "scalar:gamma distribution") {
+        return(function(x, ...) dgamma(x, shape=json$Parameters[1], rate=json$Parameters[2], ...))
+    }
+    if (json$Name == "scalar:geometric distribution") {
+        return(function(x, ...) dgeom(x, json$Parameters[1], ...))
     }
     if (json$Name == "scalar:normal distribution") {
         return(function(x, ...) dnorm(x, json$Parameters[1], json$Parameters[2], ...))
