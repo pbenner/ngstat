@@ -258,7 +258,10 @@ func EstimateOnSingleTrack(config SessionConfig, estimator VectorEstimator, trac
     x = append(x, y)
   }
   PrintStderr(config, 1, "Estimating model... ")
-  estimator.EstimateOnData(x, nil, ThreadPool{})
+  if err := estimator.EstimateOnData(x, nil, ThreadPool{}); err != nil {
+    PrintStderr(config, 1, "failed\n")
+    return err
+  }
   PrintStderr(config, 1, "done\n")
 
   return nil
