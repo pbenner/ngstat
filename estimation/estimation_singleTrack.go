@@ -23,11 +23,13 @@ import   "math"
 
 import . "github.com/pbenner/ngstat/config"
 import . "github.com/pbenner/ngstat/io"
-import . "github.com/pbenner/autodiff/statistics"
+import . "github.com/pbenner/ngstat/track"
 import . "github.com/pbenner/ngstat/trackDataTransform"
 import . "github.com/pbenner/ngstat/utility"
 
 import . "github.com/pbenner/autodiff"
+import . "github.com/pbenner/autodiff/statistics"
+
 import . "github.com/pbenner/gonetics"
 import . "github.com/pbenner/threadpool"
 
@@ -227,7 +229,7 @@ func BatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstim
   return nil
 }
 
-func EstimateOnSingleTrack(config SessionConfig, estimator VectorEstimator, track Track, step int, args ...interface{}) error {
+func EstimateOnSingleTrack(config SessionConfig, estimator VectorEstimator, track Track, args ...interface{}) error {
   if estimator.Dim() != -1 {
     return fmt.Errorf("estimator has wrong dimension (expected variable dimension, but estimator has dimension `%d'", estimator.Dim())
   }
@@ -260,4 +262,71 @@ func EstimateOnSingleTrack(config SessionConfig, estimator VectorEstimator, trac
   PrintStderr(config, 1, "done\n")
 
   return nil
+}
+
+/* utility
+ * -------------------------------------------------------------------------- */
+
+func ImportAndEstimateOnSingleTrack(config SessionConfig, estimator VectorEstimator, trackFile string, args ...interface{}) error {
+  // default parameters
+  var args_new []interface{}
+  var seqnames map[string]bool
+
+  // parse optional arguments
+  for _, arg := range args {
+    switch a := arg.(type) {
+    case []string:
+      seqnames = make(map[string]bool)
+      for _, name := range a {
+        seqnames[name] = true
+      }
+    default:
+      args_new = append(args_new, arg)
+    }
+  }
+
+  if track, err := ImportLazyTrack(config, trackFile); err != nil {
+    return err
+  } else {
+    defer track.Close()
+
+    if seqnames != nil {
+      track.FilterGenome(func(name string, length int) bool {
+        return seqnames[name]
+      })
+    }
+    return EstimateOnSingleTrack(config, estimator, track, args_new...)
+  }
+}
+
+func ImportAndBatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstimator, trackFile string, step int, args ...interface{}) error {
+  // default parameters
+  var args_new []interface{}
+  var seqnames map[string]bool
+
+  // parse optional arguments
+  for _, arg := range args {
+    switch a := arg.(type) {
+    case []string:
+      seqnames = make(map[string]bool)
+      for _, name := range a {
+        seqnames[name] = true
+      }
+    default:
+      args_new = append(args_new, arg)
+    }
+  }
+
+  if track, err := ImportLazyTrack(config, trackFile); err != nil {
+    return err
+  } else {
+    defer track.Close()
+
+    if seqnames != nil {
+      track.FilterGenome(func(name string, length int) bool {
+        return seqnames[name]
+      })
+    }
+    return BatchEstimateOnSingleTrack(config, estimator, track, step, args_new...)
+  }
 }
