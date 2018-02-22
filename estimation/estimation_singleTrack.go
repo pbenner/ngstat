@@ -241,6 +241,7 @@ func EstimateOnSingleTrack(config SessionConfig, estimator VectorEstimator, trac
       f = a
     }
   }
+  pool := NewThreadPool(config.Threads, config.Threads*1000)
 
   x := []ConstVector{}
   // collect sequences
@@ -258,7 +259,7 @@ func EstimateOnSingleTrack(config SessionConfig, estimator VectorEstimator, trac
     x = append(x, y)
   }
   PrintStderr(config, 1, "Estimating model... ")
-  if err := estimator.EstimateOnData(x, nil, ThreadPool{}); err != nil {
+  if err := estimator.EstimateOnData(x, nil, pool); err != nil {
     PrintStderr(config, 1, "failed\n")
     return err
   }
