@@ -103,7 +103,7 @@ parse.distribution <- function(json) {
         return(function(x, ...) 1/(x+json$Parameters[1])*f(log(x+json$Parameters[1]), ...))
     }
     if (json$Name == "scalar:delta distribution") {
-        return(function(x, ...) if (x == json$Parameters[1]) { 1 } else { 0 })
+        return(function(x, ...) as.numeric(x == json$Parameters[1]))
     }
     stop(sprintf("could not parse: %s", json$Name))
 }
