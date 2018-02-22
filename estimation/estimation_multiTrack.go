@@ -261,6 +261,9 @@ func EstimateOnMultiTrack(config SessionConfig, estimator MatrixEstimator, track
   if _, m := estimator.Dims(); m != -1 {
     return fmt.Errorf("estimator has wrong dimension (expected variable column dimension, but estimator has dimension `%d')", m)
   }
+  if n, _ := estimator.Dims(); n != len(tracks) {
+    return fmt.Errorf("estimator has wrong dimension (expected row dimension `%d', but estimator has dimension `%d')", len(tracks), n)
+  }
   var f MultiTrackDataTransform
 
   for _, arg := range args {
