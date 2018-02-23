@@ -68,10 +68,14 @@ func ngstat_exec_generic_main(config SessionConfig, args []string, plugin *plugi
   fmt.Fprintf(os.Stderr, "%s", config.String())
 
   switch f := g.(type) {
+  case func(config SessionConfig, args ...string):
+    f(config, args...)
   case func(config SessionConfig, args []string):
     f(config, args)
   case func(config SessionConfig):
     f(config)
+  case func(args ...string):
+    f(args...)
   case func(args []string):
     f(args)
   case func():
