@@ -132,9 +132,8 @@ func CallPeaks(config SessionConfig, args []string) {
   optComponent := options.   IntLong("component", 0,   3, "foreground mixture component")
   optModel     := options.StringLong("model",     0,  "", "json file containing the mixture model")
 
-  options.SetProgram("LearnModel")
   options.SetParameters("<OUTPUT.bw> <INPUT.bw>")
-  options.Parse(args)
+  options.Parse(append([]string{"LearnModel"}, args...))
 
   if len(options.Args()) != 2 {
     options.PrintUsage(os.Stderr)
