@@ -134,6 +134,12 @@ func BatchClassifySingleTrack(config SessionConfig, classifier VectorBatchClassi
       f = a
     }
   }
+  if n := classifier.Dim(); n == -1 {
+    return nil, fmt.Errorf("classifier must have fixed dimension")
+  }
+  if n := classifier.Dim(); n < -1 || n == 0 {
+    return nil, fmt.Errorf("classifier has invalid dimension")
+  }
 
   n := classifier.Dim()
   m := n
