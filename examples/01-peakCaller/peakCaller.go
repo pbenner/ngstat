@@ -37,43 +37,44 @@ func newEstimator(config SessionConfig) VectorEstimator {
   components := make([]ScalarEstimator, 4)
   {
     if delta, err := scalarEstimator.NewDeltaEstimator(0.0); err != nil {
-      panic(err)
+      log.Fatal(err)
     } else {
       components[0] = delta
     }
   }
   {
     if poisson, err := scalarEstimator.NewPoissonEstimator(rand.Float64()); err != nil {
-      panic(err)
+      log.Fatal(err)
     } else {
       components[1] = poisson
     }
   }
   {
     if poisson, err := scalarEstimator.NewGeometricEstimator(rand.Float64()); err != nil {
-      panic(err)
+      log.Fatal(err)
     } else {
       components[2] = poisson
     }
   }
   {
     if poisson, err := scalarEstimator.NewGeometricEstimator(rand.Float64()); err != nil {
-      panic(err)
+      log.Fatal(err)
     } else {
       components[3] = poisson
     }
   }
   if mixture, err := scalarEstimator.NewMixtureEstimator(nil, components, 1e-8, -1); err != nil {
-    panic(err)
+    log.Fatal(err)
   } else {
     // set options
     mixture.Verbose = config.Verbose
     if estimator, err := vectorEstimator.NewScalarIid(mixture, -1); err != nil {
-      panic(err)
+      log.Fatal(err)
     } else {
       return estimator
     }
   }
+  return nil
 }
 
 /* -------------------------------------------------------------------------- */
@@ -83,7 +84,7 @@ func learnModel(config SessionConfig, filenameIn string) *scalarDistribution.Mix
   estimator := newEstimator(config)
 
   if err := ImportAndEstimateOnSingleTrack(config, estimator, filenameIn); err != nil {
-    panic(err)
+    log.Fatal(err)
   }
 
   return estimator.GetEstimate().(*vectorDistribution.ScalarIid).Distribution.(*scalarDistribution.Mixture)
