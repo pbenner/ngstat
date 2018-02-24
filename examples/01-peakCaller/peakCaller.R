@@ -1,10 +1,9 @@
 
 source("~/Source/ngstat/rUtility/distributions.R")
-source("~/Source/ngstat/rUtility/mixture.R")
 
 ## -----------------------------------------------------------------------------
 
-mixture       <- fromJSON(file="peakCaller.json")$Distributions[[1]]
+mixture       <- fromJSON(file="peakCaller.json")
 nonparametric <- fromJSON(file="peakCaller-nonparametric.json")$Parameters
 
 ## -----------------------------------------------------------------------------

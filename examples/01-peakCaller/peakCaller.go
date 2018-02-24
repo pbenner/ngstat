@@ -3,10 +3,13 @@ package main
 
 /* -------------------------------------------------------------------------- */
 
-//import "fmt"
-import "log"
-import "math"
-import "math/rand"
+//import   "fmt"
+import   "log"
+import   "math"
+import   "math/rand"
+import   "os"
+
+import   "github.com/pborman/getopt"
 
 import . "github.com/pbenner/ngstat/config"
 import . "github.com/pbenner/ngstat/classification"
@@ -86,9 +89,9 @@ func learnModel(config SessionConfig, filenameIn string) *scalarDistribution.Mix
   return estimator.GetEstimate().(*vectorDistribution.ScalarIid).Distribution.(*scalarDistribution.Mixture)
 }
 
-func callPeaks(config SessionConfig, filenameOut, filenameIn string, mixture *scalarDistribution.Mixture) MutableTrack {
+func callPeaks(config SessionConfig, filenameOut, filenameIn string, mixture *scalarDistribution.Mixture, k int) MutableTrack {
 
-  scalarClassifier := scalarClassifier.MixturePosterior{mixture, []int{3}}
+  scalarClassifier := scalarClassifier.MixturePosterior{mixture, []int{k}}
   vectorClassifier := vectorClassifier.ScalarBatchIid{scalarClassifier, 1}
 
   if result, err := ImportAndBatchClassifySingleTrack(config, vectorClassifier, filenameIn); err != nil {
@@ -124,16 +127,26 @@ func LearnModel(config SessionConfig, args []string) {
 
 func CallPeaks(config SessionConfig, args []string) {
 
-  if len(args) != 2 && len(args) != 3 {
-    log.Fatal("Usage: LearnModel <OUTPUT.bw> <INPUT.bw> [MODEL.json]")
+  options := getopt.New()
+
+  optComponent := options.   IntLong("component", 0,   3, "foreground mixture component")
+  optModel     := options.StringLong("model",     0,  "", "json file containing the mixture model")
+
+  options.SetProgram("LearnModel")
+  options.SetParameters("<OUTPUT.bw> <INPUT.bw>")
+  options.Parse(args)
+
+  if len(options.Args()) != 2 {
+    options.PrintUsage(os.Stderr)
+    os.Exit(1)
   }
+  filenameOut := options.Args()[0]
+  filenameIn  := options.Args()[1]
+
   var model *scalarDistribution.Mixture
 
-  filenameOut := args[0]
-  filenameIn  := args[1]
-
-  if len(args) == 3 {
-    if t, err := ImportScalarPdf(args[2], BareRealType); err != nil {
+  if *optModel != "" {
+    if t, err := ImportScalarPdf(*optModel, BareRealType); err != nil {
       log.Fatal(err)
     } else {
       model = t.(*scalarDistribution.Mixture)
@@ -142,7 +155,7 @@ func CallPeaks(config SessionConfig, args []string) {
     model = learnModel(config, filenameIn)
   }
 
-  result := callPeaks(config, filenameOut, filenameIn, model)
+  result := callPeaks(config, filenameOut, filenameIn, model, *optComponent)
 
   if err := ExportTrack(config, result, filenameOut); err != nil {
     log.Fatal(err)
