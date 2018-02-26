@@ -1,5 +1,9 @@
 
+SUBDIRS_TOOLS = \
+	tools/ngstat
+
 SUBDIRS = \
+	$(SUBDIRS_TOOLS) \
 	classification \
 	config \
 	estimation \
@@ -7,10 +11,14 @@ SUBDIRS = \
 	statistics/nonparametric \
 	track \
 	trackDataTransform \
-	tools/ngstat \
 	utility
 
 all:
+
+install:
+	@for i in $(SUBDIRS_TOOLS); do \
+		echo "Installing $$i"; (cd $$i && go test); \
+	done
 
 test:
 	@for i in $(SUBDIRS); do \

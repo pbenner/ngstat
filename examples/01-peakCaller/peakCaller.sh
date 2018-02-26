@@ -4,5 +4,5 @@ ngstat exec ../../plugins/nonparametric/nonparametric.so Estimate 500 /project/w
 
 ngstat exec peakCaller.so CallPeaks result.bw /project/wig-data/mouse-embryo/H3K27ac-mm10-liver-day12.5.raw.bw peakCaller.json
 
-~/Source/gonetics/tools/bigWigPositive/bigWigPositive -v result.table result.bw:0.95
+bigWigPositive -v result.table result.bw:0.95
 
