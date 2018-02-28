@@ -17,7 +17,7 @@ all:
 
 install:
 	@for i in $(SUBDIRS_TOOLS); do \
-		echo "Installing $$i"; (cd $$i && go test); \
+		echo "Installing $$i"; (cd $$i && go install); \
 	done
 
 test:

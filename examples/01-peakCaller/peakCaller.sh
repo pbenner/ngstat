@@ -1,8 +1,16 @@
 
-ngstat exec peakCaller.so LearnModel peakCaller.json /project/wig-data/mouse-embryo/H3K27ac-mm10-liver-day12.5.raw.bw
-ngstat exec ../../plugins/nonparametric/nonparametric.so Estimate 500 /project/wig-data/mouse-embryo/H3K27ac-mm10-liver-day12.5.raw.bw peakCaller-nonparametric.json
+TRACK=../data/Liver-Day12.5-H3K27ac.raw.bw
 
-ngstat exec peakCaller.so CallPeaks result.bw /project/wig-data/mouse-embryo/H3K27ac-mm10-liver-day12.5.raw.bw peakCaller.json
+# compute track histogram
+if [ ! -f ../../plugins/nonparametric/nonparametric.so ]; then
+    (cd ../../plugins/nonparametric && ngstat compile nonparametric.go)
+fi
+ngstat -c config.json exec ../../plugins/nonparametric/nonparametric.so Estimate 500 $TRACK peakCaller-nonparametric.json
 
+# estimate mixture model
+ngstat exec peakCaller.so LearnModel peakCaller.json $TRACK
+# use estimates model to call peaks
+ngstat exec peakCaller.so CallPeaks --model=peakCaller.json result.bw $TRACK
+
+# extract positive regions from resulting track
 bigWigPositive -v result.table result.bw:0.95
-
