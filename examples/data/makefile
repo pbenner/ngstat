@@ -12,18 +12,20 @@ BAMTOBIGWIG_ARGS    = -v --binning-method="mean overlap" --bin-size=$(BINSIZE) -
 BAMTOBIGWIG_ARGS_PE = $(BAMTOBIGWIG_ARGS)
 BAMTOBIGWIG_ARGS_SE = $(BAMTOBIGWIG_ARGS) --estimate-fragment-length --fragment-length-range=150:250 --fragment-length-bin-size=10 --save-fraglen --save-crosscorrelation --save-crosscorrelation-plot
 
-TARGETS_RPM_ATAC = 
-TARGETS_RPM_HM   = 
-TARGETS_RPM_CTRL = 
+TARGETS_RPM_ATAC  = 
+TARGETS_RPM_HM    = 
+TARGETS_RPM_CTRL  = 
 
-TARGETS_RAW_ATAC = 
-TARGETS_RAW_HM   = Liver-Day12.5-H3K27ac.raw.bw
-TARGETS_RAW_CTRL = Liver-Day12.5-Control.raw.bw
+TARGETS_RAW_ATAC  = 
+TARGETS_RAW_HM    = Liver-Day12.5-H3K27ac.raw.bw
+TARGETS_RAW_CTRL  = Liver-Day12.5-Control.raw.bw
+
+TARGETS_HISTOGRAM = Liver-Day12.5-H3K27ac.raw.json Liver-Day12.5-Control.raw.json
 
 # main targets
 # ------------------------------------------------------------------------------
 
-all: atac hm control
+all: atac hm control $(TARGETS_HISTOGRAM)
 
 atac: $(TARGETS_RPM_ATAC) $(TARGETS_RAW_ATAC)
 
@@ -62,6 +64,16 @@ $(TARGETS_RPM_HM) $(TARGETS_RPM_CTRL): %.bw:
 .bam/%.bam:
 	mkdir -p .bam
 	wget -O $@ "https://www.encodeproject.org/files/$(basename $(notdir $@))/@@download/$(notdir $@)"
+
+# histogram rules
+# ------------------------------------------------------------------------------
+
+%.json: %.bw
+	@if [ ! -f ../../plugins/nonparametric/nonparametric.so ]; then \
+	    (cd ../../plugins/nonparametric && ngstat compile nonparametric.go) \
+	fi
+	ngstat -v --bin-size=500 --bin-summary="discrete mean" exec ../../plugins/nonparametric/nonparametric.so Estimate 500 $< $@
+
 
 # ------------------------------------------------------------------------------
 
