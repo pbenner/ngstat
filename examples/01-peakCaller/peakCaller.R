@@ -4,7 +4,7 @@ source("~/Source/ngstat/rUtility/distributions.R")
 ## -----------------------------------------------------------------------------
 
 mixture       <- fromJSON(file="peakCaller.json")
-nonparametric <- fromJSON(file="peakCaller-nonparametric.json")$Parameters
+nonparametric <- fromJSON(file="../data/Liver-Day12.5-H3K27ac.raw.json")$Parameters
 
 ## -----------------------------------------------------------------------------
 
