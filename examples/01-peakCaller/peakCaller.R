@@ -1,5 +1,5 @@
 
-source("~/Source/ngstat/rUtility/distributions.R")
+source("../../rUtility/distributions.R")
 
 ## -----------------------------------------------------------------------------
 
