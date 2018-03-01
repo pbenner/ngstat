@@ -35,33 +35,25 @@ var ConfigFilename = "config.json"
 
 func newEstimator(config SessionConfig) VectorEstimator {
   components := make([]ScalarEstimator, 4)
-  {
-    if delta, err := scalarEstimator.NewDeltaEstimator(0.0); err != nil {
-      log.Fatal(err)
-    } else {
-      components[0] = delta
-    }
+  if delta, err := scalarEstimator.NewDeltaEstimator(0.0); err != nil {
+    log.Fatal(err)
+  } else {
+    components[0] = delta
   }
-  {
-    if poisson, err := scalarEstimator.NewPoissonEstimator(rand.Float64()); err != nil {
-      log.Fatal(err)
-    } else {
-      components[1] = poisson
-    }
+  if poisson, err := scalarEstimator.NewPoissonEstimator(rand.Float64()); err != nil {
+    log.Fatal(err)
+  } else {
+    components[1] = poisson
   }
-  {
-    if poisson, err := scalarEstimator.NewGeometricEstimator(rand.Float64()); err != nil {
-      log.Fatal(err)
-    } else {
-      components[2] = poisson
-    }
+  if poisson, err := scalarEstimator.NewGeometricEstimator(rand.Float64()); err != nil {
+    log.Fatal(err)
+  } else {
+    components[2] = poisson
   }
-  {
-    if poisson, err := scalarEstimator.NewGeometricEstimator(rand.Float64()); err != nil {
-      log.Fatal(err)
-    } else {
-      components[3] = poisson
-    }
+  if poisson, err := scalarEstimator.NewGeometricEstimator(rand.Float64()); err != nil {
+    log.Fatal(err)
+  } else {
+    components[3] = poisson
   }
   if mixture, err := scalarEstimator.NewMixtureEstimator(nil, components, 1e-8, -1); err != nil {
     log.Fatal(err)
