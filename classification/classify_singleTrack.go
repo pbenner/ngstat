@@ -34,8 +34,8 @@ import . "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
-func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassifier, data []Vector, args ...interface{}) ([]float64, error) {
-  if len(data) == 0 {
+func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassifier, x []Vector, args ...interface{}) ([]float64, error) {
+  if len(x) == 0 {
     return nil, nil
   }
   n := classifier.Dim()
@@ -73,12 +73,9 @@ func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassif
   // each thread gets its own classifier, since
   // the given classifier may not be thread-safe
   c := make([]VectorBatchClassifier, config.Threads)
-  x := make([]Vector, config.Threads)
   y := make([]Vector, config.Threads)
   for i := 0; i < config.Threads; i++ {
     c[i] = classifier.CloneVectorBatchClassifier()
-    x[i] = NullVector(BareRealType, n)
-    y[i] = x[i]
     if f != nil {
       y[i] = NullVector(BareRealType, m)
     }
@@ -86,23 +83,25 @@ func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassif
 
   g := pool.NewJobGroup()
 
-  result := make([]float64, len(data))
+  result := make([]float64, len(x))
 
-  if err := pool.AddRangeJob(0, len(data), g, func(i int, pool ThreadPool, erf func() error) error {
+  if err := pool.AddRangeJob(0, len(x), g, func(i int, pool ThreadPool, erf func() error) error {
     if erf() != nil {
       return nil
     }
-    if data[i].Dim() != n {
-      return fmt.Errorf("dimension of observation `%d' does not match classifier dimension", i)
-    }
     r := r.At(pool.GetThreadId())
     c := c   [pool.GetThreadId()]
-    x := x   [pool.GetThreadId()]
     y := y   [pool.GetThreadId()]
+    x := x   [i]
+    if x.Dim() != n {
+      return fmt.Errorf("dimension of observation `%d' does not match classifier dimension", i)
+    }
     if f != nil {
       if err := f.Eval(y, x); err != nil {
         return err
       }
+    } else {
+      y = x
     }
     if err := c.Eval(r, y); err != nil {
       return err
