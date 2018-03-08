@@ -88,33 +88,29 @@ func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassif
 
   result := make([]float64, len(data))
 
-  for i := 0; i < len(data); i++ {
-    if data[i].Dim() != n {
-      return nil, fmt.Errorf("dimension of observation `%d' does not match classifier dimension", i)
+  if err := pool.AddRangeJob(0, len(data), g, func(i int, pool ThreadPool, erf func() error) error {
+    if erf() != nil {
+      return nil
     }
-    // thread safe copy of i
-    j := i
-    if err := pool.AddJob(g, func(pool ThreadPool, erf func() error) error {
-      if erf() != nil {
-        return nil
-      }
-      r := r.At(pool.GetThreadId())
-      c := c   [pool.GetThreadId()]
-      x := x   [pool.GetThreadId()]
-      y := y   [pool.GetThreadId()]
-      if f != nil {
-        if err := f.Eval(y, x); err != nil {
-          return err
-        }
-      }
-      if err := c.Eval(r, y); err != nil {
+    if data[i].Dim() != n {
+      return fmt.Errorf("dimension of observation `%d' does not match classifier dimension", i)
+    }
+    r := r.At(pool.GetThreadId())
+    c := c   [pool.GetThreadId()]
+    x := x   [pool.GetThreadId()]
+    y := y   [pool.GetThreadId()]
+    if f != nil {
+      if err := f.Eval(y, x); err != nil {
         return err
       }
-      result[j] = r.GetValue()
-      return nil
-    }); err != nil {
-      return nil, err
     }
+    if err := c.Eval(r, y); err != nil {
+      return err
+    }
+    result[i] = r.GetValue()
+    return nil
+  }); err != nil {
+    return nil, err
   }
   // wait for threads
   if err := pool.Wait(g); err != nil {
