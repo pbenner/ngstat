@@ -93,8 +93,8 @@ func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassif
     c := c   [pool.GetThreadId()]
     y := y   [pool.GetThreadId()]
     x := x   [i]
-    if x.Dim() != n {
-      return fmt.Errorf("dimension of observation `%d' does not match classifier dimension", i)
+    if n != -1 && x.Dim() != n {
+      return fmt.Errorf("dimension of observation `%d' (%d) does not match classifier dimension (%d)", i, x.Dim(), n)
     }
     if f != nil {
       if err := f.Eval(y, x); err != nil {
