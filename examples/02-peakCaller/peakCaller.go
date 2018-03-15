@@ -183,10 +183,10 @@ func CallPeaks(config SessionConfig, args []string) {
 
   options := getopt.New()
 
-  optComponents1  := options.StringLong("components-treatment", 0, "2,3", "treatment foreground mixture component")
-  optComponents2  := options.StringLong("components-control",   0,   "8", "control foreground mixture component")
-  optModel1       := options.StringLong("model-treatment",      0,    "", "json file containing the treatment mixture model")
-  optModel2       := options.StringLong("model-control",        0,    "", "json file containing the control mixture model")
+  optComponents1  := options.StringLong("components-treatment", 0, "3", "treatment foreground mixture components")
+  optComponents2  := options.StringLong("components-control",   0, "8", "control foreground mixture components")
+  optModel1       := options.StringLong("model-treatment",      0,  "", "json file containing the treatment mixture model")
+  optModel2       := options.StringLong("model-control",        0,  "", "json file containing the control mixture model")
 
   options.SetParameters("<OUTPUT.bw> <TREATMENT.bw> <CONTROL.bw>")
   options.Parse(append([]string{"LearnModel"}, args...))

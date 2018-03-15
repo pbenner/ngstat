@@ -124,8 +124,8 @@ func CallPeaks(config SessionConfig, args []string) {
 
   options := getopt.New()
 
-  optComponents := options.StringLong("components", 0, "2,3", "foreground mixture component")
-  optModel      := options.StringLong("model",      0,    "", "json file containing the mixture model")
+  optComponents := options.StringLong("components", 0, "3", "foreground mixture components")
+  optModel      := options.StringLong("model",      0,  "", "json file containing the mixture model")
 
   options.SetParameters("<OUTPUT.bw> <INPUT.bw>")
   options.Parse(append([]string{"LearnModel"}, args...))
