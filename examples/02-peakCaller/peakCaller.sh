@@ -16,3 +16,6 @@ bigWigPositive -v result.table result.bw:0.95
 # get control peaks
 ngstat exec ../01-peakCaller/peakCaller.so CallPeaks --model peakCaller-control.json --components 8 result-control.bw $TRACK2
 bigWigPositive -v result-control.table result-control.bw:0.95
+
+
+# good example: chr6:29731448-29776447
