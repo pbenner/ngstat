@@ -8,6 +8,8 @@ import   "log"
 import   "math"
 import   "math/rand"
 import   "os"
+import   "strconv"
+import   "strings"
 
 import   "github.com/pborman/getopt"
 
@@ -82,9 +84,9 @@ func learnModel(config SessionConfig, filenameIn string) *scalarDistribution.Mix
   return estimator.GetEstimate().(*vectorDistribution.ScalarIid).Distribution.(*scalarDistribution.Mixture)
 }
 
-func callPeaks(config SessionConfig, filenameOut, filenameIn string, mixture *scalarDistribution.Mixture, k int) MutableTrack {
+func callPeaks(config SessionConfig, filenameOut, filenameIn string, mixture *scalarDistribution.Mixture, k []int) MutableTrack {
 
-  scalarClassifier := scalarClassifier.MixturePosterior{mixture, []int{k}}
+  scalarClassifier := scalarClassifier.MixturePosterior{mixture, k}
   vectorClassifier := vectorClassifier.ScalarBatchIid{scalarClassifier, 1}
 
   if result, err := ImportAndBatchClassifySingleTrack(config, vectorClassifier, filenameIn); err != nil {
@@ -122,8 +124,8 @@ func CallPeaks(config SessionConfig, args []string) {
 
   options := getopt.New()
 
-  optComponent := options.   IntLong("component", 0,   3, "foreground mixture component")
-  optModel     := options.StringLong("model",     0,  "", "json file containing the mixture model")
+  optComponents := options.StringLong("components", 0, "2,3", "foreground mixture component")
+  optModel      := options.StringLong("model",      0,    "", "json file containing the mixture model")
 
   options.SetParameters("<OUTPUT.bw> <INPUT.bw>")
   options.Parse(append([]string{"LearnModel"}, args...))
@@ -136,6 +138,7 @@ func CallPeaks(config SessionConfig, args []string) {
   filenameIn  := options.Args()[1]
 
   var model *scalarDistribution.Mixture
+  var components []int
 
   if *optModel != "" {
     if t, err := ImportScalarPdf(*optModel, BareRealType); err != nil {
@@ -146,8 +149,18 @@ func CallPeaks(config SessionConfig, args []string) {
   } else {
     model = learnModel(config, filenameIn)
   }
+  for _, str := range strings.Split(*optComponents, ",") {
+    if i, err := strconv.ParseInt(str, 10, 64); err != nil {
+      log.Fatal(err)
+    } else {
+      components = append(components, int(i))
+    }
+  }
+  if len(components) == 0 {
+    log.Fatal("empty set of components")
+  }
 
-  result := callPeaks(config, filenameOut, filenameIn, model, *optComponent)
+  result := callPeaks(config, filenameOut, filenameIn, model, components)
 
   if err := ExportTrack(config, result, filenameOut); err != nil {
     log.Fatal(err)

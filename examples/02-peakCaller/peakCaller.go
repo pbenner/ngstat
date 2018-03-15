@@ -8,6 +8,8 @@ import   "log"
 import   "math"
 import   "math/rand"
 import   "os"
+import   "strconv"
+import   "strings"
 
 import   "github.com/pborman/getopt"
 
@@ -51,22 +53,6 @@ func newEstimator(config SessionConfig) VectorEstimator {
       components = append(components, t)
     }
   }
-  // if d, err := scalarDistribution.NewNegativeBinomialDistribution(NewReal(1.0), NewReal(0.5)); err != nil {
-  //   log.Fatal(err)
-  // } else {
-  //   if numeric, err := scalarEstimator.NewNumericEstimator(d); err != nil {
-  //     log.Fatal(err)
-  //   } else {
-  //     numeric.MaxIterations = 5
-  //     numeric.Epsilon = 1e-2
-  //     numeric.Method = "bfgs"
-  //     numeric.Hook = func(variables ConstVector, r ConstScalar) error {
-  //       fmt.Println(" -> numeric optimization:", variables, r)
-  //       return nil
-  //     }
-  //     components = append(components, numeric)
-  //   }
-  // }
   if poisson, err := scalarEstimator.NewGeometricEstimator(0.02); err != nil {
     log.Fatal(err)
   } else {
@@ -99,11 +85,11 @@ func learnModel(config SessionConfig, filenameIn string) *scalarDistribution.Mix
   return estimator.GetEstimate().(*vectorDistribution.ScalarIid).Distribution.(*scalarDistribution.Mixture)
 }
 
-func callPeaks(config SessionConfig, filenameOut, filenameIn1, filenameIn2 string, mixture1, mixture2 *scalarDistribution.Mixture, k int) MutableTrack {
+func callPeaks(config SessionConfig, filenameOut, filenameIn1, filenameIn2 string, mixture1, mixture2 *scalarDistribution.Mixture, k1, k2 []int) MutableTrack {
 
-  scalarClassifier1 := scalarClassifier.MixturePosterior{mixture1, []int{k}}
+  scalarClassifier1 := scalarClassifier.MixturePosterior{mixture1, k1}
   vectorClassifier1 := vectorClassifier.ScalarBatchIid{scalarClassifier1, 1}
-  scalarClassifier2 := scalarClassifier.MixturePosterior{mixture2, []int{k}}
+  scalarClassifier2 := scalarClassifier.MixturePosterior{mixture2, k2}
   vectorClassifier2 := vectorClassifier.ScalarBatchIid{scalarClassifier2, 1}
 
   result1, err := ImportAndBatchClassifySingleTrack(config, vectorClassifier1, filenameIn1); if err != nil {
@@ -142,9 +128,10 @@ func CallPeaks(config SessionConfig, args []string) {
 
   options := getopt.New()
 
-  optComponent      := options.   IntLong("component",       0,   3, "foreground mixture component")
-  optModelTreatment := options.StringLong("model-treatment", 0,  "", "json file containing the treatment mixture model")
-  optModelControl   := options.StringLong("model-control",   0,  "", "json file containing the control mixture model")
+  optComponents1  := options.StringLong("components-treatment", 0, "2,3", "treatment foreground mixture component")
+  optComponents2  := options.StringLong("components-control",   0,   "8", "control foreground mixture component")
+  optModel1       := options.StringLong("model-treatment",      0,    "", "json file containing the treatment mixture model")
+  optModel2       := options.StringLong("model-control",        0,    "", "json file containing the control mixture model")
 
   options.SetParameters("<OUTPUT.bw> <TREATMENT.bw> <CONTROL.bw>")
   options.Parse(append([]string{"LearnModel"}, args...))
@@ -160,8 +147,11 @@ func CallPeaks(config SessionConfig, args []string) {
   var model1 *scalarDistribution.Mixture
   var model2 *scalarDistribution.Mixture
 
-  if *optModelTreatment != "" {
-    if t, err := ImportScalarPdf(*optModelTreatment, BareRealType); err != nil {
+  var components1 []int
+  var components2 []int
+
+  if *optModel1 != "" {
+    if t, err := ImportScalarPdf(*optModel1, BareRealType); err != nil {
       log.Fatal(err)
     } else {
       model1 = t.(*scalarDistribution.Mixture)
@@ -169,8 +159,8 @@ func CallPeaks(config SessionConfig, args []string) {
   } else {
     model1 = learnModel(config, filenameIn1)
   }
-  if *optModelControl != "" {
-    if t, err := ImportScalarPdf(*optModelControl, BareRealType); err != nil {
+  if *optModel1 != "" {
+    if t, err := ImportScalarPdf(*optModel2, BareRealType); err != nil {
       log.Fatal(err)
     } else {
       model2 = t.(*scalarDistribution.Mixture)
@@ -178,8 +168,28 @@ func CallPeaks(config SessionConfig, args []string) {
   } else {
     model2 = learnModel(config, filenameIn2)
   }
+  for _, str := range strings.Split(*optComponents1, ",") {
+    if i, err := strconv.ParseInt(str, 10, 64); err != nil {
+      log.Fatal(err)
+    } else {
+      components1 = append(components1, int(i))
+    }
+  }
+  for _, str := range strings.Split(*optComponents2, ",") {
+    if i, err := strconv.ParseInt(str, 10, 64); err != nil {
+      log.Fatal(err)
+    } else {
+      components2 = append(components2, int(i))
+    }
+  }
+  if len(components1) == 0 {
+    log.Fatal("empty set of treatment components")
+  }
+  if len(components2) == 0 {
+    log.Fatal("empty set of control components")
+  }
 
-  result := callPeaks(config, filenameOut, filenameIn1, filenameIn2, model1, model2, *optComponent)
+  result := callPeaks(config, filenameOut, filenameIn1, filenameIn2, model1, model2, components1, components2)
 
   if err := ExportTrack(config, result, filenameOut); err != nil {
     log.Fatal(err)
