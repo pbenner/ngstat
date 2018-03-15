@@ -35,7 +35,43 @@ var ConfigFilename = "config.json"
 
 /* -------------------------------------------------------------------------- */
 
-func newEstimator(config SessionConfig) VectorEstimator {
+func newEstimatorTreatment(config SessionConfig) VectorEstimator {
+  components := make([]ScalarEstimator, 4)
+  if delta, err := scalarEstimator.NewDeltaEstimator(0.0); err != nil {
+    log.Fatal(err)
+  } else {
+    components[0] = delta
+  }
+  if poisson, err := scalarEstimator.NewPoissonEstimator(rand.Float64()); err != nil {
+    log.Fatal(err)
+  } else {
+    components[1] = poisson
+  }
+  if poisson, err := scalarEstimator.NewGeometricEstimator(rand.Float64()); err != nil {
+    log.Fatal(err)
+  } else {
+    components[2] = poisson
+  }
+  if poisson, err := scalarEstimator.NewGeometricEstimator(rand.Float64()); err != nil {
+    log.Fatal(err)
+  } else {
+    components[3] = poisson
+  }
+  if mixture, err := scalarEstimator.NewMixtureEstimator(nil, components, 1e-8, -1); err != nil {
+    log.Fatal(err)
+  } else {
+    // set options
+    mixture.Verbose = config.Verbose
+    if estimator, err := vectorEstimator.NewScalarIid(mixture, -1); err != nil {
+      log.Fatal(err)
+    } else {
+      return estimator
+    }
+  }
+  return nil
+}
+
+func newEstimatorControl(config SessionConfig) VectorEstimator {
   components := []ScalarEstimator{}
   for i := 0; i <= 6; i++ {
     if delta, err := scalarEstimator.NewDeltaEstimator(float64(i)); err != nil {
@@ -74,9 +110,20 @@ func newEstimator(config SessionConfig) VectorEstimator {
 
 /* -------------------------------------------------------------------------- */
 
-func learnModel(config SessionConfig, filenameIn string) *scalarDistribution.Mixture {
+func learnModelTreatment(config SessionConfig, filenameIn string) *scalarDistribution.Mixture {
 
-  estimator := newEstimator(config)
+  estimator := newEstimatorTreatment(config)
+
+  if err := ImportAndEstimateOnSingleTrack(config, estimator, filenameIn); err != nil {
+    log.Fatal(err)
+  }
+
+  return estimator.GetEstimate().(*vectorDistribution.ScalarIid).Distribution.(*scalarDistribution.Mixture)
+}
+
+func learnModelControl(config SessionConfig, filenameIn string) *scalarDistribution.Mixture {
+
+  estimator := newEstimatorControl(config)
 
   if err := ImportAndEstimateOnSingleTrack(config, estimator, filenameIn); err != nil {
     log.Fatal(err)
@@ -110,16 +157,24 @@ func callPeaks(config SessionConfig, filenameOut, filenameIn1, filenameIn2 strin
 
 func LearnModel(config SessionConfig, args []string) {
 
-  if len(args) != 2 {
-    log.Fatal("Usage: LearnModel <OUTPUT.json> <INPUT.bw>")
+  if len(args) != 3 {
+    log.Fatal("Usage: LearnModel <treatment|control> <OUTPUT.json> <INPUT.bw>")
   }
 
-  filenameOut := args[0]
-  filenameIn  := args[1]
+  which       := args[0]
+  filenameOut := args[1]
+  filenameIn  := args[2]
 
-  ExportDistribution(filenameOut,
-    learnModel(config, filenameIn))
-
+  switch which {
+  case "treatment":
+    ExportDistribution(filenameOut,
+      learnModelTreatment(config, filenameIn))
+  case "control":
+    ExportDistribution(filenameOut,
+      learnModelControl(config, filenameIn))
+  default:
+    log.Fatal("first argument must be `treatment' or `control'")
+  }
 }
 
 /* -------------------------------------------------------------------------- */
@@ -157,7 +212,7 @@ func CallPeaks(config SessionConfig, args []string) {
       model1 = t.(*scalarDistribution.Mixture)
     }
   } else {
-    model1 = learnModel(config, filenameIn1)
+    model1 = learnModelTreatment(config, filenameIn1)
   }
   if *optModel1 != "" {
     if t, err := ImportScalarPdf(*optModel2, BareRealType); err != nil {
@@ -166,7 +221,7 @@ func CallPeaks(config SessionConfig, args []string) {
       model2 = t.(*scalarDistribution.Mixture)
     }
   } else {
-    model2 = learnModel(config, filenameIn2)
+    model2 = learnModelControl(config, filenameIn2)
   }
   for _, str := range strings.Split(*optComponents1, ",") {
     if i, err := strconv.ParseInt(str, 10, 64); err != nil {
