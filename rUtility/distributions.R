@@ -59,6 +59,9 @@ parse.distribution.summarized <- function(json) {
     if (json$Name == "scalar:pdf log transform") {
         return(parse.distribution.summarized(json$Distributions[[1]]))
     }
+    if (json$Name == "scalar:pdf translation") {
+        return(parse.distribution.summarized(json$Distributions[[1]]))
+    }
     if (json$Name == "scalar:delta distribution") {
         return(parse.distribution.summarized(json$Distributions[[1]]))
     }
@@ -110,6 +113,10 @@ parse.distribution <- function(json) {
     if (json$Name == "scalar:pdf log transform") {
         f <- parse.distribution(json$Distributions[[1]])
         return(function(x, ...) 1/(x+json$Parameters[1])*f(log(x+json$Parameters[1]), ...))
+    }
+    if (json$Name == "scalar:pdf translation") {
+        f <- parse.distribution(json$Distributions[[1]])
+        return(function(x, ...) f(x+json$Parameters[1], ...))
     }
     if (json$Name == "scalar:delta distribution") {
         return(function(x, ...) as.numeric(x == json$Parameters[1]))
