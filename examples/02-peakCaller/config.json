@@ -1,0 +1,6 @@
+{
+    "Threads"               : 20,
+    "Verbose"               : 1,
+    "Bin Size"              : 500,
+    "Bin Summary Statistics": "discrete mean"
+}

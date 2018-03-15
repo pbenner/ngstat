@@ -1,0 +1,87 @@
+{
+  "Name": "scalar:mixture distribution",
+  "Parameters": [
+    0.12553835054193288,
+    0.03227224752188618,
+    0.03672901653905964,
+    0.046392760606336056,
+    0.05928003502614764,
+    0.05857957314278224,
+    0.03446596960594121,
+    0.6065008826074444,
+    0.00024116440847001572
+  ],
+  "Distributions": [
+    {
+      "Name": "scalar:delta distribution",
+      "Parameters": [
+        0
+      ],
+      "Distributions": null
+    },
+    {
+      "Name": "scalar:delta distribution",
+      "Parameters": [
+        1
+      ],
+      "Distributions": null
+    },
+    {
+      "Name": "scalar:delta distribution",
+      "Parameters": [
+        2
+      ],
+      "Distributions": null
+    },
+    {
+      "Name": "scalar:delta distribution",
+      "Parameters": [
+        3
+      ],
+      "Distributions": null
+    },
+    {
+      "Name": "scalar:delta distribution",
+      "Parameters": [
+        4
+      ],
+      "Distributions": null
+    },
+    {
+      "Name": "scalar:delta distribution",
+      "Parameters": [
+        5
+      ],
+      "Distributions": null
+    },
+    {
+      "Name": "scalar:delta distribution",
+      "Parameters": [
+        6
+      ],
+      "Distributions": null
+    },
+    {
+      "Name": "scalar:pdf translation",
+      "Parameters": [
+        -5
+      ],
+      "Distributions": [
+        {
+          "Name": "scalar:poisson distribution",
+          "Parameters": [
+            3.6333012031356278
+          ],
+          "Distributions": null
+        }
+      ]
+    },
+    {
+      "Name": "scalar:geometric distribution",
+      "Parameters": [
+        0.02120867383253949
+      ],
+      "Distributions": null
+    }
+  ]
+}
