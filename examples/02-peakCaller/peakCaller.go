@@ -57,7 +57,7 @@ func newEstimatorTreatment(config SessionConfig) VectorEstimator {
   } else {
     components[3] = poisson
   }
-  if mixture, err := scalarEstimator.NewMixtureEstimator(nil, components, 1e-8, -1); err != nil {
+  if mixture, err := scalarEstimator.NewDiscreteMixtureEstimator(nil, components, 1e-8, -1); err != nil {
     log.Fatal(err)
   } else {
     // set options
