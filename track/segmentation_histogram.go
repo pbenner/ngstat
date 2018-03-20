@@ -52,7 +52,7 @@ func segmentationHistogram(config SessionConfig, segmentation Track, tracks []Tr
   }
 }
 
-func SegmentationHistogram(config SessionConfig, segmentationFilename string, trackFilenames []string, nstates int, genome Genome) ([][]map[float64]int, error) {
+func SegmentationHistogram(config SessionConfig, segmentationFilename string, trackFilenames []string, nstates int, genome Genome, stateMap map[string]int) ([][]map[float64]int, error) {
 
   tracks := []Track{}
 
@@ -64,7 +64,7 @@ func SegmentationHistogram(config SessionConfig, segmentationFilename string, tr
       tracks = append(tracks, t)
     }
   }
-  if segmentation, err := ImportTrackSegmentation(config, segmentationFilename, genome); err != nil {
+  if segmentation, err := ImportTrackSegmentation(config, segmentationFilename, genome, stateMap); err != nil {
     panic(err)
   } else {
     return segmentationHistogram(config, segmentation, tracks, nstates)
@@ -84,8 +84,8 @@ func writeSegmentationData(w io.Writer, data map[float64]int, i, j int) {
   }
 }
 
-func WriteSegmentationHistogram(config SessionConfig, w io.Writer, segmentationFilename string, trackFilenames []string, nstates int, genome Genome) error {
-  if values, err := SegmentationHistogram(config, segmentationFilename, trackFilenames, nstates, genome); err != nil {
+func WriteSegmentationHistogram(config SessionConfig, w io.Writer, segmentationFilename string, trackFilenames []string, nstates int, genome Genome, stateMap map[string]int) error {
+  if values, err := SegmentationHistogram(config, segmentationFilename, trackFilenames, nstates, genome, stateMap); err != nil {
     return err
   } else {
     // loop over data
