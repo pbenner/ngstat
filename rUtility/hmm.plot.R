@@ -42,19 +42,25 @@ plot.hmm.summary <- function(hmm, labels=NULL, main="", states.nrow=NULL, states
         p2 <- arrangeGrob(grobs = p2, nrow=states.nrow, ncol=states.ncol)
         arrangeGrob(p1, p2, ncol=2)
     } else {
-        edist <- normalize.matrix(as.matrix(hmm$EDist[hmm$StateMap+1,]), bycol=TRUE)
-        ## construct matrix
-        na    <- matrix(NA, ncol(edist), ncol(edist))
-        tr    <- hmm$Tr
-        m1    <- cbind(na, NA, t(edist))
-        m2    <- cbind(edist, NA, tr)
-        m     <- rbind(m1, NA, m2)
-        ## define labels
-        if (is.null(labels)) {
-            labels <- rep("", ncol(edist))
+        if (is.null(hmm$EDist)) {
+            m <- hmm$Tr
+            labels.x <- hmm$StateMap
+            labels.y <- hmm$StateMap
+        } else {
+            edist <- normalize.matrix(as.matrix(hmm$EDist[hmm$StateMap+1,]), bycol=TRUE)
+            ## construct matrix
+            na    <- matrix(NA, ncol(edist), ncol(edist))
+            tr    <- hmm$Tr
+            m1    <- cbind(na, NA, t(edist))
+            m2    <- cbind(edist, NA, tr)
+            m     <- rbind(m1, NA, m2)
+            ## define labels
+            if (is.null(labels)) {
+                labels <- rep("", ncol(edist))
+            }
+            labels.x <- c(rep("", length(labels)+1), hmm$StateMap)
+            labels.y <- c(labels, "", hmm$StateMap)
         }
-        labels.x <- c(rep("", length(labels)+1), hmm$StateMap)
-        labels.y <- c(labels, "", hmm$StateMap)
         p <- plot.hmm.matrix(m) +
             scale_x_continuous(breaks = 1:ncol(m), labels=labels.x, position = "top") +
             scale_y_reverse   (breaks = 1:nrow(m), labels=labels.y) +
