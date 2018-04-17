@@ -104,7 +104,7 @@ func exportTrackSegmentation(granges GRanges, bedFilename, name, description str
   return ioutil.WriteFile(bedFilename, buffer.Bytes(), 0666)
 }
 
-func ExportTrackSegmentation(config SessionConfig, track Track, bedFilename, bedName, bedDescription string, compress bool, rgbChart []string) error {
+func ExportTrackSegmentation(config SessionConfig, track Track, bedFilename, bedName, bedDescription string, compress bool, stateNames, rgbChart []string) error {
   r, err := GenericTrack{track}.GRanges("state"); if err != nil {
     return err
   }
@@ -115,14 +115,22 @@ func ExportTrackSegmentation(config SessionConfig, track Track, bedFilename, bed
   thickEnd   := make([]int,    len(state))
   itemRgb    := make([]string, len(state))
 
-  if rgbChart == nil {
+  if rgbChart == nil || stateNames == nil {
     sMax := 0
     for i := 0; i < r.Length(); i++ {
       if s := int(state[i]); s > sMax {
         sMax = s
       }
     }
-    rgbChart = getNColors(sMax+1)
+    if rgbChart == nil {
+      rgbChart = getNColors(sMax+1)
+    }
+    if stateNames == nil {
+      stateNames = make([]string, sMax+1)
+      for i := 0; i < len(stateNames); i++ {
+        stateNames[i] = fmt.Sprintf("s%d", i)
+      }
+    }
   }
   for i := 0; i < r.Length(); i++ {
     s := int(state[i])
@@ -132,7 +140,10 @@ func ExportTrackSegmentation(config SessionConfig, track Track, bedFilename, bed
     if s >= len(rgbChart) {
       return fmt.Errorf("rgbChart has not enough colors")
     }
-    name      [i] = fmt.Sprintf("s%d", s)
+    if s >= len(stateNames) {
+      return fmt.Errorf("insufficient number of state names")
+    }
+    name      [i] = stateNames[s]
     score     [i] = 0
     thickStart[i] = r.Ranges[i].From
     thickEnd  [i] = r.Ranges[i].To
@@ -179,7 +190,7 @@ func importTrackSegmentation(filename string) (GRanges, error) {
   }
 }
 
-func ImportTrackSegmentation(config SessionConfig, bedFilename string, genome Genome) (Track, error) {
+func ImportTrackSegmentation(config SessionConfig, bedFilename string, genome Genome, stateMap map[string]int) (Track, error) {
   var s TrackMutableSequence
   if r, err := importTrackSegmentation(bedFilename); err != nil {
     return nil, err
@@ -201,14 +212,24 @@ func ImportTrackSegmentation(config SessionConfig, bedFilename string, genome Ge
           s = s_
         }
       }
-      for k := from; k < to; k += config.BinSize {
-        if len(states[i]) <= 1 {
-          return nil, fmt.Errorf("invalid state at line %d", i+2)
+      if stateMap == nil {
+        for k := from; k < to; k += config.BinSize {
+          if len(states[i]) <= 1 {
+            return nil, fmt.Errorf("invalid state at line %d", i+2)
+          }
+          value, err := strconv.ParseInt(states[i][1:], 10, 64); if err != nil {
+            return nil, err
+          }
+          s.Set(k, float64(value))
         }
-        value, err := strconv.ParseInt(states[i][1:], 10, 64); if err != nil {
-          return nil, err
+      } else {
+        for k := from; k < to; k += config.BinSize {
+          if value, ok := stateMap[states[i]]; !ok {
+            return nil, fmt.Errorf("state `%s' not found in state map", states[i])
+          } else {
+            s.Set(k, float64(value))
+          }
         }
-        s.Set(k, float64(value))
       }
     }
     return track, nil
@@ -217,7 +238,7 @@ func ImportTrackSegmentation(config SessionConfig, bedFilename string, genome Ge
 
 /* -------------------------------------------------------------------------- */
 
-func ExportHierarchicalTrackSegmentation(config SessionConfig, track Track, bedFilename, bedName, bedDescription string, compress bool, rgbChart []string, tree generic.HmmNode, level int) error {
+func ExportHierarchicalTrackSegmentation(config SessionConfig, track Track, bedFilename, bedName, bedDescription string, compress bool, stateNames, rgbChart []string, tree generic.HmmNode, level int) error {
   r, err := GenericTrack{track}.GRanges("state"); if err != nil {
     return err
   }
@@ -279,6 +300,16 @@ func ExportHierarchicalTrackSegmentation(config SessionConfig, track Track, bedF
   if len(rgbMap) == 0 {
     return fmt.Errorf("invalid level")
   }
+  if len(stateNames) == 0 {
+    stateNames = make([]string, len(rgbMap))
+    for i := 0; i < len(stateNames); i++ {
+      stateNames[i] = fmt.Sprintf("s%d", i)
+    }
+  } else {
+    if len(rgbMap) != len(stateNames) {
+      return fmt.Errorf("invalid number of state names")
+    }
+  }
   // get states for the lowest level
   state_old  := r.GetMetaFloat("state"); if len(state_old) == 0 {
     return nil
@@ -322,7 +353,7 @@ func ExportHierarchicalTrackSegmentation(config SessionConfig, track Track, bedF
   itemRgb    := make([]string, len(state))
 
   for i := 0; i < r.Length(); i++ {
-    name      [i] = fmt.Sprintf("s%d", int(state[i]))
+    name      [i] = stateNames[int(state[i])]
     thickStart[i] = r.Ranges[i].From
     thickEnd  [i] = r.Ranges[i].To
     itemRgb   [i] = rgbChart[int(state[i])]

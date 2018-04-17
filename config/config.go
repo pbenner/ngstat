@@ -69,17 +69,11 @@ func DefaultSessionConfig() SessionConfig {
 /* -------------------------------------------------------------------------- */
 
 func (config *SessionConfig) GetBinSummaryStatistics() (BinSummaryStatistics, error) {
-  switch config.BinSummaryStatistics {
-  case "mean":
-    return BinMean, nil
-  case "discrete mean":
-    return BinDiscreteMean, nil
-  case "min":
-    return BinMin, nil
-  case "max":
-    return BinMax, nil
+  if s := BinSummaryStatisticsFromString(config.BinSummaryStatistics); s == nil {
+    return nil, fmt.Errorf("invalid bin summary statistics: %s", config.BinSummaryStatistics)
+  } else {
+    return s, nil
   }
-  return nil, fmt.Errorf("invalid bin summary statistics")
 }
 
 /* -------------------------------------------------------------------------- */
