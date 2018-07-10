@@ -31,7 +31,7 @@ import . "github.com/pbenner/autodiff"
 import . "github.com/pbenner/autodiff/statistics"
 
 import . "github.com/pbenner/gonetics"
-import . "github.com/pbenner/threadpool"
+import   "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
@@ -66,7 +66,7 @@ func EstimateOnSingleTrackData(config SessionConfig, estimator VectorEstimator, 
   }
 
   PrintStderr(config, 1, "Estimating model... ")
-  if err := estimator.EstimateOnData(y, nil, ThreadPool{}); err != nil {
+  if err := estimator.EstimateOnData(y, nil, threadpool.Nil()); err != nil {
     PrintStderr(config, 1, "failed\n")
     return err
   }
@@ -110,7 +110,7 @@ func BatchEstimateOnSingleTrackData(config SessionConfig, estimator VectorBatchE
   if f != nil {
     y = NullVector(estimator.ScalarType(), m)
   }
-  if err := estimator.Initialize(ThreadPool{}); err != nil {
+  if err := estimator.Initialize(threadpool.Nil()); err != nil {
     return err
   }
 
@@ -127,12 +127,12 @@ func BatchEstimateOnSingleTrackData(config SessionConfig, estimator VectorBatchE
         PrintStderr(config, 1, "failed\n")
         return err
       }
-      if err := estimator.NewObservation(y, nil, ThreadPool{}); err != nil {
+      if err := estimator.NewObservation(y, nil, threadpool.Nil()); err != nil {
         PrintStderr(config, 1, "failed\n")
         return err
       }
     } else {
-      if err := estimator.NewObservation(x, nil, ThreadPool{}); err != nil {
+      if err := estimator.NewObservation(x, nil, threadpool.Nil()); err != nil {
         PrintStderr(config, 1, "failed\n")
         return err
       }
@@ -183,7 +183,7 @@ func BatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstim
   if f != nil {
     y = NullVector(estimator.ScalarType(), m)
   }
-  if err := estimator.Initialize(ThreadPool{}); err != nil {
+  if err := estimator.Initialize(threadpool.Nil()); err != nil {
     return err
   }
   // counter
@@ -217,7 +217,7 @@ func BatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstim
           return err
         }
       }
-      estimator.NewObservation(y, nil, ThreadPool{})
+      estimator.NewObservation(y, nil, threadpool.Nil())
     }
     l += seq.NBins()
 
@@ -241,7 +241,7 @@ func EstimateOnSingleTrack(config SessionConfig, estimator VectorEstimator, trac
       f = a
     }
   }
-  pool := NewThreadPool(config.Threads, config.Threads*1000)
+  pool := threadpool.New(config.Threads, config.Threads*1000)
 
   x := []ConstVector{}
   // collect sequences

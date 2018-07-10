@@ -30,7 +30,7 @@ import . "github.com/pbenner/ngstat/utility"
 
 import . "github.com/pbenner/autodiff"
 import . "github.com/pbenner/gonetics"
-import . "github.com/pbenner/threadpool"
+import   "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
@@ -66,7 +66,7 @@ func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassif
     }
   }
 
-  pool := NewThreadPool(config.Threads, 10000)
+  pool := threadpool.New(config.Threads, 10000)
 
   // temporary memory for each thread
   r := NullVector(BareRealType, config.Threads)
@@ -85,7 +85,7 @@ func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassif
 
   result := make([]float64, len(x))
 
-  if err := pool.AddRangeJob(0, len(x), g, func(i int, pool ThreadPool, erf func() error) error {
+  if err := pool.AddRangeJob(0, len(x), g, func(i int, pool threadpool.ThreadPool, erf func() error) error {
     if erf() != nil {
       return nil
     }
@@ -152,7 +152,7 @@ func BatchClassifySingleTrack(config SessionConfig, classifier VectorBatchClassi
   nan := math.NaN()
 
   result := AllocSimpleTrack("classification", track.GetGenome(), track.GetBinSize())
-  pool   := NewThreadPool(config.Threads, 10000)
+  pool   := threadpool.New(config.Threads, 10000)
 
   // temporary memory for each thread
   r := NullVector(BareRealType, config.Threads)
@@ -218,7 +218,7 @@ func BatchClassifySingleTrack(config SessionConfig, classifier VectorBatchClassi
       seq2.SetBin(i, nan)
     }
     // launch jobs
-    if err := pool.AddRangeJob(offset1, nbins-offset2, g, func(i int, pool ThreadPool, erf func() error) error {
+    if err := pool.AddRangeJob(offset1, nbins-offset2, g, func(i int, pool threadpool.ThreadPool, erf func() error) error {
       if erf() != nil {
         return nil
       }
@@ -285,7 +285,7 @@ func ClassifySingleTrack(config SessionConfig, classifier VectorClassifier, trac
   }
 
   result := AllocSimpleTrack("classification", track.GetGenome(), track.GetBinSize())
-  pool   := NewThreadPool(config.Threads, 10000)
+  pool   := threadpool.New(config.Threads, 10000)
 
   // each thread gets its own classifier, since
   // the given classifier may not be thread-safe
@@ -312,7 +312,7 @@ func ClassifySingleTrack(config SessionConfig, classifier VectorClassifier, trac
       x = f.Eval(x)
     }
 
-    if err := pool.AddJob(g, func(pool ThreadPool, erf func() error) error {
+    if err := pool.AddJob(g, func(pool threadpool.ThreadPool, erf func() error) error {
       if erf() != nil {
         return nil
       }

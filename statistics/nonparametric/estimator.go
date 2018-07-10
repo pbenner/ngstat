@@ -27,7 +27,7 @@ import . "github.com/pbenner/autodiff/statistics"
 import   "github.com/pbenner/autodiff/statistics/scalarEstimator"
 
 import   "github.com/pbenner/smartBinning"
-import . "github.com/pbenner/threadpool"
+import   "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
@@ -67,7 +67,7 @@ func (obj *NonparametricEstimator) Clone() *NonparametricEstimator {
   r.BySize  = obj.BySize
   r.Verbose = obj.Verbose
   if obj.MargCounts != nil {
-    r.Initialize(ThreadPool{})
+    r.Initialize(threadpool.Nil())
     for k, v := range obj.MargCounts {
       r.MargCounts[k] = v
     }
@@ -163,12 +163,12 @@ func (obj *NonparametricEstimator) computeBins() ([]float64, []float64) {
 /* batch estimator interface
  * -------------------------------------------------------------------------- */
 
-func (obj *NonparametricEstimator) Initialize(p ThreadPool) error {
+func (obj *NonparametricEstimator) Initialize(p threadpool.ThreadPool) error {
   obj.MargCounts = make(map[float64]float64)
   return nil
 }
 
-func (obj *NonparametricEstimator) NewObservation(x, gamma ConstScalar, p ThreadPool) error {
+func (obj *NonparametricEstimator) NewObservation(x, gamma ConstScalar, p threadpool.ThreadPool) error {
   if math.IsNaN(x.GetValue()) {
     return nil
   }
@@ -220,10 +220,10 @@ func (obj *NonparametricEstimator) SetData(x ConstVector, n int) error {
     return err
   }
   // compute initial histogram
-  return obj.Estimate(nil, ThreadPool{})
+  return obj.Estimate(nil, threadpool.Nil())
 }
 
-func (obj *NonparametricEstimator) Estimate(gamma ConstVector, p ThreadPool) error {
+func (obj *NonparametricEstimator) Estimate(gamma ConstVector, p threadpool.ThreadPool) error {
   x, _ := obj.GetData()
   if err := obj.Initialize(p); err != nil {
     return err
@@ -248,7 +248,7 @@ func (obj *NonparametricEstimator) Estimate(gamma ConstVector, p ThreadPool) err
   return nil
 }
 
-func (obj *NonparametricEstimator) EstimateOnData(x, gamma ConstVector, p ThreadPool) error {
+func (obj *NonparametricEstimator) EstimateOnData(x, gamma ConstVector, p threadpool.ThreadPool) error {
   if err := obj.StdEstimator.SetData(x, x.Dim()); err != nil {
     return err
   }

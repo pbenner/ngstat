@@ -29,7 +29,7 @@ import . "github.com/pbenner/ngstat/utility"
 
 import . "github.com/pbenner/autodiff"
 import . "github.com/pbenner/gonetics"
-import . "github.com/pbenner/threadpool"
+import   "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
@@ -69,7 +69,7 @@ func EstimateOnMultiTrackData(config SessionConfig, estimator MatrixEstimator, d
   }
 
   PrintStderr(config, 1, "Estimating model... ")
-  if err := estimator.EstimateOnData(y, nil, ThreadPool{}); err != nil {
+  if err := estimator.EstimateOnData(y, nil, threadpool.Nil()); err != nil {
     PrintStderr(config, 1, "failed\n")
     return err
   }
@@ -111,7 +111,7 @@ func BatchEstimateOnMultiTrackData(config SessionConfig, estimator MatrixBatchEs
   if f != nil {
     y = NullMatrix(estimator.ScalarType(), m1, m2)
   }
-  if err := estimator.Initialize(ThreadPool{}); err != nil {
+  if err := estimator.Initialize(threadpool.Nil()); err != nil {
     return err
   }
 
@@ -130,7 +130,7 @@ func BatchEstimateOnMultiTrackData(config SessionConfig, estimator MatrixBatchEs
     } else {
       y = x
     }
-    if err := estimator.NewObservation(y, nil, ThreadPool{}); err != nil {
+    if err := estimator.NewObservation(y, nil, threadpool.Nil()); err != nil {
       PrintStderr(config, 1, "failed\n")
       return err
     }
@@ -181,7 +181,7 @@ func BatchEstimateOnMultiTrack(config SessionConfig, estimator MatrixBatchEstima
   if f != nil {
     y = NullMatrix(estimator.ScalarType(), m1, m2)
   }
-  if err := estimator.Initialize(ThreadPool{}); err != nil {
+  if err := estimator.Initialize(threadpool.Nil()); err != nil {
     return err
   }
 
@@ -228,7 +228,7 @@ func BatchEstimateOnMultiTrack(config SessionConfig, estimator MatrixBatchEstima
         } else {
           y = x
         }
-        if err := estimator.NewObservation(y, nil, ThreadPool{}); err != nil {
+        if err := estimator.NewObservation(y, nil, threadpool.Nil()); err != nil {
           return err
         }
       } else {
@@ -240,7 +240,7 @@ func BatchEstimateOnMultiTrack(config SessionConfig, estimator MatrixBatchEstima
         } else {
           y = x
         }
-        if err := estimator.NewObservation(y, nil, ThreadPool{}); err != nil {
+        if err := estimator.NewObservation(y, nil, threadpool.Nil()); err != nil {
           return err
         }
       }
@@ -272,7 +272,7 @@ func EstimateOnMultiTrack(config SessionConfig, estimator MatrixEstimator, track
       f = a
     }
   }
-  pool := NewThreadPool(config.Threads, config.Threads*1000)
+  pool := threadpool.New(config.Threads, config.Threads*1000)
 
   x := []ConstMatrix{}
   // collect sequences

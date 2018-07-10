@@ -29,7 +29,7 @@ import . "github.com/pbenner/ngstat/utility"
 
 import . "github.com/pbenner/autodiff"
 import . "github.com/pbenner/gonetics"
-import . "github.com/pbenner/threadpool"
+import   "github.com/pbenner/threadpool"
 
 /* -------------------------------------------------------------------------- */
 
@@ -78,13 +78,13 @@ func ClassifyMultiTrackData(config SessionConfig, classifier MatrixBatchClassifi
   }
   result := make([]float64, len(data))
 
-  pool := NewThreadPool(config.Threads, 10000)
+  pool := threadpool.New(config.Threads, 10000)
   g    := pool.NewJobGroup()
   // classify data
   for d := 0; d < len(data); d++ {
     // thread safe copy of d
     d := d
-    if err := pool.AddJob(g, func(pool ThreadPool, erf func() error) error {
+    if err := pool.AddJob(g, func(pool threadpool.ThreadPool, erf func() error) error {
       c := c   [pool.GetThreadId()]
       y := y   [pool.GetThreadId()]
       r := r.At(pool.GetThreadId())
@@ -149,7 +149,7 @@ func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassif
   nan := math.NaN()
 
   result := AllocSimpleTrack("classification", tracks[0].GetGenome(), tracks[0].GetBinSize())
-  pool   := NewThreadPool(config.Threads, 10000)
+  pool   := threadpool.New(config.Threads, 10000)
 
   // temporary memory for each thread
   r := NullVector(BareRealType, config.Threads)
@@ -221,7 +221,7 @@ func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassif
     }
     nrows, ncols := x.Dims()
     // launch jobs
-    if err := pool.AddRangeJob(offset1, nbins-offset2, g, func(i int, pool ThreadPool, erf func() error) error {
+    if err := pool.AddRangeJob(offset1, nbins-offset2, g, func(i int, pool threadpool.ThreadPool, erf func() error) error {
       if erf() != nil {
         return nil
       }
@@ -289,7 +289,7 @@ func ClassifyMultiTrack(config SessionConfig, classifier MatrixClassifier, track
   }
 
   result := AllocSimpleTrack("classification", tracks[0].GetGenome(), tracks[0].GetBinSize())
-  pool   := NewThreadPool(config.Threads, 10000)
+  pool   := threadpool.New(config.Threads, 10000)
 
   // each thread gets its own classifier, since
   // the given classifier may not be thread-safe
@@ -325,7 +325,7 @@ func ClassifyMultiTrack(config SessionConfig, classifier MatrixClassifier, track
       x = f.Eval(x)
     }
 
-    if err := pool.AddJob(g, func(pool ThreadPool, erf func() error) error {
+    if err := pool.AddJob(g, func(pool threadpool.ThreadPool, erf func() error) error {
       c := c[pool.GetThreadId()]
       if erf() != nil {
         return nil
