@@ -22,7 +22,6 @@ import   "fmt"
 import   "math"
 
 import . "github.com/pbenner/ngstat/config"
-import . "github.com/pbenner/ngstat/io"
 import . "github.com/pbenner/ngstat/track"
 import . "github.com/pbenner/ngstat/trackDataTransform"
 import . "github.com/pbenner/ngstat/utility"
@@ -65,13 +64,9 @@ func EstimateOnSingleTrackData(config SessionConfig, estimator VectorEstimator, 
     y[i] = x[i]
   }
 
-  PrintStderr(config, 1, "Estimating model... ")
   if err := estimator.EstimateOnData(y, nil, threadpool.Nil()); err != nil {
-    PrintStderr(config, 1, "failed\n")
     return err
   }
-  PrintStderr(config, 1, "done\n")
-
   return nil
 }
 
@@ -114,32 +109,25 @@ func BatchEstimateOnSingleTrackData(config SessionConfig, estimator VectorBatchE
     return err
   }
 
-  PrintStderr(config, 1, "Estimating model... ")
   for d := 0; d < len(data); d++ {
     x := data[d]
 
     if x.Dim() != n {
-      PrintStderr(config, 1, "failed\n")
       return fmt.Errorf("dimension of observation %d does not match estimator dimension", d)
     }
     if f != nil {
       if err := f.Eval(y, x); err != nil {
-        PrintStderr(config, 1, "failed\n")
         return err
       }
       if err := estimator.NewObservation(y, nil, threadpool.Nil()); err != nil {
-        PrintStderr(config, 1, "failed\n")
         return err
       }
     } else {
       if err := estimator.NewObservation(x, nil, threadpool.Nil()); err != nil {
-        PrintStderr(config, 1, "failed\n")
         return err
       }
     }
   }
-  PrintStderr(config, 1, "done\n")
-
   return nil
 }
 
@@ -193,7 +181,6 @@ func BatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstim
   for _, length := range track.GetGenome().Lengths {
     L += length/binSize
   }
-  PrintStderr(config, 1, "Estimating model... \n")
   if config.Verbose >= 1 {
     NewProgress(L, L).PrintStderr(l)
   }
@@ -258,13 +245,9 @@ func EstimateOnSingleTrack(config SessionConfig, estimator VectorEstimator, trac
     }
     x = append(x, y)
   }
-  PrintStderr(config, 1, "Estimating model... ")
   if err := estimator.EstimateOnData(x, nil, pool); err != nil {
-    PrintStderr(config, 1, "failed\n")
     return err
   }
-  PrintStderr(config, 1, "done\n")
-
   return nil
 }
 

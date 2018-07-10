@@ -21,7 +21,6 @@ package estimation
 import   "fmt"
 
 import . "github.com/pbenner/ngstat/config"
-import . "github.com/pbenner/ngstat/io"
 import . "github.com/pbenner/autodiff/statistics"
 import . "github.com/pbenner/ngstat/track"
 import . "github.com/pbenner/ngstat/trackDataTransform"
@@ -68,12 +67,9 @@ func EstimateOnMultiTrackData(config SessionConfig, estimator MatrixEstimator, d
     y[i] = x[i]
   }
 
-  PrintStderr(config, 1, "Estimating model... ")
   if err := estimator.EstimateOnData(y, nil, threadpool.Nil()); err != nil {
-    PrintStderr(config, 1, "failed\n")
     return err
   }
-  PrintStderr(config, 1, "done\n")
 
   return nil
 }
@@ -115,7 +111,6 @@ func BatchEstimateOnMultiTrackData(config SessionConfig, estimator MatrixBatchEs
     return err
   }
 
-  PrintStderr(config, 1, "Estimating model... ")
   for d := 0; d < len(data); d++ {
     x := data[d]
     if transposed {
@@ -124,18 +119,15 @@ func BatchEstimateOnMultiTrackData(config SessionConfig, estimator MatrixBatchEs
     }
     if f != nil {
       if err := f.Eval(y, x); err != nil {
-        PrintStderr(config, 1, "failed\n")
         return err
       }
     } else {
       y = x
     }
     if err := estimator.NewObservation(y, nil, threadpool.Nil()); err != nil {
-      PrintStderr(config, 1, "failed\n")
       return err
     }
   }
-  PrintStderr(config, 1, "done\n")
 
   return nil
 }
@@ -308,12 +300,8 @@ LOOP1:
     }
     x = append(x, r)
   }
-  PrintStderr(config, 1, "Estimating model... ")
   if err := estimator.EstimateOnData(x, nil, pool); err != nil {
-    PrintStderr(config, 1, "failed\n")
     return err
-  } else {
-    PrintStderr(config, 1, "done\n")
   }
   return nil
 }
