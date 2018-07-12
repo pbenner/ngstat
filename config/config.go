@@ -82,13 +82,13 @@ func (config *SessionConfig) String() string {
   var buffer bytes.Buffer
 
   fmt.Fprintf(&buffer, "Session Config:\n")
-  fmt.Fprintf(&buffer, " -> BinOverlap           : %v\n", config.BinOverlap)
-  fmt.Fprintf(&buffer, " -> BinSummaryStatistics : %v\n", config.BinSummaryStatistics)
-  fmt.Fprintf(&buffer, " -> BinSize              : %v\n", config.BinSize)
-  fmt.Fprintf(&buffer, " -> BWZoomLevels         : %v\n", config.BWZoomLevels)
-  fmt.Fprintf(&buffer, " -> TrackInit            : %v\n", config.TrackInit)
-  fmt.Fprintf(&buffer, " -> Threads              : %v\n", config.Threads)
-  fmt.Fprintf(&buffer, " -> Verbose              : %v\n", config.Verbose)
+  fmt.Fprintf(&buffer, " -> Bin Overlap            : %v\n", config.BinOverlap)
+  fmt.Fprintf(&buffer, " -> Bin Summary Statistics : %v\n", config.BinSummaryStatistics)
+  fmt.Fprintf(&buffer, " -> Bin Size               : %v\n", config.BinSize)
+  fmt.Fprintf(&buffer, " -> BigWig Zoom Levels     : %v\n", config.BWZoomLevels)
+  fmt.Fprintf(&buffer, " -> Track Initial Value    : %v\n", config.TrackInit)
+  fmt.Fprintf(&buffer, " -> Threads                : %v\n", config.Threads)
+  fmt.Fprintf(&buffer, " -> Verbose                : %v\n", config.Verbose)
 
   return buffer.String()
 }
