@@ -19,20 +19,36 @@ package config
 /* -------------------------------------------------------------------------- */
 
 //import   "fmt"
+import   "bufio"
+import   "bytes"
 import   "encoding/json"
 import   "io"
-import   "io/ioutil"
+import   "strings"
+
+/* -------------------------------------------------------------------------- */
+
+func stripComment(str []byte) []byte {
+	if cut := strings.IndexAny(string(str), "#"); cut >= 0 {
+		return str[:cut]
+	} else {
+    return str
+  }
+}
 
 /* -------------------------------------------------------------------------- */
 
 func JsonImport(reader io.Reader, object interface{}) error {
 
-  b, err := ioutil.ReadAll(reader)
-  if err != nil {
-    return err
+  scanner := bufio.NewScanner(reader)
+  result  := bytes.NewBuffer(nil)
+  for scanner.Scan() {
+    line := stripComment(scanner.Bytes())
+    if _, err := result.Write(line); err != nil {
+      return err
+    }
   }
 
-  return json.Unmarshal(b, object)
+  return json.Unmarshal(result.Bytes(), object)
 }
 
 func JsonExport(writer io.Writer, object interface{}) error {
