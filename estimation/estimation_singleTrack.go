@@ -63,8 +63,9 @@ func EstimateOnSingleTrackData(config SessionConfig, estimator VectorEstimator, 
   for i := 0; i < len(x); i++ {
     y[i] = x[i]
   }
+  pool := threadpool.New(config.Threads, config.Threads*1000)
 
-  if err := estimator.EstimateOnData(y, nil, threadpool.Nil()); err != nil {
+  if err := estimator.EstimateOnData(y, nil, pool); err != nil {
     return err
   }
   return nil
@@ -105,7 +106,9 @@ func BatchEstimateOnSingleTrackData(config SessionConfig, estimator VectorBatchE
   if f != nil {
     y = NullVector(estimator.ScalarType(), m)
   }
-  if err := estimator.Initialize(threadpool.Nil()); err != nil {
+  pool := threadpool.New(config.Threads, config.Threads*1000)
+
+  if err := estimator.Initialize(pool); err != nil {
     return err
   }
 
@@ -119,11 +122,11 @@ func BatchEstimateOnSingleTrackData(config SessionConfig, estimator VectorBatchE
       if err := f.Eval(y, x); err != nil {
         return err
       }
-      if err := estimator.NewObservation(y, nil, threadpool.Nil()); err != nil {
+      if err := estimator.NewObservation(y, nil, pool); err != nil {
         return err
       }
     } else {
-      if err := estimator.NewObservation(x, nil, threadpool.Nil()); err != nil {
+      if err := estimator.NewObservation(x, nil, pool); err != nil {
         return err
       }
     }
@@ -171,7 +174,9 @@ func BatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstim
   if f != nil {
     y = NullVector(estimator.ScalarType(), m)
   }
-  if err := estimator.Initialize(threadpool.Nil()); err != nil {
+  pool := threadpool.New(config.Threads, config.Threads*1000)
+
+  if err := estimator.Initialize(pool); err != nil {
     return err
   }
   // counter
@@ -204,7 +209,7 @@ func BatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstim
           return err
         }
       }
-      estimator.NewObservation(y, nil, threadpool.Nil())
+      estimator.NewObservation(y, nil, pool)
     }
     l += seq.NBins()
 
