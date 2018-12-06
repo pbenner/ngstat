@@ -80,8 +80,12 @@ func learnModel(config SessionConfig, filenameIn string) *scalarDistribution.Mix
   if err := ImportAndEstimateOnSingleTrack(config, estimator, filenameIn); err != nil {
     log.Fatal(err)
   }
-
-  return estimator.GetEstimate().(*vectorDistribution.ScalarIid).Distribution.(*scalarDistribution.Mixture)
+  if d, err := estimator.GetEstimate(); err != nil {
+    log.Fatal(err)
+  } else {
+    return d.(*vectorDistribution.ScalarIid).Distribution.(*scalarDistribution.Mixture)
+  }
+  return nil
 }
 
 func callPeaks(config SessionConfig, filenameOut, filenameIn string, mixture *scalarDistribution.Mixture, k []int) MutableTrack {

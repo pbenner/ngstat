@@ -255,9 +255,11 @@ func (obj *NonparametricEstimator) EstimateOnData(x, gamma ConstVector, p thread
   return obj.Estimate(gamma, p)
 }
 
-func (obj *NonparametricEstimator) GetEstimate() ScalarPdf {
+func (obj *NonparametricEstimator) GetEstimate() (ScalarPdf, error) {
   if obj.MargCounts != nil {
-    obj.updateEstimate()
+    if err := obj.updateEstimate(); err != nil {
+      return nil, err
+    }
   }
-  return obj.NonparametricDistribution
+  return obj.NonparametricDistribution, nil
 }

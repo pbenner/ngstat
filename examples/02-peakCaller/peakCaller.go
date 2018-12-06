@@ -117,8 +117,12 @@ func learnModelTreatment(config SessionConfig, filenameIn string) *scalarDistrib
   if err := ImportAndEstimateOnSingleTrack(config, estimator, filenameIn); err != nil {
     log.Fatal(err)
   }
-
-  return estimator.GetEstimate().(*vectorDistribution.ScalarIid).Distribution.(*scalarDistribution.Mixture)
+  if d, err := estimator.GetEstimate(); err != nil {
+    log.Fatal(err)
+  } else {
+    return d.(*vectorDistribution.ScalarIid).Distribution.(*scalarDistribution.Mixture)
+  }
+  return nil
 }
 
 func learnModelControl(config SessionConfig, filenameIn string) *scalarDistribution.Mixture {
@@ -128,8 +132,12 @@ func learnModelControl(config SessionConfig, filenameIn string) *scalarDistribut
   if err := ImportAndEstimateOnSingleTrack(config, estimator, filenameIn); err != nil {
     log.Fatal(err)
   }
-
-  return estimator.GetEstimate().(*vectorDistribution.ScalarIid).Distribution.(*scalarDistribution.Mixture)
+  if d, err := estimator.GetEstimate(); err != nil {
+    log.Fatal(err)
+  } else {
+    return d.(*vectorDistribution.ScalarIid).Distribution.(*scalarDistribution.Mixture)
+  }
+  return nil
 }
 
 func callPeaks(config SessionConfig, filenameOut, filenameIn1, filenameIn2 string, mixture1, mixture2 *scalarDistribution.Mixture, k1, k2 []int) MutableTrack {

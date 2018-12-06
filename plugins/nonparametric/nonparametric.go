@@ -53,9 +53,11 @@ func Estimate(config SessionConfig, args []string) {
   if err := BatchEstimateOnSingleTrack(config, estimator, track, -1, chromosomes); err != nil {
     panic(err)
   }
-  estimate := estimator.GetEstimate().(*vectorDistribution.ScalarId)
-
-  if err := ExportDistribution(filenameOut, estimate.Distributions[0]); err != nil {
+  if estimate, err := estimator.GetEstimate(); err != nil {
     panic(err)
+  } else {
+    if err := ExportDistribution(filenameOut, estimate.(*vectorDistribution.ScalarId).Distributions[0]); err != nil {
+      panic(err)
+    }
   }
 }
