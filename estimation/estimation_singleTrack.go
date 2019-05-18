@@ -71,6 +71,18 @@ func EstimateOnSingleTrackData(config SessionConfig, estimator VectorEstimator, 
   return nil
 }
 
+func EstimateOnSingleTrackConstData(config SessionConfig, estimator VectorEstimator, data []ConstVector, args ...interface{}) error {
+  if len(data) == 0 {
+    return nil
+  }
+  pool := threadpool.New(config.Threads, config.Threads*1000)
+
+  if err := estimator.EstimateOnData(data, nil, pool); err != nil {
+    return err
+  }
+  return nil
+}
+
 func BatchEstimateOnSingleTrackData(config SessionConfig, estimator VectorBatchEstimator, data []Vector, args ...interface{}) error {
   if len(data) == 0 {
     return nil
