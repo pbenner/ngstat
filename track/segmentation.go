@@ -53,7 +53,7 @@ func getNColors(n int) []string {
 
 /* -------------------------------------------------------------------------- */
 
-func ExportTrackSegmentation(config SessionConfig, track Track, bedFilename, bedName, bedDescription string, compress bool, stateNames, rgbChart []string, scores []GenericTrack) error {
+func ExportTrackSegmentation(config SessionConfig, track Track, bedFilename, bedName, bedDescription string, compress bool, stateNames, rgbChart []string, scores []Track) error {
   return (GenericTrack{track}).ExportSegmentation(bedFilename, bedName, bedDescription, compress, stateNames, rgbChart, scores)
 }
 
