@@ -169,20 +169,20 @@ func (obj *NonparametricEstimator) Initialize(p threadpool.ThreadPool) error {
 }
 
 func (obj *NonparametricEstimator) NewObservation(x, gamma ConstScalar, p threadpool.ThreadPool) error {
-  if math.IsNaN(x.GetValue()) {
+  if math.IsNaN(x.GetFloat64()) {
     return nil
   }
   if gamma != nil {
-    if r, ok := obj.MargCounts[x.GetValue()]; ok {
-      obj.MargCounts[x.GetValue()] = LogAdd(r, gamma.GetValue())
+    if r, ok := obj.MargCounts[x.GetFloat64()]; ok {
+      obj.MargCounts[x.GetFloat64()] = LogAdd(r, gamma.GetFloat64())
     } else {
-      obj.MargCounts[x.GetValue()] = gamma.GetValue()
+      obj.MargCounts[x.GetFloat64()] = gamma.GetFloat64()
     }
   } else {
-    if r, ok := obj.MargCounts[x.GetValue()]; ok {
-      obj.MargCounts[x.GetValue()] = LogAdd(r, 0.0)
+    if r, ok := obj.MargCounts[x.GetFloat64()]; ok {
+      obj.MargCounts[x.GetFloat64()] = LogAdd(r, 0.0)
     } else {
-      obj.MargCounts[x.GetValue()] = 0.0
+      obj.MargCounts[x.GetFloat64()] = 0.0
     }
   }
   return nil
@@ -199,18 +199,18 @@ func (obj *NonparametricEstimator) updateEstimate() error {
   } else {
     obj.NonparametricDistribution = dist
   }
-  n := NewBareReal(0.0)
-  t := NewBareReal(0.0)
+  n := NewFloat64(0.0)
+  t := NewFloat64(0.0)
   // compute total counts
   for _, c := range counts {
-    n.LogAdd(n, ConstReal(c), t)
+    n.LogAdd(n, ConstFloat64(c), t)
   }
   for i := 0; i < obj.MargDensity.Dim(); i++ {
     // weight at this position
     w := obj.MargDensity.At(i)
-    w.SetValue(counts[i])
+    w.SetFloat64(counts[i])
     w.Sub(w, n)
-    w.Sub(w, ConstReal(math.Log(obj.Delta[i])))
+    w.Sub(w, ConstFloat64(math.Log(obj.Delta[i])))
   }
   return nil
 }

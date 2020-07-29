@@ -69,7 +69,7 @@ func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassif
   pool := threadpool.New(config.Threads, 10000)
 
   // temporary memory for each thread
-  r := NullVector(BareRealType, config.Threads)
+  r := NullDenseVector(Float64Type, config.Threads)
   // each thread gets its own classifier, since
   // the given classifier may not be thread-safe
   c := make([]VectorBatchClassifier, config.Threads)
@@ -77,7 +77,7 @@ func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassif
   for i := 0; i < config.Threads; i++ {
     c[i] = classifier.CloneVectorBatchClassifier()
     if f != nil {
-      y[i] = NullVector(BareRealType, m)
+      y[i] = NullDenseVector(Float64Type, m)
     }
   }
 
@@ -106,7 +106,7 @@ func ClassifySingleTrackData(config SessionConfig, classifier VectorBatchClassif
     if err := c.Eval(r, y); err != nil {
       return err
     }
-    result[i] = r.GetValue()
+    result[i] = r.GetFloat64()
     return nil
   }); err != nil {
     return nil, err
@@ -155,7 +155,7 @@ func BatchClassifySingleTrack(config SessionConfig, classifier VectorBatchClassi
   pool   := threadpool.New(config.Threads, 10000)
 
   // temporary memory for each thread
-  r := NullVector(BareRealType, config.Threads)
+  r := NullDenseVector(Float64Type, config.Threads)
   // each thread gets its own classifier, since
   // the given classifier may not be thread-safe
   c := make([]VectorBatchClassifier, config.Threads)
@@ -163,7 +163,7 @@ func BatchClassifySingleTrack(config SessionConfig, classifier VectorBatchClassi
   for i := 0; i < config.Threads; i++ {
     c[i] = classifier.CloneVectorBatchClassifier()
     if f != nil {
-      y[i] = NullVector(BareRealType, m)
+      y[i] = NullDenseVector(Float64Type, m)
     }
   }
 
@@ -205,9 +205,9 @@ func BatchClassifySingleTrack(config SessionConfig, classifier VectorBatchClassi
     g := pool.NewJobGroup()
 
     // convert whole sequence to vector
-    x := NullVector(BareRealType, nbins)
+    x := NullDenseVector(Float64Type, nbins)
     for i := 0; i < nbins; i++ {
-      x.At(i).SetValue(seq1.AtBin(i))
+      x.At(i).SetFloat64(seq1.AtBin(i))
     }
 
     // clear non-accessible regions
@@ -236,7 +236,7 @@ func BatchClassifySingleTrack(config SessionConfig, classifier VectorBatchClassi
       if err := c.Eval(r, y); err != nil {
         return err
       }
-      seq2.SetBin(i, r.GetValue())
+      seq2.SetBin(i, r.GetFloat64())
       return nil
     }); err != nil {
       return nil, err
@@ -304,9 +304,9 @@ func ClassifySingleTrack(config SessionConfig, classifier VectorClassifier, trac
     }
 
     // convert whole sequence to vector
-    x := NullVector(BareRealType, seq1.NBins())
+    x := NullDenseVector(Float64Type, seq1.NBins())
     for i := 0; i < seq1.NBins(); i++ {
-      x.At(i).SetValue(seq1.AtBin(i))
+      x.At(i).SetFloat64(seq1.AtBin(i))
     }
     if f != nil {
       x = f.Eval(x)
@@ -317,12 +317,12 @@ func ClassifySingleTrack(config SessionConfig, classifier VectorClassifier, trac
         return nil
       }
       c := c[pool.GetThreadId()]
-      r := NullVector(BareRealType, seq1.NBins())
+      r := NullDenseVector(Float64Type, seq1.NBins())
       if err := c.Eval(r, x); err != nil {
         return err
       }
       for i := 0; i < seq1.NBins(); i++ {
-        seq2.SetBin(i, r.At(i).GetValue())
+        seq2.SetBin(i, r.At(i).GetFloat64())
       }
       return nil
     }); err != nil {

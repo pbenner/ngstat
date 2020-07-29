@@ -90,9 +90,9 @@ func SlicesToVectors(t ScalarType, counts [][]float64, transposed bool) []Vector
     n = len(counts)
     x = []Vector{}
     for j := 0; j < len(counts[0]); j++ {
-      v := NullVector(t, n)
+      v := NullDenseVector(t, n)
       for i := 0; i < len(counts); i++ {
-        v.At(i).SetValue(counts[i][j])
+        v.At(i).SetFloat64(counts[i][j])
       }
       x = append(x, v)
     }
@@ -101,7 +101,11 @@ func SlicesToVectors(t ScalarType, counts [][]float64, transposed bool) []Vector
     // extract 2-dimensional data
     x = make([]Vector, n)
     for i := 0; i < n; i++ {
-      x[i] = NewVector(t, counts[i])
+      v := NullDenseVector(t, len(counts[i]))
+      for j := 0; j < len(counts[i]); j++ {
+        v.At(j).SetFloat64(counts[i][j])
+      }
+      x[i] = v
     }
   }
   return x
@@ -118,9 +122,9 @@ func SequencesToVectors(t ScalarType, sequences []TrackSequence, transposed bool
     n = len(sequences)
     x = []Vector{}
     for j := 0; j < sequences[0].NBins(); j++ {
-      v := NullVector(t, n)
+      v := NullDenseVector(t, n)
       for i := 0; i < len(sequences); i++ {
-        v.At(i).SetValue(sequences[i].AtBin(j))
+        v.At(i).SetFloat64(sequences[i].AtBin(j))
       }
       x = append(x, v)
     }
@@ -129,9 +133,9 @@ func SequencesToVectors(t ScalarType, sequences []TrackSequence, transposed bool
     // extract 2-dimensional data
     x = make([]Vector, n)
     for i := 0; i < n; i++ {
-      x[i] = NullVector(t, sequences[i].NBins())
+      x[i] = NullDenseVector(t, sequences[i].NBins())
       for j := 0; j < sequences[i].NBins(); j++ {
-        x[i].At(j).SetValue(sequences[i].AtBin(j))
+        x[i].At(j).SetFloat64(sequences[i].AtBin(j))
       }
     }
   }
@@ -140,21 +144,21 @@ func SequencesToVectors(t ScalarType, sequences []TrackSequence, transposed bool
 
 func SequencesToMatrix(t ScalarType, sequences []TrackSequence, transposed bool) Matrix {
   if len(sequences) == 0 {
-    return NullMatrix(t, 0, 0)
+    return NullDenseMatrix(t, 0, 0)
   }
   if transposed {
-    x := NullMatrix(t, sequences[0].NBins(), len(sequences))
+    x := NullDenseMatrix(t, sequences[0].NBins(), len(sequences))
     for i := 0; i < len(sequences); i++ {
       for j := 0; j < sequences[i].NBins(); j++ {
-        x.At(j,i).SetValue(sequences[i].AtBin(j))
+        x.At(j,i).SetFloat64(sequences[i].AtBin(j))
       }
     }
     return x
   } else {
-    x := NullMatrix(t, len(sequences), sequences[0].NBins())
+    x := NullDenseMatrix(t, len(sequences), sequences[0].NBins())
     for i := 0; i < len(sequences); i++ {
       for j := 0; j < sequences[i].NBins(); j++ {
-        x.At(i,j).SetValue(sequences[i].AtBin(j))
+        x.At(i,j).SetFloat64(sequences[i].AtBin(j))
       }
     }
     return x
@@ -164,7 +168,7 @@ func SequencesToMatrix(t ScalarType, sequences []TrackSequence, transposed bool)
 /* -------------------------------------------------------------------------- */
 
 func SlicesToMatrix(t ScalarType, counts [][]float64, transposed bool) Matrix {
-  x := NullVector(t, 0)
+  x := NullDenseVector(t, 0)
   n := len(counts)
   // exit if no data is available
   if n == 0 {
@@ -172,9 +176,9 @@ func SlicesToMatrix(t ScalarType, counts [][]float64, transposed bool) Matrix {
   }
   if transposed {
     for j := 0; j < len(counts[0]); j++ {
-      v := NullVector(t, n)
+      v := NullDenseVector(t, n)
       for i := 0; i < len(counts); i++ {
-        v.At(i).SetValue(counts[i][j])
+        v.At(i).SetFloat64(counts[i][j])
       }
       x = x.AppendVector(v)
     }
@@ -182,9 +186,13 @@ func SlicesToMatrix(t ScalarType, counts [][]float64, transposed bool) Matrix {
   } else {
     n = len(counts)
     // extract 2-dimensional data
-    x = NullVector(t, 0)
+    x = NullDenseVector(t, 0)
     for i := 0; i < n; i++ {
-      x = x.AppendVector(NewVector(t, counts[i]))
+      v := NullDenseVector(t, len(counts[i]))
+      for j := 0; j < len(counts[i]); j++ {
+        v.At(j).SetFloat64(counts[i][j])
+      }
+      x = x.AppendVector(v)
     }
     return x.AsMatrix(n, x.Dim()/n)
   }

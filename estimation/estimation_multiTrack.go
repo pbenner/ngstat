@@ -105,7 +105,7 @@ func BatchEstimateOnMultiTrackData(config SessionConfig, estimator MatrixBatchEs
     }
   }
   if f != nil {
-    y = NullMatrix(estimator.ScalarType(), m1, m2)
+    y = NullDenseMatrix(estimator.ScalarType(), m1, m2)
   }
   if err := estimator.Initialize(threadpool.Nil()); err != nil {
     return err
@@ -171,7 +171,7 @@ func BatchEstimateOnMultiTrack(config SessionConfig, estimator MatrixBatchEstima
   // the given classifier may not be thread-safe
   y := Matrix(nil)
   if f != nil {
-    y = NullMatrix(estimator.ScalarType(), m1, m2)
+    y = NullDenseMatrix(estimator.ScalarType(), m1, m2)
   }
   if err := estimator.Initialize(threadpool.Nil()); err != nil {
     return err
@@ -270,7 +270,7 @@ func EstimateOnMultiTrack(config SessionConfig, estimator MatrixEstimator, track
   // collect sequences
 LOOP1:
   for _, name := range tracks[0].GetSeqNames() {
-    xd := NullVector(BareRealType, 0)
+    xd := NullDenseVector(Float64Type, 0)
     nd := -1
     for i := 0; i < len(tracks); i++ {
       seq, err := tracks[i].GetSequence(name); if err != nil {
@@ -283,9 +283,9 @@ LOOP1:
       if seq.NBins() != nd {
         return fmt.Errorf("sequence `%s' has varying length", name)
       }
-      y := NullVector(estimator.ScalarType(), nd)
+      y := NullDenseVector(estimator.ScalarType(), nd)
       for j := 0; j < nd; j++ {
-        y.At(j).SetValue(seq.AtBin(j))
+        y.At(j).SetFloat64(seq.AtBin(j))
       }
       xd = xd.AppendVector(y)
     }

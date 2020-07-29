@@ -65,7 +65,7 @@ func ClassifyMultiTrackData(config SessionConfig, classifier MatrixBatchClassifi
   }
 
   // temporary memory for each thread
-  r := NullVector(BareRealType, config.Threads)
+  r := NullDenseVector(Float64Type, config.Threads)
   // each thread gets its own classifier, since
   // the given classifier may not be thread-safe
   c := make([]MatrixBatchClassifier, config.Threads)
@@ -73,7 +73,7 @@ func ClassifyMultiTrackData(config SessionConfig, classifier MatrixBatchClassifi
   for i := 0; i < config.Threads; i++ {
     c[i] = classifier.CloneMatrixBatchClassifier()
     if f != nil {
-      y[i] = NullMatrix(BareRealType, m1, m2)
+      y[i] = NullDenseMatrix(Float64Type, m1, m2)
     }
   }
   result := make([]float64, len(data))
@@ -105,7 +105,7 @@ func ClassifyMultiTrackData(config SessionConfig, classifier MatrixBatchClassifi
       if err := c.Eval(r, y); err != nil {
         return err
       }
-      result[d] = r.GetValue()
+      result[d] = r.GetFloat64()
       return nil
     }); err != nil {
       return nil, err
@@ -152,7 +152,7 @@ func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassif
   pool   := threadpool.New(config.Threads, 10000)
 
   // temporary memory for each thread
-  r := NullVector(BareRealType, config.Threads)
+  r := NullDenseVector(Float64Type, config.Threads)
   // each thread gets its own classifier, since
   // the given classifier may not be thread-safe
   c := make([]MatrixBatchClassifier, config.Threads)
@@ -160,7 +160,7 @@ func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassif
   for i := 0; i < config.Threads; i++ {
     c[i] = classifier.CloneMatrixBatchClassifier()
     if f != nil {
-      y[i] = NullMatrix(BareRealType, m1, m2)
+      y[i] = NullDenseMatrix(Float64Type, m1, m2)
     }
   }
 
@@ -210,7 +210,7 @@ func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassif
       sequences[k] = seq
     }
     g := pool.NewJobGroup()
-    x := SequencesToMatrix(BareRealType, sequences, transposed)
+    x := SequencesToMatrix(Float64Type, sequences, transposed)
 
     // clear non-accessible regions
     for i := 0; i < offset1; i++ {
@@ -253,7 +253,7 @@ func BatchClassifyMultiTrack(config SessionConfig, classifier MatrixBatchClassif
           return err
         }
       }
-      dst.SetBin(i, r.GetValue())
+      dst.SetBin(i, r.GetFloat64())
       return nil
     }); err != nil {
       return nil, err
@@ -319,8 +319,8 @@ func ClassifyMultiTrack(config SessionConfig, classifier MatrixClassifier, track
       }
       sequences[k] = seq
     }
-    r := NullVector(BareRealType, nbins)
-    x := SequencesToMatrix(BareRealType, sequences, transposed)
+    r := NullDenseVector(Float64Type, nbins)
+    x := SequencesToMatrix(Float64Type, sequences, transposed)
     if f != nil {
       x = f.Eval(x)
     }
@@ -334,7 +334,7 @@ func ClassifyMultiTrack(config SessionConfig, classifier MatrixClassifier, track
         return err
       }
       for i := 0; i < nbins; i++ {
-        dst.SetBin(i, r.At(i).GetValue())
+        dst.SetBin(i, r.At(i).GetFloat64())
       }
       return nil
     }); err != nil {

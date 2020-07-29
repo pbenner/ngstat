@@ -116,7 +116,7 @@ func BatchEstimateOnSingleTrackData(config SessionConfig, estimator VectorBatchE
   // temporary memory
   var y Vector
   if f != nil {
-    y = NullVector(estimator.ScalarType(), m)
+    y = NullDenseVector(estimator.ScalarType(), m)
   }
   pool := threadpool.New(config.Threads, config.Threads*1000)
 
@@ -180,11 +180,11 @@ func BatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstim
     step = n
   }
   // allocate matrix where track slices are copied to
-  x := NullVector(estimator.ScalarType(), n)
+  x := NullDenseVector(estimator.ScalarType(), n)
   // storage for transformed data
   y := x
   if f != nil {
-    y = NullVector(estimator.ScalarType(), m)
+    y = NullDenseVector(estimator.ScalarType(), m)
   }
   pool := threadpool.New(config.Threads, config.Threads*1000)
 
@@ -214,7 +214,7 @@ func BatchEstimateOnSingleTrack(config SessionConfig, estimator VectorBatchEstim
         if math.IsNaN(seq.AtBin(i+j)) {
           continue LOOP_SEQUENCE
         }
-        x.At(j).SetValue(seq.AtBin(i+j))
+        x.At(j).SetFloat64(seq.AtBin(i+j))
       }
       if f != nil {
         if err := f.Eval(y, x); err != nil {
@@ -253,9 +253,9 @@ func EstimateOnSingleTrack(config SessionConfig, estimator VectorEstimator, trac
     seq, err := track.GetSequence(name); if err != nil {
       return err
     }
-    y := NullVector(estimator.ScalarType(), seq.NBins())
+    y := NullDenseVector(estimator.ScalarType(), seq.NBins())
     for i := 0; i < seq.NBins(); i++ {
-      y.At(i).SetValue(seq.AtBin(i))
+      y.At(i).SetFloat64(seq.AtBin(i))
     }
     if f != nil {
       y = f.Eval(y)

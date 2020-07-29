@@ -29,7 +29,7 @@ import . "github.com/pbenner/autodiff"
 /* -------------------------------------------------------------------------- */
 
 type NonparametricDistribution struct {
-  MargDensity   Vector  // p(x_i)
+  MargDensity   DenseFloat64Vector  // p(x_i)
   Delta       []float64
   X           []float64
   Xmap          map[float64]int
@@ -45,7 +45,7 @@ func NewDistribution(x, y []float64) (*NonparametricDistribution, error) {
     return nil, err
   } else {
     for i := 0; i < len(y); i++ {
-      r.MargDensity.At(i).SetValue(y[i])
+      r.MargDensity.At(i).SetFloat64(y[i])
     }
     return r, nil
   }
@@ -53,7 +53,7 @@ func NewDistribution(x, y []float64) (*NonparametricDistribution, error) {
 
 func NullDistribution(x []float64) (*NonparametricDistribution, error) {
   r := &NonparametricDistribution{}
-  r.MargDensity = NullVector(BareRealType, len(x))
+  r.MargDensity = NullDenseFloat64Vector(len(x))
   r.Delta = make([]float64, len(x))
   r.X     = make([]float64, len(x))
   // map values to indices
@@ -87,7 +87,7 @@ func (dist *NonparametricDistribution) Clone() *NonparametricDistribution {
     xmap[k] = v
   }
   return &NonparametricDistribution{
-    MargDensity: dist.MargDensity.CloneVector(),
+    MargDensity: dist.MargDensity.Clone(),
     Delta      : delta,
     X          : x,
     Xmap       : xmap }
@@ -104,7 +104,7 @@ func (dist *NonparametricDistribution) ScalarType() ScalarType {
 }
 
 func (dist *NonparametricDistribution) Index(x_ ConstScalar) (int, error) {
-  x := x_.GetValue()
+  x := x_.GetFloat64()
 
   if idx, ok := dist.Xmap[x]; ok {
     return idx, nil
@@ -120,7 +120,7 @@ func (dist *NonparametricDistribution) Index(x_ ConstScalar) (int, error) {
 
 func (dist *NonparametricDistribution) LogPdf(r Scalar, y ConstScalar) error {
   if i1, err := dist.Index(y); err != nil {
-    r.SetValue(math.Inf(-1))
+    r.SetFloat64(math.Inf(-1))
   } else {
     r.Set(dist.MargDensity.At(i1))
   }
@@ -136,11 +136,11 @@ func (dist *NonparametricDistribution) Pdf(r Scalar, y ConstScalar) error {
 }
 
 func (dist *NonparametricDistribution) LogEntropy() Scalar {
-  sum := NewScalar(BareRealType, math.Inf(-1))
-  t1  := NewBareReal(0.0)
-  t2  := NewBareReal(0.0)
+  sum := NewFloat64(math.Inf(-1))
+  t1  := NewFloat64(0.0)
+  t2  := NewFloat64(0.0)
   for i := 0; i < dist.MargDensity.Dim(); i++ {
-    t1.SetValue(math.Log(dist.Delta[i]))
+    t1.SetFloat64(math.Log(dist.Delta[i]))
     // t1 = log f(x)dx
     t1.Add(t1, dist.MargDensity.At(i))
     // t2 = log f(x)dx
@@ -193,7 +193,7 @@ func (dist *NonparametricDistribution) ExportConfig() ConfigDistribution {
     Y []float64 }{}
 
   config.X = dist.X
-  config.Y = dist.MargDensity.GetValues()
+  config.Y = dist.MargDensity
 
   return NewConfigDistribution("scalar:nonparametric distribution", config)
 }

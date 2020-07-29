@@ -130,7 +130,11 @@ func ImportSingleTrackData(config SessionConfig, t ScalarType, filenameBw string
       PrintStderr(config, 1, "failed\n")
       return nil, err
     } else {
-      r[i] = NewVector(t, slice)
+      v := NullDenseVector(t, len(slice))
+      for k := 0; k < len(slice); k++ {
+        v.At(k).SetFloat64(slice[k])
+      }
+      r[i] = v
     }
   }
   PrintStderr(config, 1, "done\n")
@@ -188,7 +192,11 @@ func ImportMultiTrackData(config SessionConfig, t ScalarType, filenamesBw []stri
       PrintStderr(config, 1, "failed\n")
       return nil, fmt.Errorf("received data of varying lengths from bigWig files")
     }
-    r[i] = NewMatrix(t, m, len(values)/m, values)
+    v := NullDenseVector(t, len(values))
+    for k := 0; k < len(values); k++ {
+      v.At(k).SetFloat64(values[k])
+    }
+    r[i] = v.AsMatrix(m, len(values)/m)
   }
   PrintStderr(config, 1, "done\n")
 
